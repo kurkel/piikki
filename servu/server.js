@@ -35,7 +35,7 @@ app.get('/', function(req, res) {
 });
 
 // API ROUTES -------------------
-app.post('/register', function(req, res) {
+app.post('/api/register', function(req, res) {
   console.log(mongoose);
 
   bcrypt.genSalt(10, function(err, salt) {
@@ -55,7 +55,7 @@ app.post('/register', function(req, res) {
   });
 });
 
-app.post('/login', function(req, res){
+app.post('/api/login', function(req, res){
   User.findOne({username: req.body.username}, 'password', function (err, docs) {
     if(err)
       console.log(err);
@@ -76,6 +76,29 @@ app.post('/login', function(req, res){
     }
   });
 })
+
+app.all('*', checkUser);
+
+function checkUser(req, res, next) {
+  if ( req.path == '/' || req.path == '/api/register' || req.path == '/api/login') return next();
+  var token = req.body.token || req.query.token || req.headers['x-access-token'];
+  if(token){
+    jwt.verify(token, app.get('superSecret'), function(err, user){
+      if(err){
+        return res.json({success: false, message: 'Failed to authenticate'});
+      }else{
+        req.username = user;
+        console.log(user);
+        next();
+      }
+    });
+  } else{
+    return res.status(403).send({
+      success: false,
+      message: 'No token provided'
+    });
+  }
+}
 
 // =======================
 // start the server ======
