@@ -3,6 +3,6 @@
 module.exports = {
 
     'secret': 'hrrbrroispahousut',
-    'database': 'mongodb://<user>:<pass>@jello.modulusmongo.net:27017/toxYw3oh'
+    'database': 'mongodb://dev2:dev2@ds021671.mlab.com:21671/piikkidevv2'
 
 };

@@ -6,11 +6,12 @@ var app         = express();
 var bodyParser  = require('body-parser');
 var morgan      = require('morgan');
 var mongoose    = require('mongoose');
+var bcrypt = require('bcrypt');
 
 var jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
 var config = require('./config'); // get our config file
 var User   = require('./app/models/user'); // get our mongoose model
-    
+
 // =======================
 // configuration =========
 // =======================
@@ -35,22 +36,46 @@ app.get('/', function(req, res) {
 
 // API ROUTES -------------------
 app.post('/register', function(req, res) {
+  console.log(mongoose);
 
-  // create a sample user
-  var nick = new User({ 
-    name: req.nick, 
-    password: req.password,
-    tabMaxed: false
-  });
-
-  // save the sample user
-  nick.save(function(err) {
-    if (err) throw err;
-
-    console.log('User saved successfully');
-    res.json({ success: true });
+  bcrypt.genSalt(10, function(err, salt) {
+    bcrypt.hash(req.body.password, salt, function(err, hash) {
+      User.create({
+        username: req.body.username,
+        password: hash,
+      }, function(err){
+          if(err){
+            console.log(err);
+            res.json({success: false});
+          }else{
+            res.json({success: true});
+          }
+      });
+    });
   });
 });
+
+app.post('/login', function(req, res){
+  User.findOne({username: req.body.username}, 'password', function (err, docs) {
+    if(err)
+      console.log(err);
+    else{
+      var hash = docs.password;
+      bcrypt.compare(req.body.password, hash, function(err, comp) {
+        if(err || comp == false)
+          console.log(err);
+        else {
+          var token = jwt.sign(req.body.username, app.get('superSecret'));
+          console.log(token);
+          res.json({
+            success: true,
+            token: token
+          });
+        }
+      });
+    }
+  });
+})
 
 // =======================
 // start the server ======
