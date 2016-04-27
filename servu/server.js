@@ -11,6 +11,7 @@ var bcrypt = require('bcrypt');
 var jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
 var config = require('./config'); // get our config file
 var User   = require('./app/models/user'); // get our mongoose model
+var Transaction   = require('./app/models/transaction');
 
 // =======================
 // configuration =========
@@ -75,9 +76,24 @@ app.post('/api/login', function(req, res){
       });
     }
   });
-})
+});
+
+app.get('/api/tab', function(req, res){
+  Transaction.find({username: req.username}, 'amount', function(err, docs){
+    if(err)
+      console.log(err);
+    else{
+    }
+  });
+});
 
 app.all('*', checkUser);
+
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 
 function checkUser(req, res, next) {
   if ( req.path == '/' || req.path == '/api/register' || req.path == '/api/login') return next();
