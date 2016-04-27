@@ -14,19 +14,13 @@ var {
   TouchableHighlight,
 } = React;
 
-var Login1 = React.createClass({
+var Tab = React.createClass({
 	render: function() {
-		return(
-			<Navigator
-	          renderScene={this.renderScene.bind(this)}
-	    	/>
-    )
-	},
-
-	renderScene: function() {
 		return(
 			<Text>jee pääsit inee</Text>
 		)
 	}
 
 })
+
+module.exports = Tab;

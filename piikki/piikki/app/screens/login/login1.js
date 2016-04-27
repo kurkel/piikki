@@ -21,28 +21,29 @@ var Login1 = React.createClass({
       password: ''
     }
   },
-  login: function() {
+    async login() {
 
     if(this.state.username === '' || this.state.password === '') {
       alert("lol");
     }
 
-    fetch('localhost:8080', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        username: this.state.username,
-        password: this.state.password,
-      })
-    }).then(this.loggedin(response));
+    try { 
+      let response = await fetch('http://192.168.56.1:8080/api/login', { 
+          method: 'POST', 
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', }, 
+          body: JSON.stringify(
+            { username: this.state.username, password: this.state.password, }) }); 
+      let responseJson = await response.json(); 
+      this.state.token = responseJson.token;
+      this.loggedin()
+      } 
+      catch(error) {  // Handle error
+        console.error(error); }
   },
 
-  loggedin: function(response) {
-    if(response.token) {
-      this.state.token = response.token;
+  loggedin: function() {
+    if(!this.state.token) {
+      alert("moi");
     }
     this.props.navigator.push({
       id: 'TabPage',
