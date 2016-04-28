@@ -89,25 +89,31 @@ app.get('/api/tab', function(req, res){
       docs.forEach(function(args){
         spike += args.amount;
       });
-      res.json({amount: spike});
+      res.json({amount: spike, success: true});
     }
   });
 });
 
 app.post('/api/tab', function(req, res){
-  var newtrans = new Transaction({
-    username: req.username,
-    amount: req.body.amount,
-    date: Date.now()
-  });
-  newtrans.save(function(err){
-    if(err)
-      console.log(err);
-    else{
-      res.json({success: true});
-    }
-  });
-
+  if(req.body.amount >= 0){
+    var newtrans = new Transaction({
+      username: req.username,
+      amount: req.body.amount,
+      date: Date.now()
+    });
+    newtrans.save(function(err){
+      if(err)
+        console.log(err);
+      else{
+        res.json({success: true});
+      }
+    });
+  }else {
+    res.status(403).send({
+      success: false,
+      message: 'You are not allowed to spike negatively'
+    });
+  }
 });
 
 app.use(function(req, res, next) {
