@@ -97,22 +97,60 @@ app.post('/api/tab', function(req, res){
 });
 
 app.post('/api/alltabs', function(req, res){
-Transaction.aggregate(
-[{
-  $group: {
-    _id: "$username",
-    tab: {
-      $sum: "$amount"
+  Transaction.aggregate(
+  [{
+    $group: {
+      _id: "$username",
+      tab: {
+        $sum: "$amount"
+      }
     }
+  }],
+  function(err, result) {
+    if (err)
+      console.log(err);
+    else {
+      res.json(result);
+    }
+  })
+});
+
+app.post('/api/getusers', function(req, res){
+  User.find({}, function(err, docs){
+    if(err)
+      console.log(err);
+    else{
+      return res.json(docs);
+    }
+  })
+});
+
+app.post('/api/toplist', function(req, res){
+  Transaction.aggregate(
+  [{
+      $match: {
+        amount: {$gt: 70}
+      }
+    },
+    {
+    $group: {
+      _id: "$username",
+      tab: {
+        $sum: "$amount"
+      }
+    }
+  },
+  {
+    $sort: {sum: -1}
   }
-}],
-function(err, result) {
-  if (err)
-    console.log(err);
-  else {
-    res.json(result);
-  }
-})
+],
+  function(err, result) {
+    if (err)
+      console.log(err);
+    else {
+      res.json(result);
+    }
+  })
 });
 
 //////////////////
@@ -173,6 +211,10 @@ function getTab(username, cb){
 //////////////////////////
 // Middleware functions //
 //////////////////////////
+function checkTab(req,res, next){
+  return;
+}
+
 function authUser(req, res, next) {
   if ( req.path == '/' || req.path == '/api/register' || req.path == '/api/login') return next();
   var token = req.body.token || req.query.token || req.headers['x-access-token'];
