@@ -12,8 +12,9 @@ var {
   Image,
   Navigator,
   TouchableHighlight,
+  AsyncStorage
 } = React;
-
+  
 var Login1 = React.createClass({
   getInitialState: function() {
     return {
@@ -35,6 +36,8 @@ var Login1 = React.createClass({
             { username: this.state.username, password: this.state.password, }) }); 
       let responseJson = await response.json(); 
       this.state.token = responseJson.token;
+      console.log(this.state.token);
+      AsyncStorage.setItem('token', this.state.token);
       this.loggedin()
       } 
       catch(error) {  // Handle error
@@ -48,6 +51,7 @@ var Login1 = React.createClass({
     this.props.navigator.push({
       id: 'TabPage',
       name: 'Tab',
+      token: this.state.token,
     });
   },
 
@@ -56,7 +60,7 @@ var Login1 = React.createClass({
         <View style={styles.container}>
             <Image style={styles.bg} source={{uri: 'http://i.imgur.com/xlQ56UK.jpg'}} />
             <View style={styles.header}>
-                <Image style={styles.mark} source={{uri: 'http://i.imgur.com/da4G0Io.png'}} />
+                <Image style={styles.mark} source={{uri: 'https://scontent-arn2-1.xx.fbcdn.net/v/t1.0-9/11009997_10207606930672465_3737485251735034342_n.jpg?oh=b8f0e293d9a6d5196ee23e17b2148b13&oe=57AEB043'}} />
             </View>
             <View style={styles.inputs}>
                 <View style={styles.inputContainer}>

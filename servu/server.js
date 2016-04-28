@@ -177,6 +177,7 @@ function authUser(req, res, next) {
   if ( req.path == '/' || req.path == '/api/register' || req.path == '/api/login') return next();
   var token = req.body.token || req.query.token || req.headers['x-access-token'];
   if(token){
+    console.log(token);
     jwt.verify(token, app.get('superSecret'), function(err, user){
       if(err){
         return res.json({success: false, message: 'Failed to authenticate'});
