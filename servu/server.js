@@ -78,16 +78,37 @@ app.post('/api/login', function(req, res){
   });
 });
 
+app.all('*', checkUser);
+
 app.get('/api/tab', function(req, res){
   Transaction.find({username: req.username}, 'amount', function(err, docs){
     if(err)
       console.log(err);
     else{
+      var spike = 0;
+      docs.forEach(function(args){
+        spike += args.amount;
+      });
+      res.json({amount: spike});
     }
   });
 });
 
-app.all('*', checkUser);
+app.post('/api/tab', function(req, res){
+  var newtrans = new Transaction({
+    username: req.username,
+    amount: req.body.amount,
+    date: Date.now()
+  });
+  newtrans.save(function(err){
+    if(err)
+      console.log(err);
+    else{
+      res.json({success: true});
+    }
+  });
+
+});
 
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -104,7 +125,6 @@ function checkUser(req, res, next) {
         return res.json({success: false, message: 'Failed to authenticate'});
       }else{
         req.username = user;
-        console.log(user);
         next();
       }
     });
