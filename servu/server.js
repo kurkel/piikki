@@ -33,20 +33,19 @@ app.use(function(req, res, next) {
   next();
 });
 app.use(authUser);
-app.use(checkUserClass);
-app.use('/^(\/api\/admin\/)\w*/', adminCheck);
+app.use(/^\/api\/admin\/\w*/, checkUserClass);
+app.use(/^\/api\/admin\/\w*/, adminCheck);
 
 /////////////////
 // User routes //
 /////////////////
 app.post('/api/register', function(req, res) {
-  console.log(mongoose);
-
   bcrypt.genSalt(10, function(err, salt) {
     bcrypt.hash(req.body.password, salt, function(err, hash) {
       User.create({
         username: req.body.username,
         password: hash,
+        admin: req.body.admin ? req.body.admin : false
       }, function(err){
           if(err){
             console.log(err);
@@ -72,7 +71,6 @@ app.post('/api/login', function(req, res){
           var token = jwt.sign(req.body.username, app.get('superSecret'));
           getTab(req.body.username, function(spike){
             var prices = getPrices();
-            console.log(spike);
             res.json({
               success: true,
               token: token,
@@ -93,28 +91,11 @@ app.get('/api/tab', function(req, res){
 });
 
 app.post('/api/tab', function(req, res){
-  if(req.body.amount >= 0){
-    var newtrans = new Transaction({
-      username: req.username,
-      amount: req.body.amount,
-      date: Date.now()
-    });
-    newtrans.save(function(err){
-      if(err)
-        console.log(err);
-      else{
-        res.json({success: true});
-      }
-    });
-  }else {
-    res.status(403).send({
-      success: false,
-      message: 'You are not allowed to spike negatively'
-    });
-  }
+  res.json(addTab(req.username, req.body.amount));
+
 });
 
-app.get('/api/alltabs', function(req, res){
+app.post('/api/alltabs', function(req, res){
 Transaction.aggregate(
 [{
   $group: {
@@ -137,11 +118,40 @@ function(err, result) {
 // Admin routes //
 //////////////////
 
-
+app.post('/api/admin/tab', function(req, res){
+  addTab(req.body.username, req.body.amount, true, function(resp){
+    res.json(resp);
+  });
+});
 
 /////////////
 // Helpers //
 /////////////
+
+function addTab(username, amount, admin, cb){
+  if(amount>= 0 || admin){
+    var newtrans = new Transaction({
+      username: username,
+      amount: amount,
+      date: Date.now()
+    });
+    newtrans.save(function(err){
+      if(err)
+        console.log(err);
+      else{
+         cb({
+          success: true
+        })
+      }
+    });
+  }else {
+    cb({
+      success: false,
+      message: 'You are not allowed to spike negatively'
+    });
+  }
+}
+
 function getPrices(){
   return prices;
 }
@@ -184,7 +194,9 @@ function authUser(req, res, next) {
 
 function checkUserClass(req, res, next) {
   if(req.username){
+    console.log(req.username);
     User.findOne({username: req.username}, 'admin', function(err, docs){
+      console.log(docs);
       if(err)
         console.log(err);
       else{
@@ -193,18 +205,22 @@ function checkUserClass(req, res, next) {
       }
     });
   }else{
-    next();
+    return res.status(403).send({
+      success: false,
+      message: "Wtf??"
+    });
   }
 }
 
 function adminCheck(req, res, next) {
+  console
     if(req.admin){
       next();
     } else{
-      return res.status(403).send({
+        return res.status(403).send({
         success: false,
         message: "You do not have admin rights."
-      })
+      });
     }
 }
 
