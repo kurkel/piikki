@@ -91,8 +91,9 @@ app.get('/api/tab', function(req, res){
 });
 
 app.post('/api/tab', function(req, res){
-  res.json(addTab(req.username, req.body.amount));
-
+  addTab(req.username, req.body.amount, false, function(resp){
+    res.json(resp);
+  });
 });
 
 app.post('/api/alltabs', function(req, res){
