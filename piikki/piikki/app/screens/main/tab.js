@@ -16,15 +16,15 @@ var {
 } = React;
 
 var Tab = React.createClass({
-	moi: function() {
+	moi: function(amount) {
 		var asd = AsyncStorage.getItem('token', async function(err, result){
     try {
-    	console.log("moi"); 
+    	console.log(amount); 
       let response = await fetch('http://192.168.56.1:8080/api/tab', { 
           method: 'POST', 
           headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }, 
           body: JSON.stringify(
-            { amount: 1, token: result}) }); 
+            { amount: amount, token: result}) }); 
       let responseJson = await response.json();
       } 
       catch(error) {  // Handle error
@@ -36,24 +36,24 @@ var Tab = React.createClass({
 				<Image style={styles.bg} source={{uri: 'http://www.decalskin.com/wallpaper.php?file=samsung/SGS3-SN1.jpg'}} />
 				<Text style={styles.header}>Spike</Text>
 				<View style={styles.buttonrow}>
-					<TouchableHighlight onPress={this.moi}>
+					<TouchableHighlight onPress={() => this.moi(1)}>
 						<View style={styles.button1}>
 							<Text style={styles.amount}>1€</Text>
 						</View>
 					</TouchableHighlight>
-					<TouchableHighlight onPress={this.tab}>
+					<TouchableHighlight onPress={() => this.moi(1.5)}>
 						<View style={styles.button2}>
 							<Text style={styles.amount}>1.5€</Text>
 						</View>
 					</TouchableHighlight>
 				</View>
 				<View style={styles.buttonrow}>
-					<TouchableHighlight onPress={this.tab}>
+					<TouchableHighlight onPress={() => this.moi(2)}>
 						<View style={styles.button1}>
 							<Text style={styles.amount}>2€</Text>
 						</View>
 					</TouchableHighlight>
-					<TouchableHighlight onPress={this.tab}>
+					<TouchableHighlight onPress={() => this.moi(3)}>
 						<View style={styles.button2}>
 							<Text style={styles.amount}>3€</Text>
 						</View>

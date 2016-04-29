@@ -33,12 +33,13 @@ var Login1 = React.createClass({
           method: 'POST', 
           headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', }, 
           body: JSON.stringify(
-            { username: this.state.username, password: this.state.password, }) }); 
+            { username: this.state.username, password: this.state.password }) }); 
       let responseJson = await response.json(); 
       this.state.token = responseJson.token;
-      console.log(this.state.token);
-      AsyncStorage.setItem('token', this.state.token);
-      this.loggedin()
+      var asdasd = this.loggedin;
+      AsyncStorage.setItem('token', this.state.token, function(err, result) {
+        asdasd();
+      });
       } 
       catch(error) {  // Handle error
         console.error(error); }
