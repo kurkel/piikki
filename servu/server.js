@@ -69,7 +69,7 @@ app.post('/api/login', function(req, res){
       console.log(err);
     else{
       if(!docs)
-        return res.status§(403).send({success: false});
+        return res.status(403).send({success: false});
       var hash = docs.password;
       bcrypt.compare(req.body.password, hash, function(err, comp) {
         if(err || comp == false)
