@@ -62,6 +62,8 @@ app.post('/api/register', function(req, res) {
 });
 
 app.post('/api/login', function(req, res){
+  if(!req.body.username)
+    return res.code(403).send({message: "Fuck uyou"});
   User.findOne({username: req.body.username}, 'password', function (err, docs) {
     if(err)
       console.log(err);
