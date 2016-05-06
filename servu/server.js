@@ -63,11 +63,13 @@ app.post('/api/register', function(req, res) {
 
 app.post('/api/login', function(req, res){
   if(!req.body.username)
-    return res.code(403).send({message: "Fuck uyou"});
+    return res.code(403).send({message: "Fuck uyoux"});
   User.findOne({username: req.body.username}, 'password', function (err, docs) {
     if(err)
       console.log(err);
     else{
+      if(!docs)
+        return res.code(403).send({message: "Fuck uyoux"});
       var hash = docs.password;
       bcrypt.compare(req.body.password, hash, function(err, comp) {
         if(err || comp == false)
