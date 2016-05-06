@@ -11,9 +11,10 @@ var {
   TextInput,
   Image,
   Navigator,
-  TouchableOpacity,
+  TouchableHighlight,
   AsyncStorage,
-  Modal
+  Modal,
+  BackAndroid
 } = React;
   
 var Button = React.createClass({ 
@@ -22,13 +23,21 @@ var Button = React.createClass({
     _onHighlight() { this.setState({active: true}); },
      _onUnhighlight() { this.setState({active: false}); },
       render() { var colorStyle = { color: this.state.active ? '#fff' : '#000', }; 
-      return ( <TouchableOpacity 
+      return ( <TouchableHighlight 
         onHideUnderlay={this._onUnhighlight} 
         onPress={this.props.onPress} 
         onShowUnderlay={this._onHighlight} 
         style={[styles.button, this.props.style]} underlayColor="#a9d9d4"> 
         <Text style={[styles.buttonText, colorStyle]}>{this.props.children}</Text> 
-        </TouchableOpacity> ); } });
+        </TouchableHighlight> ); } });
+
+var nav;
+
+BackAndroid.addEventListener('hardwareBackPress', function() {
+
+  nav.pop(); 
+  return true; 
+});
 
 var Login1 = React.createClass({
   getInitialState: function() {
@@ -37,7 +46,40 @@ var Login1 = React.createClass({
       password: ''
     }
   },
-    async login() {
+    async reg() {
+
+    if(this.state.username === '' || this.state.password === '') {
+      alert("lol");
+    }
+
+    if(this.password !== this.password2) {
+      this.state.error = "Passwords do not match!";
+      _setModalVisible(true);
+      return;
+    }
+
+    try { 
+
+
+      let response = await fetch('http://192.168.56.1:8080/api/register', { 
+          method: 'POST', 
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', }, 
+          body: JSON.stringify(
+            { username: this.state.username, password: this.state.password, secret: this.state.secret, admin: false}) }); 
+      let responseJson = await response.json(); 
+      if(responesJson.success == false) {
+        this.state.error = responseJson.error;
+        this._setModalVisible(true);
+      }
+      else {
+        login();
+      }
+    } 
+    catch(error) {  // Handle error
+      console.error(error); }
+  },
+
+  async login() {
 
     if(this.state.username === '' || this.state.password === '') {
       alert("lol");
@@ -74,17 +116,13 @@ var Login1 = React.createClass({
     });
   },
 
-  register: function () {
-    this.props.navigator.push({
-      id: 'RegisterPage',
-      name: 'Register',
-    })
-  },
+ 
 
   _setModalVisible(visible) { this.setState({modalVisible: visible}); },
 
   render: function() {
     this.state.modalVisible = false;
+    nav = this.props.navigator;
         return (
         <View style={styles.container}>
           <Modal 
@@ -94,14 +132,14 @@ var Login1 = React.createClass({
             onRequestClose={() => {this._setModalVisible(false)}} > 
               <View style={[styles.modalcontainer]}> 
                 <View style={[styles.innerContainer]}> 
-                  <Text style={{top: 10}}>Loginnaa paremmin.</Text> 
+                  <Text style={{top: 10}}>this.state.error</Text> 
                   <Button onPress={this._setModalVisible.bind(this, false)} style={styles.modalButton}> Close </Button> 
                 </View> 
               </View> 
           </Modal>
             <Image style={styles.bg} source={{uri: 'http://i.imgur.com/xlQ56UK.jpg'}} />
-            <View style={styles.header}>
-                <Image style={styles.mark} source={{uri: 'https://scontent-arn2-1.xx.fbcdn.net/v/t1.0-9/11009997_10207606930672465_3737485251735034342_n.jpg?oh=b8f0e293d9a6d5196ee23e17b2148b13&oe=57AEB043'}} />
+            <View style={{justifyContent: 'center'}}>
+              <Text style={styles.header}>Register</Text>
             </View>
             <View style={styles.inputs}>
                 <View style={styles.inputContainer}>
@@ -125,22 +163,33 @@ var Login1 = React.createClass({
                         value={this.state.password}
                     />
                 </View>
-                <View style={styles.forgotContainer}>
-                    <Text style={styles.greyFont}>Forgot Password</Text>
+                <View style={styles.inputContainer}>
+                    <Image style={styles.inputPassword} source={{uri: 'http://i.imgur.com/ON58SIG.png'}}/>
+                    <TextInput
+                        password={true}
+                        style={[styles.input, styles.whiteFont]}
+                        placeholder="Password again"
+                        placeholderTextColor="#FFF"
+                        onChangeText={(password2) => this.setState({password2})}
+                        value={this.state.password2}
+                    />
+                </View>
+                <View style={styles.inputContainer}>
+                    <Text style={styles.inputUsername}>?</Text>
+                    <TextInput 
+                        style={[styles.input, styles.whiteFont]}
+                        placeholder="Secret"
+                        placeholderTextColor="#FFF"
+                        onChangeText={(secret) => this.setState({secret})}
+                        value={this.state.secret}
+                    />
                 </View>
             </View>
-            <TouchableOpacity onPress={this.login}>
+            <TouchableHighlight onPress={this.reg}>
               <View style={styles.signin}>
-                  <Text style={styles.whiteFont}>Sign In</Text>
+                  <Text style={styles.whiteFont}>Register</Text>
               </View>
-            </TouchableOpacity>
-            <View style={styles.signup}>
-                <Text style={styles.greyFont}>Dont have an account?
-                </Text>
-                <TouchableOpacity onPress={this.register}>
-                  <Text style={styles.whiteFont}>  Sign Up</Text>
-                </TouchableOpacity>
-            </View>
+            </TouchableHighlight>
         </View>
     );
   }
@@ -163,10 +212,15 @@ var styles = StyleSheet.create({
         height: windowSize.height
     },
     header: {
+        top: 20,
         justifyContent: 'center',
-        alignItems: 'center',
-        flex: .3,
-        backgroundColor: 'transparent'
+        textAlign: 'center',
+        flex: 0.1,
+        fontWeight: 'bold',
+        fontSize: 30,
+        backgroundColor: 'transparent',
+        color: '#FFF'
+
     },
     mark: {
         width: 150,
@@ -175,7 +229,8 @@ var styles = StyleSheet.create({
     signin: {
         backgroundColor: '#FF3366',
         padding: 20,
-        alignItems: 'center'
+        alignItems: 'center',
+        marginBottom: 70,
     },
     signup: {
       justifyContent: 'center',
@@ -183,7 +238,8 @@ var styles = StyleSheet.create({
       flex: .15
     },
     inputs: {
-        marginTop: 10,
+
+        marginTop: 50,
         marginBottom: 10,
         flex: .25
     },

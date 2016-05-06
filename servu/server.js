@@ -40,6 +40,9 @@ app.use(/^\/api\/admin\/\w*/, adminCheck);
 // User routes //
 /////////////////
 app.post('/api/register', function(req, res) {
+  if(req.body.secret !== "ania patiossa") {
+    res.json(success: false, error: "Wrong secret.");
+  }
   bcrypt.genSalt(10, function(err, salt) {
     bcrypt.hash(req.body.password, salt, function(err, hash) {
       User.create({
@@ -49,7 +52,7 @@ app.post('/api/register', function(req, res) {
       }, function(err){
           if(err){
             console.log(err);
-            res.json({success: false});
+            res.json({success: false, error: "Username in use."});
           }else{
             res.json({success: true});
           }
@@ -69,7 +72,7 @@ app.post('/api/login', function(req, res){
           console.log(err);
         else {
           var token = jwt.sign(req.body.username, app.get('superSecret'));
-          getTab(req.body.username, function(spike){
+          getTab(req.body.username, function(spike){ 
             var prices = getPrices();
             res.json({
               success: true,
