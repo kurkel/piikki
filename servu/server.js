@@ -72,7 +72,7 @@ app.post('/api/login', function(req, res){
           console.log(err);
         else {
           var token = jwt.sign(req.body.username, app.get('superSecret'));
-          getTab(req.body.username, function(spike){ 
+          getTab(req.body.username, function(spike){
             var prices = getPrices();
             res.json({
               success: true,
@@ -132,7 +132,7 @@ app.post('/api/toplist', function(req, res){
   Transaction.aggregate(
   [{
       $match: {
-        amount: {$gt: 70}
+        amount: {$gt: 0}
       }
     },
     {
