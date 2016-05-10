@@ -11,6 +11,8 @@ var TabPage = require('./app/screens/main/tab');
 
 var RegisterPage = require('./app/screens/login/register');
 
+var AdminPage = require('./app/screens/main/admin')
+
 var piikki = React.createClass({
   render: function() {
     return (
@@ -39,12 +41,19 @@ var piikki = React.createClass({
 		          navigator={navigator} onBack={() => { if (route.index > 0) { navigator.pop(); } }} />
 		      );
 		    }
+		    if (routeId === 'AdminPage') {
+		      return (
+		        <AdminPage
+		          navigator={navigator} onBack={() => { if (route.index > 0) { navigator.pop(); } }} />
+		      );
+		    }
 		    	
 		}}
         />
     );
   }
-});
+}
+);
 
 
 AppRegistry.registerComponent('piikki', () => piikki);

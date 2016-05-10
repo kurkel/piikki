@@ -41,7 +41,7 @@ app.use(/^\/api\/admin\/\w*/, adminCheck);
 /////////////////
 app.post('/api/register', function(req, res) {
   if(req.body.secret !== "ania patiossa") {
-    res.json(success: false, error: "Wrong secret.");
+    res.json({success: false, error: "Wrong secret."});
   }
   bcrypt.genSalt(10, function(err, salt) {
     bcrypt.hash(req.body.password, salt, function(err, hash) {

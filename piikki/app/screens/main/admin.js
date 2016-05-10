@@ -44,14 +44,14 @@ var Login1 = React.createClass({
     }
 
     try { 
-      let response = await fetch('http://localhost:8080/api/login', { 
+      let response = await fetch('http://192.168.56.1:8080/api/login', { 
           method: 'POST', 
           headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', }, 
           body: JSON.stringify(
             { username: this.state.username, password: this.state.password }) }); 
       let responseJson = await response.json(); 
       this.state.token = responseJson.token;
-      if(responseJson.success == false) {
+      if(responesJson.success == false) {
         this._setModalVisible(true);
       }
       else {
