@@ -1,62 +1,50 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- */
-
-import React, {
+'use strict';
+var React = require('react-native');
+var {
   AppRegistry,
-  Component,
-  StyleSheet,
-  Text,
-  View
-} from 'react-native';
+  Navigator
+} = React;
 
-var Button = require('react-native-button');
-var LinearGradient = require('react-native-linear-gradient');
+var LoginPage = require('./app/screens/login/login1');
 
-class piikki extends Component {
-  render() {
+var TabPage = require('./app/screens/main/tab');
+
+var RegisterPage = require('./app/screens/login/register');
+
+var piikki = React.createClass({
+  render: function() {
     return (
-      <LinearGradient colors={['#4c669f', '#3b5998', '#192f6a']} style={styles.linearGradient}>
-        <Text style={styles.buttonText}>
-          Sign in with Facebook
-        </Text>
-      </LinearGradient>
+       <Navigator
+          initialRoute={{id: 'LoginPage', name: 'Login', index: 0}}
+          configureScene={() => {
+                    return Navigator.SceneConfigs.FloatFromRight;
+                }}
+          renderScene={(route, navigator) =>{
+          	var routeId = route.id;
+		    if (routeId === 'LoginPage') {
+		      return (
+		        <LoginPage
+		          navigator={navigator} />
+		      );
+		    }
+		    if (routeId === 'TabPage') {
+		      return (
+		        <TabPage
+		          navigator={navigator} onBack={() => { if (route.index > 0) { navigator.pop(); } }} />
+		      );
+		    }
+		    if (routeId === 'RegisterPage') {
+		      return (
+		        <RegisterPage
+		          navigator={navigator} onBack={() => { if (route.index > 0) { navigator.pop(); } }} />
+		      );
+		    }
+		    	
+		}}
+        />
     );
   }
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
-
-  linearGradient: {
-    flex: 1,
-    paddingLeft: 15,
-    paddingRight: 15,
-    borderRadius: 5
-  },
-  buttonText: {
-    fontSize: 18,
-    fontFamily: 'Gill Sans',
-    textAlign: 'center',
-    margin: 10,
-    color: '#ffffff',
-  },
 });
+
 
 AppRegistry.registerComponent('piikki', () => piikki);

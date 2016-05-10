@@ -1,53 +1,50 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- * @flow
- */
-
-import React, {
+'use strict';
+var React = require('react-native');
+var {
   AppRegistry,
-  Component,
-  StyleSheet,
-  Text,
-  View
-} from 'react-native';
+  Navigator
+} = React;
 
-class piikki extends Component {
-  render() {
+var LoginPage = require('./app/screens/login/login1');
+
+var TabPage = require('./app/screens/main/tab');
+
+var RegisterPage = require('./app/screens/login/register');
+
+var piikki = React.createClass({
+  render: function() {
     return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Welcome to React Native!
-        </Text>
-        <Text style={styles.instructions}>
-          To get started, edit index.ios.js
-        </Text>
-        <Text style={styles.instructions}>
-          Press Cmd+R to reload,{'\n'}
-          Cmd+D or shake for dev menu
-        </Text>
-      </View>
+       <Navigator
+          initialRoute={{id: 'LoginPage', name: 'Login', index: 0}}
+          configureScene={() => {
+                    return Navigator.SceneConfigs.FloatFromRight;
+                }}
+          renderScene={(route, navigator) =>{
+          	var routeId = route.id;
+		    if (routeId === 'LoginPage') {
+		      return (
+		        <LoginPage
+		          navigator={navigator} />
+		      );
+		    }
+		    if (routeId === 'TabPage') {
+		      return (
+		        <TabPage
+		          navigator={navigator} onBack={() => { if (route.index > 0) { navigator.pop(); } }} />
+		      );
+		    }
+		    if (routeId === 'RegisterPage') {
+		      return (
+		        <RegisterPage
+		          navigator={navigator} onBack={() => { if (route.index > 0) { navigator.pop(); } }} />
+		      );
+		    }
+		    	
+		}}
+        />
     );
   }
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
 });
+
 
 AppRegistry.registerComponent('piikki', () => piikki);
