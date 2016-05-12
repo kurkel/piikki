@@ -15,7 +15,10 @@ var {
   AsyncStorage,
   Modal
 } = React;
-  
+
+var Spinner = require('react-native-spinkit');
+
+
 var Button = React.createClass({ 
   getInitialState() { 
     return { active: false, }; }, 
@@ -31,16 +34,24 @@ var Button = React.createClass({
         </TouchableOpacity> ); } });
 
 var Login1 = React.createClass({
-  getInitialState: function() {
-    return {
-      username: '',
-      password: ''
-    }
-  },
+    getInitialState: function() {
+      return {
+        errorVisible: false,
+        spinnerVisible: false,
+        logoVisible: true,
+        username: '',
+        password: '',
+        error: '',
+      };
+    },
+
     async login() {
+      this.showSpinner();
 
     if(this.state.username === '' || this.state.password === '') {
-      alert("lol");
+      this.state.error = "Username or password empty";
+      this.showError();
+      return;
     }
 
     try { 
@@ -52,7 +63,8 @@ var Login1 = React.createClass({
       let responseJson = await response.json(); 
       this.state.token = responseJson.token;
       if(responseJson.success == false) {
-        this._setModalVisible(true);
+        this.state.error = "Wrong username or password";
+        this.showError();
       }
       else {
         var asdasd = this.loggedin;
@@ -66,12 +78,33 @@ var Login1 = React.createClass({
 
   loggedin: function() {
     if(!this.state.token) {
-      alert("moi");
+      this.state.error = "Something went wrong";
+      this.showError();
     }
     this.props.navigator.push({
       id: 'MainPage',
       name: 'Main',
     });
+  },
+
+  showSpinner: function() {
+    this.setState({logoVisible: false});
+    this.setState({errorVisible: false});
+    this.setState({spinnerVisible: true});
+  },
+
+  showLogo: function() {
+    this.setState({errorVisible: false});
+    this.setState({spinnerVisible: false});
+    this.setState({logoVisible: true});
+    
+  },
+
+  showError: function() {
+    this.setState({logoVisible: false});
+    this.setState({spinnerVisible: false});
+    this.setState({errorVisible: true});
+
   },
 
   register: function () {
@@ -81,27 +114,28 @@ var Login1 = React.createClass({
     })
   },
 
+  renderHeader: function() {
+    if(this.state.logoVisible) {
+      return <Image style={[styles.mark]} source={{uri: 'https://scontent-arn2-1.xx.fbcdn.net/v/t1.0-9/11009997_10207606930672465_3737485251735034342_n.jpg?oh=b8f0e293d9a6d5196ee23e17b2148b13&oe=57AEB043'}} />;
+    }
+    else if(this.state.spinnerVisible){
+      return <Spinner size={40} type='ThreeBounce'/>;
+    }
+    else {
+      return <Text style={[styles.errorText]}>{this.state.error}</Text>;
+    }
+  },
+
   _setModalVisible(visible) { this.setState({modalVisible: visible}); },
 
   render: function() {
-    this.state.modalVisible = false;
+    
+        
         return (
         <View style={styles.container}>
-          <Modal 
-            animated={true} 
-            transparent={true} 
-            visible={this.state.modalVisible}
-            onRequestClose={() => {this._setModalVisible(false)}} > 
-              <View style={[styles.modalcontainer]}> 
-                <View style={[styles.innerContainer]}> 
-                  <Text style={{top: 10}}>Loginnaa paremmin.</Text> 
-                  <Button onPress={this._setModalVisible.bind(this, false)} style={styles.modalButton}> Close </Button> 
-                </View> 
-              </View> 
-          </Modal>
             <Image style={styles.bg} source={{uri: 'http://i.imgur.com/xlQ56UK.jpg'}} />
             <View style={styles.header}>
-                <Image style={styles.mark} source={{uri: 'https://scontent-arn2-1.xx.fbcdn.net/v/t1.0-9/11009997_10207606930672465_3737485251735034342_n.jpg?oh=b8f0e293d9a6d5196ee23e17b2148b13&oe=57AEB043'}} />
+              {this.renderHeader()}
             </View>
             <View style={styles.inputs}>
                 <View style={styles.inputContainer}>
@@ -124,9 +158,6 @@ var Login1 = React.createClass({
                         onChangeText={(password) => this.setState({password})}
                         value={this.state.password}
                     />
-                </View>
-                <View style={styles.forgotContainer}>
-                    <Text style={styles.greyFont}>Forgot Password</Text>
                 </View>
             </View>
             <TouchableOpacity onPress={this.login}>
@@ -198,6 +229,7 @@ var styles = StyleSheet.create({
       height: 20
     },
     inputContainer: {
+        flex:0.01,
         flexDirection: "row",
         justifyContent: 'center',
         alignItems: 'center',
@@ -221,6 +253,17 @@ var styles = StyleSheet.create({
     },
     whiteFont: {
       color: '#FFF'
+    },
+    errorText: {
+
+      color: '#FF4F4D',
+      fontSize: 20,
+      fontWeight: 'bold',
+    },
+    textWrapper: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center'
     },
     button: { borderRadius: 5, flex: 1, height: 44, alignSelf: 'stretch', justifyContent: 'center', overflow: 'hidden', }, 
     buttonText: { fontSize: 18, margin: 5, textAlign: 'center', },

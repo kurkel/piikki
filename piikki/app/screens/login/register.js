@@ -16,7 +16,9 @@ var {
   Modal,
   BackAndroid
 } = React;
-  
+
+var Spinner = require('react-native-spinkit');
+
 var Button = React.createClass({ 
   getInitialState() { 
     return { active: false, }; }, 
@@ -43,58 +45,61 @@ var Register = React.createClass({
   getInitialState: function() {
     return {
       username: '',
-      password: ''
+      password: '',
+      error: '',
+      spinnerVisible: false,
     }
   },
     async reg() {
 
+    this.showSpinner()
     if(this.state.username === '' || this.state.password === '') {
-      alert("lol");
+       this.showError("Fill out both fields first!");
     }
 
     if(this.password !== this.password2) {
-      this.state.error = "Passwords do not match!";
-      _setModalVisible(true);
-      return;
+      this.showError("Passwords do not match!");
     }
 
     try { 
 
 
-      let response = await fetch('http://192.168.56.1:8080/api/register', { 
+      let response = await fetch('http://localhost:8080/api/register', { 
           method: 'POST', 
           headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', }, 
           body: JSON.stringify(
             { username: this.state.username, password: this.state.password, secret: this.state.secret, admin: false}) }); 
       let responseJson = await response.json(); 
-      if(responesJson.success == false) {
+      if(responseJson.success == false) {
         this.state.error = responseJson.error;
-        this._setModalVisible(true);
       }
       else {
-        login();
+        var loggers = this.login;
+        loggers();
       }
     } 
     catch(error) {  // Handle error
-      console.error(error); }
+      console.error(error);
+      this.showError(error);
+    }
   },
 
   async login() {
 
     if(this.state.username === '' || this.state.password === '') {
-      alert("lol");
+      this.showError("Fill out both fields first!");
     }
 
     try { 
-      let response = await fetch('http://192.168.56.1:8080/api/login', { 
+      let response = await fetch('http://localhost:8080/api/login', { 
           method: 'POST', 
           headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', }, 
           body: JSON.stringify(
             { username: this.state.username, password: this.state.password }) }); 
       let responseJson = await response.json(); 
       this.state.token = responseJson.token;
-      if(responesJson.success == false) {
-        this._setModalVisible(true);
+      if(responseJson.success == false) {
+        this.showError('Login after register failed');
       }
       else {
         var asdasd = this.loggedin;
@@ -103,43 +108,55 @@ var Register = React.createClass({
       }
     } 
     catch(error) {  // Handle error
-      console.error(error); }
+      console.error(error); 
+      this.showError('Something went wrong');
+    }
   },
 
   loggedin: function() {
     if(!this.state.token) {
-      alert("moi");
+      this.showError('Something went wrong');
     }
     this.props.navigator.push({
-      id: 'TabPage',
-      name: 'Tab',
+      id: 'MainPage',
+      name: 'Main',
     });
   },
 
- 
+  renderErrors: function() {
+    if(this.state.error !== '') {
+      return <Text style={styles.errorText}>{this.state.error}</Text>;
+    }
+    else if(this.state.spinnerVisible){
+      return <Spinner size={40} type='ThreeBounce'/>;
+    }
+    else {
+      return;
+    }
+  },
 
-  _setModalVisible(visible) { this.setState({modalVisible: visible}); },
+  showError: function(errorMsg) {
+    this.setState({spinnerVisible: false});
+    this.setState({error: errorMsg});
+
+  },
+ 
+ showSpinner: function() {
+    this.setState({error: ''});
+    this.setState({spinnerVisible: true});
+ },
+
 
   render: function() {
-    this.state.modalVisible = false;
     nav = this.props.navigator;
         return (
         <View style={styles.container}>
-          <Modal 
-            animated={true} 
-            transparent={true} 
-            visible={this.state.modalVisible}
-            onRequestClose={() => {this._setModalVisible(false)}} > 
-              <View style={[styles.modalcontainer]}> 
-                <View style={[styles.innerContainer]}> 
-                  <Text style={{top: 10}}>this.state.error</Text> 
-                  <Button onPress={this._setModalVisible.bind(this, false)} style={styles.modalButton}> Close </Button> 
-                </View> 
-              </View> 
-          </Modal>
             <Image style={styles.bg} source={{uri: 'http://i.imgur.com/xlQ56UK.jpg'}} />
-            <View style={{justifyContent: 'center'}}>
+            <View style={styles.headerContainer}>
               <Text style={styles.header}>Register</Text>
+            </View>
+            <View style={styles.errors}>
+              {this.renderErrors()}
             </View>
             <View style={styles.inputs}>
                 <View style={styles.inputContainer}>
@@ -185,11 +202,15 @@ var Register = React.createClass({
                     />
                 </View>
             </View>
-            <TouchableHighlight onPress={this.reg}>
+            <View style={{flex:0.15}} />
+            <TouchableHighlight style={{flex:0.1, justifyContent:'center'}} onPress={this.reg}>
+              
               <View style={styles.signin}>
                   <Text style={styles.whiteFont}>Register</Text>
               </View>
             </TouchableHighlight>
+            <View style={{flex:0.15}} />
+
         </View>
     );
   }
@@ -211,16 +232,27 @@ var styles = StyleSheet.create({
         width: windowSize.width,
         height: windowSize.height
     },
+    errors: {
+      flex: 0.1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    errorText: {
+      color: '#FF4F4D',
+      fontSize: 20,
+      fontWeight: 'bold',
+    },
     header: {
-        top: 20,
-        justifyContent: 'center',
-        textAlign: 'center',
-        flex: 0.1,
         fontWeight: 'bold',
         fontSize: 30,
         backgroundColor: 'transparent',
         color: '#FFF'
 
+    },
+    headerContainer: {
+      flex: 0.2,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     mark: {
         width: 150,
@@ -228,9 +260,9 @@ var styles = StyleSheet.create({
     },
     signin: {
         backgroundColor: '#FF3366',
-        padding: 20,
         alignItems: 'center',
-        marginBottom: 70,
+        justifyContent: 'center',
+        flex: 0.2
     },
     signup: {
       justifyContent: 'center',
@@ -238,10 +270,9 @@ var styles = StyleSheet.create({
       flex: .15
     },
     inputs: {
-
         marginTop: 50,
         marginBottom: 10,
-        flex: .25
+        flex: .3
     },
     inputPassword: {
         alignItems: "flex-start",
@@ -260,17 +291,14 @@ var styles = StyleSheet.create({
         padding: 1,
         borderWidth: 1,
         borderBottomColor: '#CCC',
-        borderColor: 'transparent'
+        borderColor: 'transparent',
+        flex: 0.25,
     },
     input: {
         alignItems: "flex-end",
         width: 200,
         fontSize: 14,
         left: 10,
-    },
-    forgotContainer: {
-      alignItems: 'flex-end',
-      padding: 15,
     },
     greyFont: {
       color: '#D8D8D8'
