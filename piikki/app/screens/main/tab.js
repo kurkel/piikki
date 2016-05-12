@@ -15,13 +15,11 @@ var {
   AsyncStorage,
 } = React;
 
-var touchStart = 0;
-var currentTouch = 0;
+
 
 var Tab = React.createClass({
 	 getInitialState: function() {
 	 	return {
-	 		arrowSize: 0,
 	 	}
 	 },
 
@@ -40,42 +38,9 @@ var Tab = React.createClass({
         console.error(error); }
   });},
 
-	setRespondArrow: function(evt) {
-		touchStart = evt.locationX;
-		currentTouch = 0;
-	},
-
-	adjustArrow: function(evt) {
-		currentTouch = touchStart - evt.locationX;
-
-		if(currentTouch >= 0) {
-			if (currentTouch > 100) {
-				touch = 100;
-			}
-			this.setState('arrowSize', currentTouch);
-		}
-	},
-
-	onRelease: function(evt) {
-		if(this.state.arrowSize === 1) {
-			this.props.navigator.push({
-				id: 'AdminPage',
-				name: 'Admin'
-			})
-		}
-		else {
-			this.setState('arrowSize', 0);
-		}
-	},
 	render: function() {
 		return(
-			<View style={styles.container}
-				onMoveShouldSetResponder={() => {return true;}} 
-				onResponderGrant = {(evt) => {this.setRespondArrow(evt);}}
-				onResponderMove = {(evt) => {this.adjustArrow(evt);}}
-			>
-
-				<Text style={styles.arrow, {opacity:this.state.arrowSize/100}}>⟩</Text>
+			<View style={styles.container}>
 				<Image style={styles.bg} source={{uri: 'http://www.decalskin.com/wallpaper.php?file=samsung/SGS3-SN1.jpg'}} />
 				<Text style={styles.header}>Spike</Text>
 				<View style={styles.buttonrow}>
@@ -197,11 +162,14 @@ var styles = StyleSheet.create({
 	},
 
 	arrow: {
-		fontSize:100,
+		fontSize: 40,
+		
+
+	},
+	arrowContainer: {
 		position: 'absolute',
 		top:windowSize.height/2,
-		right:0,
-
+		left:windowSize.width,
 	}
 
 

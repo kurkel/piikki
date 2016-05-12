@@ -7,9 +7,10 @@ var {
 
 var LoginPage = require('./app/screens/login/login1');
 
-var TabPage = require('./app/screens/main/tab');
+var MainPage = require('./app/screens/main/base');
 
 var RegisterPage = require('./app/screens/login/register');
+
 
 var piikki = React.createClass({
   render: function() {
@@ -27,9 +28,9 @@ var piikki = React.createClass({
 		          navigator={navigator} />
 		      );
 		    }
-		    if (routeId === 'TabPage') {
+		    if (routeId === 'MainPage') {
 		      return (
-		        <TabPage
+		        <MainPage
 		          navigator={navigator} onBack={() => { if (route.index > 0) { navigator.pop(); } }} />
 		      );
 		    }
@@ -38,8 +39,7 @@ var piikki = React.createClass({
 		        <RegisterPage
 		          navigator={navigator} onBack={() => { if (route.index > 0) { navigator.pop(); } }} />
 		      );
-		    }
-		    	
+		    }	
 		}}
         />
     );

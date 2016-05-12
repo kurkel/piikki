@@ -6,9 +6,10 @@
     "start": "node node_modules/react-native/local-cli/cli.js start"
   },
   "dependencies": {
+    "art": "^0.10.0",
     "react": "^0.14.5",
     "react-native": "^0.24.1",
     "react-native-linear-gradient": "^1.5.4",
-    "art": "^0.10.0"
+    "react-native-scrollable-tab-view": "^0.4.2"
   }
 }

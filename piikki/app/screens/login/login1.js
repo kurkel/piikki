@@ -69,8 +69,8 @@ var Login1 = React.createClass({
       alert("moi");
     }
     this.props.navigator.push({
-      id: 'TabPage',
-      name: 'Tab',
+      id: 'MainPage',
+      name: 'Main',
     });
   },
 

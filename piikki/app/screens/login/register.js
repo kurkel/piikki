@@ -39,7 +39,7 @@ BackAndroid.addEventListener('hardwareBackPress', function() {
   return true; 
 });
 
-var Login1 = React.createClass({
+var Register = React.createClass({
   getInitialState: function() {
     return {
       username: '',
@@ -283,4 +283,4 @@ var styles = StyleSheet.create({
 })
 
 
-module.exports = Login1;
+module.exports = Register;
