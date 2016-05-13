@@ -42,7 +42,12 @@ var Login1 = React.createClass({
         username: '',
         password: '',
         error: '',
+        token: '',
       };
+    },
+
+    componentDidMount: function() {
+      this.checkSession();
     },
 
     async login() {
@@ -126,11 +131,25 @@ var Login1 = React.createClass({
     }
   },
 
+  tokenSetter: function(value){
+    this.setState({token:value});
+  },
+
+  checkSession: function() {
+    var setter = this.tokenSetter;
+    var logged = this.loggedin;
+    AsyncStorage.getItem('token', function(err, res){
+      if(res) {
+        setter(res);
+        logged();
+      }
+
+    })
+  },
+
   _setModalVisible(visible) { this.setState({modalVisible: visible}); },
 
   render: function() {
-    
-        
         return (
         <View style={styles.container}>
             <Image style={styles.bg} source={{uri: 'http://i.imgur.com/xlQ56UK.jpg'}} />

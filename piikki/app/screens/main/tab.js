@@ -11,68 +11,130 @@ var {
   TextInput,
   Image,
   Navigator,
-  TouchableHighlight,
+  TouchableOpacity,
   AsyncStorage,
+  Modal,
+  ScrollView
 } = React;
 
 
+var Spinner = require('react-native-spinkit');
 
 var Tab = React.createClass({
 	 getInitialState: function() {
 	 	return {
+	 		pricesAvailable: false,
+	 		token: '',
+	 		prices: {},
+	 		tab: 0,
 	 	}
+	 },
+	 componentDidMount: function() {
+	 	this.getPrices();
 	 },
 
 	moi: function(amount) {
+		var app = this;
 		var asd = AsyncStorage.getItem('token', async function(err, result){
     try {
     	console.log(amount); 
-      let response = await fetch('http://192.168.56.1:8080/api/tab', { 
+      let response = await fetch('http://localhost:8080/api/tab', { 
           method: 'POST', 
           headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }, 
           body: JSON.stringify(
-            { amount: amount, token: result}) }); 
+            { amount: app.state.prices[amount], token: result}) }); 
       let responseJson = await response.json();
       } 
       catch(error) {  // Handle error
         console.error(error); }
   });},
 
-	render: function() {
-		return(
-			<View style={styles.container}>
-				<Image style={styles.bg} source={{uri: 'http://www.decalskin.com/wallpaper.php?file=samsung/SGS3-SN1.jpg'}} />
-				<Text style={styles.header}>Spike</Text>
-				<View style={styles.buttonrow}>
-					<TouchableHighlight onPress={() => this.moi(1)}>
-						<View style={styles.button1}>
-							<Text style={styles.amount}>1€</Text>
-						</View>
-					</TouchableHighlight>
-					<TouchableHighlight onPress={() => this.moi(1.5)}>
-						<View style={styles.button2}>
-							<Text style={styles.amount}>1.5€</Text>
-						</View>
-					</TouchableHighlight>
-				</View>
-				<View style={styles.buttonrow}>
-					<TouchableHighlight onPress={() => this.moi(2)}>
-						<View style={styles.button1}>
-							<Text style={styles.amount}>2€</Text>
-						</View>
-					</TouchableHighlight>
-					<TouchableHighlight onPress={() => this.moi(3)}>
-						<View style={styles.button2}>
-							<Text style={styles.amount}>3€</Text>
-						</View>
-					</TouchableHighlight>
-				</View>
-				<View style={styles.buttonrow}>
-					<View style={styles.button3}>
-						<Text style={styles.amount}>Custom</Text>
+	getPrices: async function() {
+		var app = this
+		var asd = AsyncStorage.getItem('token', async function(err, result){
+			try {
+	      		let response = await fetch('http://localhost:8080/api/prices', { 
+	          		method: 'GET', 
+	          		headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
+	      		let responseJson = await response.json();
+	      		app.setState({prices: responseJson.prices})
+	      		app.setState({tab: responseJson.tab})
+	      		app.setState({pricesAvailable: true})
+	      	} 
+	      	catch(error) {  // Handle error
+	        	console.error(error); }
+		});
+	},
+
+	renderButtons: function(i) {
+		var resp = [];
+		var keys = Object.keys(this.state.prices);
+		var prices = this.state.prices;
+		for(var j = 0; j<2; j++) {
+			var price = prices[keys[i*2+j]]
+			console.log(price);
+			resp.push(<View style={{flex:0.08}} key={keys[i*2+j] + " flex"}>
+				</View>);
+			resp.push(
+				<TouchableOpacity key={keys[i*2+j]} onPress={this.moi.bind(this,keys[i*2+j])}>
+					<View style={((j == 0) ? styles.button1 : styles.button2)}>
+						<Text style={styles.amount}>{keys[i*2+j]}</Text>
 					</View>
-				</View>
-			</View>
+				</TouchableOpacity>
+			);
+		}	
+		return resp;
+	},
+
+	renderPrices: function() {
+		if(!this.state.pricesAvailable) {
+			return(<View style={{justifyContent: 'center', alignItems:'center', flex: 0.8}}>
+				<Spinner size={100} type='ThreeBounce'/>
+				</View>);
+		}
+		else {
+			var resp = [];
+			var total = 0;
+			for (var k in this.state.prices){
+				total= total + 1;
+			}
+			for(var i = 0; i<Math.ceil(total/2); i++) {
+				resp.push(
+					<View style={styles.buttonrow} key={"row " + i}>
+						{this.renderButtons(i)}
+						<View style={{flex:0.08}}>
+						</View>
+					</View>
+				);
+			}
+			return resp;
+		}
+
+	},
+
+	render: function() {
+
+		return(
+				
+					<ScrollView style={styles.container}>
+						<Image style={[styles.bg,{width: this.state.width, height:this.state.height}]} source={{uri: 'http://www.decalskin.com/wallpaper.php?file=samsung/SGS3-SN1.jpg'}} />
+						<View style={styles.headerContainer}>
+							<Text style={styles.header}>Spike</Text>
+						</View>
+						<View style={{flexDirection: 'row'}}>
+							<View style={{flex:0.1}}>
+							</View>
+							<View style={styles.cart}>
+								
+								<Text style={styles.currentTab}>Current tab: {this.state.tab}</Text>
+								<Text style={styles.cartItem}>asd</Text>
+							</View>
+							<View style={{flex:0.1}}>
+							</View>	
+						</View>
+						{this.renderPrices()}
+					</ScrollView>
+				
 		)
 	}
 
@@ -84,7 +146,16 @@ var styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: 'transparent'
 	},
-
+	headerContainer: {
+		flex: 0.2
+	},	
+	cart: {
+		flex: 0.8,
+		top: 10,
+		borderWidth:1,
+		padding: 10,
+		backgroundColor:'rgba(140,140,140,0.8)'
+	},	
 	header: {
 		color: 'white',
 		top: 10,
@@ -100,25 +171,23 @@ var styles = StyleSheet.create({
 	bg: {
 		position: 'absolute',
         left: 0,
-        top: 0,
-        width: windowSize.width,
-        height: windowSize.height
+        top: -300,
+        bottom: -300,
+        right:0,
 	},
 
 	buttonrow: {
 		top:20,
 		flexDirection: 'row',
 		alignItems: 'center',
-		justifyContent: 'space-between',
-		height: 160,
-		padding:10
+		justifyContent: 'center',
+		height: 140,
 	},
 
 	button1: {
-		height:150,
-		width: 150,
+		height:130,
+		width: 130,
 		borderWidth:1,
-		left: 5,
 		borderColor: '#CCC',
 		borderRadius: 30,
 		justifyContent: 'center',
@@ -126,26 +195,10 @@ var styles = StyleSheet.create({
 	},
 
 	button2: {
-		height:150,
-		width: 150,
-		right: 5,
+		height:130,
+		width: 130,
 		justifyContent: 'center',
 		borderWidth:1,
-		borderColor: '#CCC',
-		borderRadius: 30,
-		backgroundColor:'rgba(52,52,52,0.8)',
-
-
-	},
-
-	button3: {
-		height:150,
-		flex: 1,
-		right: 5,
-		left: 5,
-		alignSelf: 'stretch',
-		justifyContent: 'center',
-		borderWidth: 1,
 		borderColor: '#CCC',
 		borderRadius: 30,
 		backgroundColor:'rgba(52,52,52,0.8)',
@@ -156,7 +209,7 @@ var styles = StyleSheet.create({
 	amount: {
 		textAlign: 'center',
 		justifyContent: 'center',
-		fontSize: 30,
+		fontSize: 20,
 		color: 'white',
 		fontWeight: 'bold',
 	},

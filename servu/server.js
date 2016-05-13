@@ -98,6 +98,7 @@ app.get('/api/tab', function(req, res){
 });
 
 app.post('/api/tab', function(req, res){
+  console.log(req.body.amount);
   addTab(req.username, req.body.amount, false, function(resp){
     res.json(resp);
   });
@@ -121,6 +122,13 @@ app.post('/api/alltabs', function(req, res){
     }
   })
 });
+
+app.get('/api/prices', function(req, res) {
+  var prices = getPrices();
+  getTab(req.username, function(spike){
+    res.json({prices: prices, tab: spike, success: true});
+  });
+})
 
 app.post('/api/getusers', function(req, res){
   User.find({}, function(err, docs){
