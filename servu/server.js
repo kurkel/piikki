@@ -1,17 +1,18 @@
 // =======================
 // get the packages we need ============
 // =======================
-var express     = require('express');
-var app         = express();
-var bodyParser  = require('body-parser');
-var morgan      = require('morgan');
-var mongoose    = require('mongoose');
+var express = require('express');
+var app = express();
+var bodyParser = require('body-parser');
+var morgan = require('morgan');
+var mongoose = require('mongoose');
 var bcrypt = require('bcrypt');
+var _ = require('lodash');
 
-var jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
+var jwt = require('jsonwebtoken'); // used to create, sign, and verify tokens
 var config = require('./config'); // get our config file
-var User   = require('./app/models/user'); // get our mongoose model
-var Transaction   = require('./app/models/transaction');
+var User = require('./app/models/user'); // get our mongoose model
+var Transaction = require('./app/models/transaction');
 var prices = require('./prices');
 
 // =======================
@@ -24,7 +25,9 @@ app.set('superSecret', config.secret); // secret variable
 /////////////////
 // Middlewares //
 /////////////////
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({
+  extended: false
+}));
 app.use(bodyParser.json());
 app.use(morgan('dev'));
 app.use(function(req, res, next) {
@@ -40,8 +43,11 @@ app.use(/^\/api\/admin\/\w*/, adminCheck);
 // User routes //
 /////////////////
 app.post('/api/register', function(req, res) {
-  if(req.body.secret !== "ania patiossa") {
-    res.json({success: false, error: "Wrong secret."});
+  if (req.body.secret !== "ania patiossa") {
+    res.json({
+      success: false,
+      error: "Wrong secret."
+    });
   }
   bcrypt.genSalt(10, function(err, salt) {
     bcrypt.hash(req.body.password, salt, function(err, hash) {
@@ -49,36 +55,53 @@ app.post('/api/register', function(req, res) {
         username: req.body.username,
         password: hash,
         admin: req.body.admin ? req.body.admin : false
-      }, function(err){
-          if(err){
-            console.log(err);
-            res.json({success: false, error: "Username in use."});
-          }else{
-            res.json({success: true});
-          }
+      }, function(err) {
+        if (err) {
+          console.log(err);
+          res.status(401).send({
+            success: false,
+            error: "Username in use."
+          });
+        } else {
+          res.status(200).send({
+            success: true
+          });
+        }
       });
     });
   });
 });
 
-app.post('/api/login', function(req, res){
-  if(!req.body.username)
-    return res.status(403).send({success: false});
-  User.findOne({username: req.body.username}, 'password', function (err, docs) {
-    if(err)
+app.post('/api/login', function(req, res) {
+  if (!req.body.username)
+    return res.status(400).send({
+      success: false,
+      error: "Request didn't include username."
+    });
+  User.findOne({
+    username: req.body.username
+  }, 'password', function(err, docs) {
+    if (err)
       console.log(err);
-    else{
-      if(!docs)
-        return res.status(403).send({success: false});
+    else {
+      if (!docs)
+        return res.status(401).send({
+          success: false,
+          error: "Wrong username or password."
+        });
       var hash = docs.password;
       bcrypt.compare(req.body.password, hash, function(err, comp) {
-        if(err || comp == false)
+        if (err ||  comp == false) {
           console.log(err);
-        else {
+          return res.status(401).send({
+            success: false,
+            error: "Wrong username or password."
+          });
+        } else {
           var token = jwt.sign(req.body.username, app.get('superSecret'));
-          getTab(req.body.username, function(spike){
+          getTab(req.body.username, function(spike) {
             var prices = getPrices();
-            res.json({
+            res.status(200).send({
               success: true,
               token: token,
               tab: spike,
@@ -91,90 +114,100 @@ app.post('/api/login', function(req, res){
   });
 });
 
-app.get('/api/tab', function(req, res){
-  getTab(req.username, function(spike){
-    res.json({tab: spike, success: true});
+app.get('/api/tab', function(req, res) {
+  getTab(req.username, function(spike) {
+    res.status(200).send({
+      tab: spike,
+      success: true
+    });
   });
 });
 
-app.post('/api/tab', function(req, res){
+app.post('/api/tab', function(req, res) {
   console.log(req.body.amount);
-  addTab(req.username, req.body.amount, false, function(resp){
-    res.json(resp);
+  addTab(req.username, req.body, false, function(resp) {
+    res.status(200).send(resp);
   });
 });
 
-app.post('/api/alltabs', function(req, res){
+app.post('/api/alltabs', function(req, res) {
   Transaction.aggregate(
-  [{
-    $group: {
-      _id: "$username",
-      tab: {
-        $sum: "$amount"
+    [{
+      $group: {
+        _id: "$username",
+        tab: {
+          $sum: "$amount"
+        }
       }
-    }
-  }],
-  function(err, result) {
-    if (err)
-      console.log(err);
-    else {
-      res.json(result);
-    }
-  })
+    }],
+    function(err, result) {
+      if (err)
+        console.log(err);
+      else {
+        res.status(200).send(result);
+      }
+    })
 });
 
 app.get('/api/prices', function(req, res) {
   var prices = getPrices();
-  getTab(req.username, function(spike){
-    res.json({prices: prices, tab: spike, success: true});
+  getTab(req.username, function(spike) {
+    res.status(200).send({
+      prices: prices,
+      tab: spike,
+      success: true
+    });
   });
 })
 
-app.post('/api/getusers', function(req, res){
-  User.find({}, function(err, docs){
-    if(err)
+app.post('/api/getusers', function(req, res) {
+  User.find({}, function(err, docs) {
+    if (err) {
       console.log(err);
-    else{
-      return res.json(docs);
+      res.status(500)
+    } else {
+      return res.status(200).send(docs);
     }
   })
 });
 
-app.post('/api/toplist', function(req, res){
+app.post('/api/toplist', function(req, res) {
   Transaction.aggregate(
-  [{
+    [{
       $match: {
-        amount: {$gt: 0}
+        amount: {
+          $gt: 0
+        }
       }
-    },
-    {
-    $group: {
-      _id: "$username",
-      tab: {
-        $sum: "$amount"
+    }, {
+      $group: {
+        _id: "$username",
+        tab: {
+          $sum: "$amount"
+        }
       }
-    }
-  },
-  {
-    $sort: {sum: -1}
-  }
-],
-  function(err, result) {
-    if (err)
-      console.log(err);
-    else {
-      res.json(result);
-    }
-  })
+    }, {
+      $sort: {
+        sum: -1
+      }
+    }],
+    function(err, result) {
+      if (err) {
+        console.log(err);
+        res.status(500);
+      } else {
+        res.status(200).send(result);
+      }
+    })
 });
 
 //////////////////
 // Admin routes //
 //////////////////
 
-app.post('/api/admin/tab', function(req, res){
-  addTab(req.body.username, req.body.amount, true, function(resp){
-    res.json(resp);
+app.post('/api/admin/tab', function(req, res) {
+  addTab(req.body.username, req.body, true, function(resp) {
+    res.status(200).send(resp);
   });
 });
 
@@ -182,68 +215,77 @@ app.post('/api/admin/tab', function(req, res){
 // Helpers //
 /////////////
 
-function addTab(username, amount, admin, cb){
-  if(amount>= 0 || admin){
-    var newtrans = new Transaction({
-      username: username,
-      amount: amount,
-      date: Date.now()
-    });
-    newtrans.save(function(err){
-      if(err)
-        console.log(err);
-      else{
-         cb({
-          success: true
-        })
-      }
-    });
-  }else {
-    cb({
-      success: false,
-      message: 'You are not allowed to spike negatively'
-    });
-  }
+function addTab(username, body, admin, cb) {
+  _.forEach(body, function(value, key) {
+    if (amount >= 0 ||  admin) {
+      var newtrans = new Transaction({
+        username: username,
+        amount: value,
+        date: Date.now(),
+        product: key,
+      });
+      newtrans.save(function(err) {
+        if (err)
+          console.log(err);
+        else {
+          cb({
+            success: true
+          })
+        }
+      });
+    } else {
+      cb({
+        success: false,
+        message: 'You are not allowed to spike negatively'
+      });
+    }
+  })
 }
 
-function getPrices(){
+function getPrices() {
   return prices;
 }
 
-function getTab(username, cb){
-  Transaction.find({username: username}, 'amount', function(err, docs){
-    if(err)
+function getTab(username, cb) {
+  Transaction.find({
+    username: username
+  }, 'amount', function(err, docs) {
+    if (err)
       console.log(err);
-    else{
+    else {
       var spike = 0;
-      docs.forEach(function(args){
+      docs.forEach(function(args) {
         spike += args.amount;
       });
       cb(spike);
     }
-})};
+  })
+};
 
 //////////////////////////
 // Middleware functions //
 //////////////////////////
-function checkTab(req,res, next){
+function checkTab(req, res, next) {
   return;
 }
 
 function authUser(req, res, next) {
-  if ( req.path == '/' || req.path == '/api/register' || req.path == '/api/login') return next();
+  if (req.path == '/' ||  req.path == '/api/register' ||  req.path == '/api/login') return next();
   var token = req.body.token || req.query.token || req.headers['x-access-token'];
-  if(token){
+  if (token) {
     console.log(token);
-    jwt.verify(token, app.get('superSecret'), function(err, user){
-      if(err){
-        return res.json({success: false, message: 'Failed to authenticate'});
-      }else{
+    jwt.verify(token, app.get('superSecret'), function(err, user) {
+      if (err) {
+        return res.json({
+          success: false,
+          message: 'Failed to authenticate'
+        });
+      } else {
         req.username = user;
         next();
       }
     });
-  } else{
+  } else {
     return res.status(403).send({
       success: false,
       message: 'No token provided'
@@ -252,35 +294,38 @@ function authUser(req, res, next) {
 }
 
 function checkUserClass(req, res, next) {
-  if(req.username){
+  if (req.username) {
     console.log(req.username);
-    User.findOne({username: req.username}, 'admin', function(err, docs){
+    User.findOne({
+      username: req.username
+    }, 'admin', function(err, docs) {
       console.log(docs);
-      if(err)
+      if (err) {
         console.log(err);
-      else{
+        res.status(500);
+      } else {
         req.admin = docs.admin;
         next();
       }
     });
-  }else{
-    return res.status(403).send({
+  } else {
+    return res.status(400).send({
       success: false,
-      message: "Wtf??"
+      message: "No username specified."
     });
   }
 }
 
 function adminCheck(req, res, next) {
   console
-    if(req.admin){
-      next();
-    } else{
-        return res.status(403).send({
-        success: false,
-        message: "You do not have admin rights."
-      });
-    }
+  if (req.admin) {
+    next();
+  } else {
+    return res.status(403).send({
+      success: false,
+      message: "You do not have admin rights."
+    });
+  }
 }
 
 // =======================
