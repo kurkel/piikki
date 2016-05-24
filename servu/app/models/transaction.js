@@ -7,4 +7,5 @@ module.exports = mongoose.model('Transaction', new Schema({
     username: String,
     amount: Number,
     date: Date,
+    product: String,
 }));
