@@ -17,6 +17,7 @@ var {
   ScrollView
 } = React;
 
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 var Spinner = require('react-native-spinkit');
 
@@ -27,6 +28,7 @@ var Tab = React.createClass({
 	 		token: '',
 	 		prices: {},
 	 		tab: 0,
+	 		cart: [],
 	 	}
 	 },
 	 componentDidMount: function() {
@@ -48,6 +50,22 @@ var Tab = React.createClass({
       catch(error) {  // Handle error
         console.error(error); }
   });},
+
+	addToCart: function(item) {
+		var cart = this.state.cart
+		var new_item = {}
+		new_item[item] = this.state.prices[item] 
+		cart.push(new_item);
+		this.setState({cart: cart});
+		console.log(this.state.cart);
+	},
+
+	deleteCart: function(item) {
+		var cart = this.state.cart;
+		console.log(item);
+		cart.splice(item, 1);
+		this.setState({cart: cart});
+	},
 
 	getPrices: async function() {
 		var app = this
@@ -72,11 +90,10 @@ var Tab = React.createClass({
 		var prices = this.state.prices;
 		for(var j = 0; j<2; j++) {
 			var price = prices[keys[i*2+j]]
-			console.log(price);
 			resp.push(<View style={{flex:0.08}} key={keys[i*2+j] + " flex"}>
 				</View>);
 			resp.push(
-				<TouchableOpacity key={keys[i*2+j]} onPress={this.moi.bind(this,keys[i*2+j])}>
+				<TouchableOpacity key={keys[i*2+j]} onPress={this.addToCart.bind(this,keys[i*2+j])}>
 					<View style={((j == 0) ? styles.button1 : styles.button2)}>
 						<Text style={styles.amount}>{keys[i*2+j]}</Text>
 					</View>
@@ -112,29 +129,49 @@ var Tab = React.createClass({
 
 	},
 
+	renderCart: function() {
+		var resp = [];
+		for(var i = 0; i < this.state.cart.length; i++) {
+			var key = Object.keys(this.state.cart[i])[0];
+			resp.push(
+				<View style={styles.cartRow}>
+					<Text style={styles.rowName}>{key}</Text>
+					<View style={{flex:0.1}}>
+					</View>
+					<Text style={styles.rowAmount}>{this.state.cart[i][key]}€</Text>
+					<View style={{flex:0.1}}>
+					</View>
+					<View style={styles.deleteButton}>
+						<TouchableOpacity key={'cartrow' + i} onPress={this.deleteCart.bind(this, i)}>
+							<Icon name="remove" size={20} color="#ff0000"/>
+						</TouchableOpacity>
+					</View>
+				</View>
+			);
+		}
+		return resp;
+	},
+
 	render: function() {
 
 		return(
-				
-					<ScrollView style={styles.container}>
-						<Image style={[styles.bg,{width: this.state.width, height:this.state.height}]} source={{uri: 'http://www.decalskin.com/wallpaper.php?file=samsung/SGS3-SN1.jpg'}} />
-						<View style={styles.headerContainer}>
-							<Text style={styles.header}>Spike</Text>
-						</View>
-						<View style={{flexDirection: 'row'}}>
-							<View style={{flex:0.1}}>
-							</View>
-							<View style={styles.cart}>
-								
-								<Text style={styles.currentTab}>Current tab: {this.state.tab}</Text>
-								<Text style={styles.cartItem}>asd</Text>
-							</View>
-							<View style={{flex:0.1}}>
-							</View>	
-						</View>
-						{this.renderPrices()}
-					</ScrollView>
-				
+			<ScrollView style={styles.container}>
+				<Image style={[styles.bg,{width: this.state.width, height:this.state.height}]} source={{uri: 'http://www.decalskin.com/wallpaper.php?file=samsung/SGS3-SN1.jpg'}} />
+				<View style={styles.headerContainer}>
+					<Text style={styles.header}>Spike</Text>
+				</View>
+				<View style={{flexDirection: 'row'}}>
+					<View style={{flex:0.1}}>
+					</View>
+					<View style={styles.cart}>
+						<Text style={styles.currentTab}>Current tab: {this.state.tab}€</Text>
+						{this.renderCart()}
+					</View>
+					<View style={{flex:0.1}}>
+					</View>	
+				</View>
+				{this.renderPrices()}
+			</ScrollView>
 		)
 	}
 
@@ -216,13 +253,26 @@ var styles = StyleSheet.create({
 
 	arrow: {
 		fontSize: 40,
-		
-
 	},
 	arrowContainer: {
 		position: 'absolute',
 		top:windowSize.height/2,
 		left:windowSize.width,
+	},
+	cartRow: {
+		borderColor: '#CCC',
+		borderWidth: 1,
+		flex:0.1,
+		flexDirection: 'row',
+	},
+	rowName: {
+		flex:0.5,
+	},
+	rowAmount: {
+		flex: 0.1,
+	},
+	deleteButton: {
+		flex: 0.2
 	}
 
 

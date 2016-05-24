@@ -5,6 +5,8 @@ var windowSize = Dimensions.get('window');
 var ScrollableTabView = require('react-native-scrollable-tab-view');
 
 
+import CustomTabBar from '../helpers/CustomTab'
+
 var {
   StyleSheet,
   View,
@@ -17,10 +19,10 @@ var AdminPage = require('./admin');
 var MainPage = React.createClass({
   render: function() {
     return (
-      <ScrollableTabView>
-      	<TabPage tabLabel='Tab'/>
-      	<Text tabLabel='Stats'>favorite</Text>
-      	<AdminPage tabLabel='Admin'></AdminPage>
+      <ScrollableTabView renderTabBar={() => <CustomTabBar />}>
+      	<TabPage tabLabel='beer' />
+      	<Text tabLabel='bar-chart-o'>favorite</Text>
+      	<AdminPage tabLabel='gavel'></AdminPage>
       </ScrollableTabView>
     );
   }
