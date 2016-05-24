@@ -81,7 +81,7 @@ app.post('/api/login', function(req, res) {
     });
   User.findOne({
     username: req.body.username
-  }, 'password', function(err, docs) {
+  }, 'password admin', function(err, docs) {
     if (err)
       console.log(err);
     else {
@@ -106,7 +106,8 @@ app.post('/api/login', function(req, res) {
               success: true,
               token: token,
               tab: spike,
-              prices: prices
+              prices: prices,
+              admin: docs.admin
             });
           })
         }
@@ -346,11 +347,9 @@ function authUser(req, res, next) {
 
 function checkUserClass(req, res, next) {
   if (req.username) {
-    console.log(req.username);
     User.findOne({
       username: req.username
     }, 'admin', function(err, docs) {
-      console.log(docs);
       if (err) {
         console.log(err);
         res.status(500);
@@ -368,7 +367,6 @@ function checkUserClass(req, res, next) {
 }
 
 function adminCheck(req, res, next) {
-  console
   if (req.admin) {
     next();
   } else {
