@@ -8,6 +8,7 @@ var morgan = require('morgan');
 var mongoose = require('mongoose');
 var bcrypt = require('bcrypt');
 var _ = require('lodash');
+var async = require('async');
 
 var jwt = require('jsonwebtoken'); // used to create, sign, and verify tokens
 var config = require('./config'); // get our config file
@@ -201,6 +202,36 @@ app.post('/api/toplist', function(req, res) {
     })
 });
 
+app.get('/api/drinkstats', function(req, res) {
+  Transaction.aggregate(
+    [{
+      $match: {
+        amount: {
+          $gt: 0
+        }
+      }
+    }, {
+      $group: {
+        _id: "$product",
+        total: {
+          $sum: "$amount"
+        }
+      }
+    }, {
+      $sort: {
+        total: -1
+      }
+    }],
+    function(err, result) {
+      if (err) {
+        console.log(err);
+        res.status(500);
+      } else {
+        res.status(200).send(result);
+      }
+    })
+});
+
 //////////////////
 // Admin routes //
 //////////////////
@@ -216,29 +247,36 @@ app.post('/api/admin/tab', function(req, res) {
 /////////////
 
 function addTab(username, body, admin, cb) {
-  _.forEach(body, function(value, key) {
-    if (amount >= 0 ||  admin) {
+  var productsAdded = {};
+  async.forEachOf(body, function(value, key, callback) {
+    var amountFromDb = prices[key];
+    var price = amountFromDb ? amountFromDb * value : value;
+    if (price >= 0 ||  admin) {
       var newtrans = new Transaction({
         username: username,
-        amount: value,
+        amount: price,
         date: Date.now(),
         product: key,
       });
       newtrans.save(function(err) {
-        if (err)
-          console.log(err);
-        else {
-          cb({
-            success: true
-          })
+        productsAdded[key] = true;
+        if (err) {
+          productsAdded[key] = false;
         }
+        callback();
       });
     } else {
-      cb({
-        success: false,
-        message: 'You are not allowed to spike negatively'
-      });
+      productsAdded[key] = false;
+      callback();
     }
+  }, function(err) {
+    if (err) {
+      console.log("wtf happened");
+    }
+    cb({
+      success: true,
+      message: productsAdded,
+    });
   })
 }
 

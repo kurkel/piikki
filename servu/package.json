@@ -2,6 +2,7 @@
   "name": "piikki-servu",
   "main": "server.js",
   "dependencies": {
+    "async": "^2.0.0-rc.5",
     "bcrypt": "^0.8.6",
     "body-parser": "^1.15.0",
     "express": "^4.13.4",
