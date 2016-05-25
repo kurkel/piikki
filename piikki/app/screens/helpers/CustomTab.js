@@ -9,7 +9,7 @@ import React, {
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 const CustomTabBar = React.createClass({
-  tabIcons: ['fa-beer', 'fa-bar-chart-o', 'fa-gavel' ],
+  tabIcons: [],
 
   propTypes: {
     goToPage: React.PropTypes.func,

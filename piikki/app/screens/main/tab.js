@@ -19,6 +19,7 @@ var {
 
 import Icon from 'react-native-vector-icons/FontAwesome';
 
+var LinearGradient = require('react-native-linear-gradient');
 var Spinner = require('react-native-spinkit');
 
 var Tab = React.createClass({
@@ -93,10 +94,13 @@ var Tab = React.createClass({
 			resp.push(<View style={{flex:0.08}} key={keys[i*2+j] + " flex"}>
 				</View>);
 			resp.push(
+
 				<TouchableOpacity key={keys[i*2+j]} onPress={this.addToCart.bind(this,keys[i*2+j])}>
-					<View style={((j == 0) ? styles.button1 : styles.button2)}>
+					<LinearGradient cstart={[0.0, 0.0]} end={[1.0, 1.0]} colors={['rgba(180,180,180,0.7)', 'rgba(120,120,120,0.88)', 'rgba(90,90,90,1)']} style={((j == 0) ? styles.button1 : styles.button2)}>
+					<View>
 						<Text style={styles.amount}>{keys[i*2+j]}</Text>
 					</View>
+					</LinearGradient>
 				</TouchableOpacity>
 			);
 		}	
@@ -134,19 +138,29 @@ var Tab = React.createClass({
 		for(var i = 0; i < this.state.cart.length; i++) {
 			var key = Object.keys(this.state.cart[i])[0];
 			resp.push(
-				<View style={styles.cartRow}>
-					<Text style={styles.rowName}>{key}</Text>
-					<View style={{flex:0.1}}>
+				<View style={{flexDirection: 'column', flex:1}}>
+					<View style={{flex:0.1}}/>
+					<View style={styles.cartRow}>
+						<View style={{flex:0.2}}/>
+						<LinearGradient start={[0.0, 0.0]} end={[1.0, 1.0]} colors={['rgba(180,180,180,0.7)', 'rgba(120,120,120,0.6)', 'rgba(90,90,90,0.5)']} style={styles.cartPill}>
+							<View style={{flex:0.05}}/>
+							<Text style={styles.rowName}>{key}</Text>
+							<View style={{flex:0.1}}>
+							</View>
+							<Text style={styles.rowAmount}>{this.state.cart[i][key]}€</Text>
+							<View style={{flex:0.1}}/>
+							<View style={styles.deleteButton}>
+								<TouchableOpacity key={'cartrow' + i} onPress={this.deleteCart.bind(this, i)}>
+									<Icon name="remove" size={25} color="#ff0000"/>
+								</TouchableOpacity>
+							</View>
+							<View style={{flex:0.05}}/>
+						</LinearGradient>
+						<View style={{flex:0.2}}/>
 					</View>
-					<Text style={styles.rowAmount}>{this.state.cart[i][key]}€</Text>
-					<View style={{flex:0.1}}>
-					</View>
-					<View style={styles.deleteButton}>
-						<TouchableOpacity key={'cartrow' + i} onPress={this.deleteCart.bind(this, i)}>
-							<Icon name="remove" size={20} color="#ff0000"/>
-						</TouchableOpacity>
-					</View>
+					<View style={{flex:0.1}}/>
 				</View>
+
 			);
 		}
 		return resp;
@@ -160,7 +174,8 @@ var Tab = React.createClass({
 				<View style={styles.headerContainer}>
 					<Text style={styles.header}>Spike</Text>
 				</View>
-				<View style={{flexDirection: 'row'}}>
+				<View style={{flex:0.1}}/>
+				<View style={{flexDirection: 'row', flex:0.7}}>
 					<View style={{flex:0.1}}>
 					</View>
 					<View style={styles.cart}>
@@ -170,6 +185,9 @@ var Tab = React.createClass({
 					<View style={{flex:0.1}}>
 					</View>	
 				</View>
+
+				<View style={{flex:0.1}}>
+				</View>	
 				{this.renderPrices()}
 			</ScrollView>
 		)
@@ -190,6 +208,7 @@ var styles = StyleSheet.create({
 		flex: 0.8,
 		top: 10,
 		borderWidth:1,
+		borderRadius: 20,
 		padding: 10,
 		backgroundColor:'rgba(140,140,140,0.8)'
 	},	
@@ -200,8 +219,9 @@ var styles = StyleSheet.create({
 		textAlign: 'center',
 		fontSize: 40,
 		fontWeight: 'bold',
-		textShadowRadius: 10,
-		textShadowColor: 'black',
+		textShadowColor: "#000000",
+		textShadowOffset: {width: 2, height: 2},
+		textShadowRadius: 4,
 
 	},
 
@@ -219,26 +239,22 @@ var styles = StyleSheet.create({
 		alignItems: 'center',
 		justifyContent: 'center',
 		height: 140,
+
 	},
 
 	button1: {
 		height:130,
 		width: 130,
-		borderWidth:1,
-		borderColor: '#CCC',
 		borderRadius: 30,
 		justifyContent: 'center',
-		backgroundColor:'rgba(52,52,52,0.8)',
+
 	},
 
 	button2: {
 		height:130,
 		width: 130,
 		justifyContent: 'center',
-		borderWidth:1,
-		borderColor: '#CCC',
 		borderRadius: 30,
-		backgroundColor:'rgba(52,52,52,0.8)',
 
 
 	},
@@ -250,29 +266,45 @@ var styles = StyleSheet.create({
 		color: 'white',
 		fontWeight: 'bold',
 	},
-
-	arrow: {
-		fontSize: 40,
-	},
-	arrowContainer: {
-		position: 'absolute',
-		top:windowSize.height/2,
-		left:windowSize.width,
-	},
+	
 	cartRow: {
-		borderColor: '#CCC',
-		borderWidth: 1,
-		flex:0.1,
-		flexDirection: 'row',
+		
 	},
 	rowName: {
+		fontSize:20,
 		flex:0.5,
+		color: 'white',
+		textShadowColor: "#000000",
+		textShadowOffset: {width: 1, height: 1},
+		textShadowRadius: 2,
+
 	},
 	rowAmount: {
-		flex: 0.1,
+		fontSize: 20,
+		flex: 0.2,
+		color: 'white',
+		textShadowColor: "#000000",
+		textShadowOffset: {width: 1, height: 1},
+		textShadowRadius: 2,
 	},
 	deleteButton: {
-		flex: 0.2
+		flex: 0.1,
+		shadowColor: "#000000",
+		shadowRadius: 3,
+	},
+	currentTab: {
+		fontWeight:'bold',
+		fontSize: 25,
+		color: 'white',
+		textShadowColor: "#000000",
+		textShadowOffset: {width: 1, height: 1},
+		textShadowRadius: 3,
+	},
+	cartPill: {
+		borderRadius:5,
+		flex:0.8,
+		flexDirection: 'row',
+
 	}
 
 
