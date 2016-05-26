@@ -14,6 +14,7 @@ var {
 } = React;
 
 var TabPage = require('./tab');
+var StatsPage = require('./stats');
 var AdminPage = require('./admin');
 
 var MainPage = React.createClass({
@@ -21,8 +22,8 @@ var MainPage = React.createClass({
     return (
       <ScrollableTabView renderTabBar={() => <CustomTabBar />}>
       	<TabPage tabLabel='beer' />
-      	<Text tabLabel='bar-chart-o'>favorite</Text>
-      	<AdminPage tabLabel='gavel'></AdminPage>
+      	<StatsPage tabLabel='bar-chart-o' />
+      	<AdminPage tabLabel='gavel' />
       </ScrollableTabView>
     );
   }

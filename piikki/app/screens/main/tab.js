@@ -36,8 +36,12 @@ var Tab = React.createClass({
 	 	this.getPrices();
 	 },
 
-	moi: function(amount) {
+	commitCart: function() {
 		var app = this;
+		var cart = {};
+		for (key in this.state.cart){
+			cart[key] = cart[key] + this.state.prices[key];
+		}
 		var asd = AsyncStorage.getItem('token', async function(err, result){
     try {
     	console.log(amount); 
@@ -45,7 +49,7 @@ var Tab = React.createClass({
           method: 'POST', 
           headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }, 
           body: JSON.stringify(
-            { amount: app.state.prices[amount], token: result}) }); 
+            { amount: this.state.cart, token: result}) }); 
       let responseJson = await response.json();
       } 
       catch(error) {  // Handle error
@@ -170,7 +174,7 @@ var Tab = React.createClass({
 
 		return(
 			<ScrollView style={styles.container}>
-				<Image style={[styles.bg,{width: this.state.width, height:this.state.height}]} source={{uri: 'http://www.decalskin.com/wallpaper.php?file=samsung/SGS3-SN1.jpg'}} />
+				<Image style={[styles.bg,{flex:1}]} source={{uri: 'http://www.decalskin.com/wallpaper.php?file=samsung/SGS3-SN1.jpg'}} />
 				<View style={styles.headerContainer}>
 					<Text style={styles.header}>Spike</Text>
 				</View>
@@ -185,7 +189,15 @@ var Tab = React.createClass({
 					<View style={{flex:0.1}}>
 					</View>	
 				</View>
-
+				<View style={{flexDirection: 'row'}}>
+					<View style={{flex:0.1}}/>
+					<TouchableOpacity onPress={this.commitCart} >
+						<LinearGradient start={[0.0, 0.0]} end={[1.0, 1.0]} colors={['rgba(180,180,180,0.7)', 'rgba(120,120,120,0.6)', 'rgba(90,90,90,0.5)']} style={styles.commitCart}>
+							<Text style={styles.amount}>Tab me!</Text>
+						</LinearGradient>
+						<View style={{flex:0.1}}/>
+					</TouchableOpacity>
+				</View>
 				<View style={{flex:0.1}}>
 				</View>	
 				{this.renderPrices()}
