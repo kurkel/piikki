@@ -39,30 +39,41 @@ var Tab = React.createClass({
 	commitCart: function() {
 		var app = this;
 		var cart = {};
-		for (key in this.state.cart){
-			cart[key] = cart[key] + this.state.prices[key];
+		for (var key in this.state.cart)
+		{
+			var k = Object.keys(this.state.cart[key])[0];
+			if (cart[k])
+				cart[k] = cart[k] + 1;
+			else
+				cart[k] = 1;
 		}
 		var asd = AsyncStorage.getItem('token', async function(err, result){
-    try {
-    	console.log(amount); 
-      let response = await fetch('http://localhost:8080/api/tab', { 
-          method: 'POST', 
-          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }, 
-          body: JSON.stringify(
-            { amount: this.state.cart, token: result}) }); 
-      let responseJson = await response.json();
-      } 
-      catch(error) {  // Handle error
-        console.error(error); }
-  });},
+	    	try {
+		    	console.log(cart); 
+		      	let response = await fetch('http://localhost:8080/api/tab', { 
+		          method: 'POST', 
+		          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }, 
+		          body: JSON.stringify(
+		            { amount: cart, token: result}) 
+		      	}); 
+		      	let responseJson = await response.json();
+		      	console.log(responseJson);
+	      	} 
+	      	catch(error) {  // Handle error
+	        	console.error(error); }
+	  	});
+	},
 
 	addToCart: function(item) {
+		console.log(this.state.prices["Beer"])
+		console.log(item);
 		var cart = this.state.cart
 		var new_item = {}
-		new_item[item] = this.state.prices[item] 
+		new_item[item] = this.state.prices[item]
+		console.log(new_item);
 		cart.push(new_item);
+		console.log(cart);
 		this.setState({cart: cart});
-		console.log(this.state.cart);
 	},
 
 	deleteCart: function(item) {
