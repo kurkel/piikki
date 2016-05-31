@@ -81,7 +81,7 @@ app.post('/api/login', function(req, res) {
     });
   User.findOne({
     username: req.body.username
-  }, 'password admin', function(err, docs) {
+  }, function(err, docs) {
     if (err)
       console.log(err);
     else {
@@ -247,7 +247,7 @@ app.get('/api/drinkstats', function(req, res) {
 //////////////////
 
 app.post('/api/admin/tab', function(req, res) {
-  addTab(req.body.username, req.body, true, function(resp) {
+  addTab(req.body.username, req.body, req.admin, function(resp) {
     res.status(200).send(resp);
   });
 });
@@ -297,7 +297,7 @@ function getPrices() {
 function getTab(username, req, cb) {
   var matchOpts = {
     username: username
-  }
+  };
   Transaction.aggregate([{
     $match: matchOpts
   }, {
@@ -325,7 +325,6 @@ function authUser(req, res, next) {
   if (req.path == '/' ||  req.path == '/api/register' ||  req.path == '/api/login') return next();
   var token = req.body.token || req.query.token || req.headers['x-access-token'];
   if (token) {
-    console.log(token);
     jwt.verify(token, app.get('superSecret'), function(err, user) {
       if (err) {
         return res.json({
