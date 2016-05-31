@@ -9,8 +9,10 @@
     "art": "^0.10.0",
     "react": "^0.14.5",
     "react-native": "^0.24.1",
-    "react-native-linear-gradient": "^1.5.4",
+    "react-native-icons": "^0.7.1",
+    "react-native-linear-gradient": "^1.5.9",
     "react-native-scrollable-tab-view": "^0.4.2",
-    "react-native-spinkit": "0.0.11"
+    "react-native-spinkit": "0.0.11",
+    "react-native-vector-icons": "^2.0.2"
   }
 }

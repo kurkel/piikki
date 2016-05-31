@@ -17,7 +17,9 @@ var {
   ScrollView
 } = React;
 
+import Icon from 'react-native-vector-icons/FontAwesome';
 
+var LinearGradient = require('react-native-linear-gradient');
 var Spinner = require('react-native-spinkit');
 
 var Tab = React.createClass({
@@ -27,27 +29,59 @@ var Tab = React.createClass({
 	 		token: '',
 	 		prices: {},
 	 		tab: 0,
+	 		cart: [],
 	 	}
 	 },
 	 componentDidMount: function() {
 	 	this.getPrices();
 	 },
 
-	moi: function(amount) {
+	commitCart: function() {
 		var app = this;
+		var cart = {};
+		for (var key in this.state.cart)
+		{
+			var k = Object.keys(this.state.cart[key])[0];
+			if (cart[k])
+				cart[k] = cart[k] + 1;
+			else
+				cart[k] = 1;
+		}
 		var asd = AsyncStorage.getItem('token', async function(err, result){
-    try {
-    	console.log(amount); 
-      let response = await fetch('http://localhost:8080/api/tab', { 
-          method: 'POST', 
-          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }, 
-          body: JSON.stringify(
-            { amount: app.state.prices[amount], token: result}) }); 
-      let responseJson = await response.json();
-      } 
-      catch(error) {  // Handle error
-        console.error(error); }
-  });},
+	    	try {
+		    	console.log(cart); 
+		      	let response = await fetch('http://localhost:8080/api/tab', { 
+		          method: 'POST', 
+		          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }, 
+		          body: JSON.stringify(
+		            { amount: cart, token: result}) 
+		      	}); 
+		      	let responseJson = await response.json();
+		      	console.log(responseJson);
+	      	} 
+	      	catch(error) {  // Handle error
+	        	console.error(error); }
+	  	});
+	},
+
+	addToCart: function(item) {
+		console.log(this.state.prices["Beer"])
+		console.log(item);
+		var cart = this.state.cart
+		var new_item = {}
+		new_item[item] = this.state.prices[item]
+		console.log(new_item);
+		cart.push(new_item);
+		console.log(cart);
+		this.setState({cart: cart});
+	},
+
+	deleteCart: function(item) {
+		var cart = this.state.cart;
+		console.log(item);
+		cart.splice(item, 1);
+		this.setState({cart: cart});
+	},
 
 	getPrices: async function() {
 		var app = this
@@ -72,14 +106,16 @@ var Tab = React.createClass({
 		var prices = this.state.prices;
 		for(var j = 0; j<2; j++) {
 			var price = prices[keys[i*2+j]]
-			console.log(price);
 			resp.push(<View style={{flex:0.08}} key={keys[i*2+j] + " flex"}>
 				</View>);
 			resp.push(
-				<TouchableOpacity key={keys[i*2+j]} onPress={this.moi.bind(this,keys[i*2+j])}>
-					<View style={((j == 0) ? styles.button1 : styles.button2)}>
+
+				<TouchableOpacity key={keys[i*2+j]} onPress={this.addToCart.bind(this,keys[i*2+j])}>
+					<LinearGradient cstart={[0.0, 0.0]} end={[1.0, 1.0]} colors={['rgba(180,180,180,0.7)', 'rgba(120,120,120,0.88)', 'rgba(90,90,90,1)']} style={((j == 0) ? styles.button1 : styles.button2)}>
+					<View>
 						<Text style={styles.amount}>{keys[i*2+j]}</Text>
 					</View>
+					</LinearGradient>
 				</TouchableOpacity>
 			);
 		}	
@@ -112,29 +148,71 @@ var Tab = React.createClass({
 
 	},
 
+	renderCart: function() {
+		var resp = [];
+		for(var i = 0; i < this.state.cart.length; i++) {
+			var key = Object.keys(this.state.cart[i])[0];
+			resp.push(
+				<View style={{flexDirection: 'column', flex:1}}>
+					<View style={{flex:0.1}}/>
+					<View style={styles.cartRow}>
+						<View style={{flex:0.2}}/>
+						<LinearGradient start={[0.0, 0.0]} end={[1.0, 1.0]} colors={['rgba(180,180,180,0.7)', 'rgba(120,120,120,0.6)', 'rgba(90,90,90,0.5)']} style={styles.cartPill}>
+							<View style={{flex:0.05}}/>
+							<Text style={styles.rowName}>{key}</Text>
+							<View style={{flex:0.1}}>
+							</View>
+							<Text style={styles.rowAmount}>{this.state.cart[i][key]}€</Text>
+							<View style={{flex:0.1}}/>
+							<View style={styles.deleteButton}>
+								<TouchableOpacity key={'cartrow' + i} onPress={this.deleteCart.bind(this, i)}>
+									<Icon name="remove" size={25} color="#ff0000"/>
+								</TouchableOpacity>
+							</View>
+							<View style={{flex:0.05}}/>
+						</LinearGradient>
+						<View style={{flex:0.2}}/>
+					</View>
+					<View style={{flex:0.1}}/>
+				</View>
+
+			);
+		}
+		return resp;
+	},
+
 	render: function() {
 
 		return(
-				
-					<ScrollView style={styles.container}>
-						<Image style={[styles.bg,{width: this.state.width, height:this.state.height}]} source={{uri: 'http://www.decalskin.com/wallpaper.php?file=samsung/SGS3-SN1.jpg'}} />
-						<View style={styles.headerContainer}>
-							<Text style={styles.header}>Spike</Text>
-						</View>
-						<View style={{flexDirection: 'row'}}>
-							<View style={{flex:0.1}}>
-							</View>
-							<View style={styles.cart}>
-								
-								<Text style={styles.currentTab}>Current tab: {this.state.tab}</Text>
-								<Text style={styles.cartItem}>asd</Text>
-							</View>
-							<View style={{flex:0.1}}>
-							</View>	
-						</View>
-						{this.renderPrices()}
-					</ScrollView>
-				
+			<ScrollView style={styles.container}>
+				<Image style={[styles.bg,{flex:1}]} source={{uri: 'http://www.decalskin.com/wallpaper.php?file=samsung/SGS3-SN1.jpg'}} />
+				<View style={styles.headerContainer}>
+					<Text style={styles.header}>Spike</Text>
+				</View>
+				<View style={{flex:0.1}}/>
+				<View style={{flexDirection: 'row', flex:0.7}}>
+					<View style={{flex:0.1}}>
+					</View>
+					<View style={styles.cart}>
+						<Text style={styles.currentTab}>Current tab: {this.state.tab}€</Text>
+						{this.renderCart()}
+					</View>
+					<View style={{flex:0.1}}>
+					</View>	
+				</View>
+				<View style={{flexDirection: 'row'}}>
+					<View style={{flex:0.1}}/>
+					<TouchableOpacity onPress={this.commitCart} >
+						<LinearGradient start={[0.0, 0.0]} end={[1.0, 1.0]} colors={['rgba(180,180,180,0.7)', 'rgba(120,120,120,0.6)', 'rgba(90,90,90,0.5)']} style={styles.commitCart}>
+							<Text style={styles.amount}>Tab me!</Text>
+						</LinearGradient>
+						<View style={{flex:0.1}}/>
+					</TouchableOpacity>
+				</View>
+				<View style={{flex:0.1}}>
+				</View>	
+				{this.renderPrices()}
+			</ScrollView>
 		)
 	}
 
@@ -153,6 +231,7 @@ var styles = StyleSheet.create({
 		flex: 0.8,
 		top: 10,
 		borderWidth:1,
+		borderRadius: 20,
 		padding: 10,
 		backgroundColor:'rgba(140,140,140,0.8)'
 	},	
@@ -163,8 +242,9 @@ var styles = StyleSheet.create({
 		textAlign: 'center',
 		fontSize: 40,
 		fontWeight: 'bold',
-		textShadowRadius: 10,
-		textShadowColor: 'black',
+		textShadowColor: "#000000",
+		textShadowOffset: {width: 2, height: 2},
+		textShadowRadius: 4,
 
 	},
 
@@ -182,26 +262,22 @@ var styles = StyleSheet.create({
 		alignItems: 'center',
 		justifyContent: 'center',
 		height: 140,
+
 	},
 
 	button1: {
 		height:130,
 		width: 130,
-		borderWidth:1,
-		borderColor: '#CCC',
 		borderRadius: 30,
 		justifyContent: 'center',
-		backgroundColor:'rgba(52,52,52,0.8)',
+
 	},
 
 	button2: {
 		height:130,
 		width: 130,
 		justifyContent: 'center',
-		borderWidth:1,
-		borderColor: '#CCC',
 		borderRadius: 30,
-		backgroundColor:'rgba(52,52,52,0.8)',
 
 
 	},
@@ -213,16 +289,45 @@ var styles = StyleSheet.create({
 		color: 'white',
 		fontWeight: 'bold',
 	},
-
-	arrow: {
-		fontSize: 40,
+	
+	cartRow: {
 		
+	},
+	rowName: {
+		fontSize:20,
+		flex:0.5,
+		color: 'white',
+		textShadowColor: "#000000",
+		textShadowOffset: {width: 1, height: 1},
+		textShadowRadius: 2,
 
 	},
-	arrowContainer: {
-		position: 'absolute',
-		top:windowSize.height/2,
-		left:windowSize.width,
+	rowAmount: {
+		fontSize: 20,
+		flex: 0.2,
+		color: 'white',
+		textShadowColor: "#000000",
+		textShadowOffset: {width: 1, height: 1},
+		textShadowRadius: 2,
+	},
+	deleteButton: {
+		flex: 0.1,
+		shadowColor: "#000000",
+		shadowRadius: 3,
+	},
+	currentTab: {
+		fontWeight:'bold',
+		fontSize: 25,
+		color: 'white',
+		textShadowColor: "#000000",
+		textShadowOffset: {width: 1, height: 1},
+		textShadowRadius: 3,
+	},
+	cartPill: {
+		borderRadius:5,
+		flex:0.8,
+		flexDirection: 'row',
+
 	}
 
 
