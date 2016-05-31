@@ -53,8 +53,7 @@ var Tab = React.createClass({
 		      	let response = await fetch('http://localhost:8080/api/tab', { 
 		          method: 'POST', 
 		          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }, 
-		          body: JSON.stringify(
-		            { amount: cart, token: result}) 
+		          body: JSON.stringify(cart) 
 		      	}); 
 		      	let responseJson = await response.json();
 		      	console.log(responseJson);
@@ -184,8 +183,9 @@ var Tab = React.createClass({
 	render: function() {
 
 		return(
+			<View style={{flex: 1}}>
+          	<Image style={styles.bg} source={{uri: 'http://i.imgur.com/xlQ56UK.jpg'}} />
 			<ScrollView style={styles.container}>
-				<Image style={[styles.bg,{flex:1}]} source={{uri: 'http://www.decalskin.com/wallpaper.php?file=samsung/SGS3-SN1.jpg'}} />
 				<View style={styles.headerContainer}>
 					<Text style={styles.header}>Spike</Text>
 				</View>
@@ -200,19 +200,25 @@ var Tab = React.createClass({
 					<View style={{flex:0.1}}>
 					</View>	
 				</View>
-				<View style={{flexDirection: 'row'}}>
-					<View style={{flex:0.1}}/>
-					<TouchableOpacity onPress={this.commitCart} >
-						<LinearGradient start={[0.0, 0.0]} end={[1.0, 1.0]} colors={['rgba(180,180,180,0.7)', 'rgba(120,120,120,0.6)', 'rgba(90,90,90,0.5)']} style={styles.commitCart}>
-							<Text style={styles.amount}>Tab me!</Text>
-						</LinearGradient>
-						<View style={{flex:0.1}}/>
-					</TouchableOpacity>
+				<View style={{flexDirection: 'row',}}>
+					<View style={{flex: 0.1}} />
+					<View style={styles.commitCart}>
+						<TouchableOpacity onPress={this.commitCart} >
+							<LinearGradient start={[0.0, 0.0]} end={[1.0, 1.0]} colors={['rgba(180,180,180,0.7)', 'rgba(120,120,120,0.6)', 'rgba(90,90,90,0.5)']} style={{borderRadius: 30}} >
+								<Text style={styles.amount}>Tab me!</Text>
+							</LinearGradient>
+						</TouchableOpacity>
+					</View>
+					<View style={{flex: 0.1}} />
 				</View>
 				<View style={{flex:0.1}}>
 				</View>	
 				{this.renderPrices()}
+				<View style={{flex:0.1}}>
+				</View>
+				
 			</ScrollView>
+			</View>
 		)
 	}
 
@@ -251,8 +257,8 @@ var styles = StyleSheet.create({
 	bg: {
 		position: 'absolute',
         left: 0,
-        top: -300,
-        bottom: -300,
+        top: 0,
+        bottom: 0,
         right:0,
 	},
 
@@ -328,7 +334,25 @@ var styles = StyleSheet.create({
 		flex:0.8,
 		flexDirection: 'row',
 
-	}
+	},
+	commitCart: {
+		flex: 0.8,
+		top: 15,
+		borderRadius: 30,
+		borderWidth: 1,
+
+	},
+	amount: {
+		textAlign: 'center',
+		justifyContent: 'center',
+		fontWeight: 'bold',
+		color: "#FFFFFF",
+		fontSize: 25,
+		textShadowColor: "#000000",
+		textShadowOffset: {width: 1, height: 1},
+		textShadowRadius: 3,
+	},
+
 
 
 })

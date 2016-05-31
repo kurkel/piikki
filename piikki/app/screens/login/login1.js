@@ -72,7 +72,9 @@ var Login1 = React.createClass({
         this.showError();
       }
       else {
+        console.log(responseJson);
         var asdasd = this.loggedin;
+
         AsyncStorage.setItem('token', this.state.token);
         asdasd();
       }
