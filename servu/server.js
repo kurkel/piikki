@@ -81,7 +81,7 @@ app.post('/api/login', function(req, res) {
     });
   User.findOne({
     username: req.body.username
-  }, 'password', function(err, docs) {
+  }, function(err, docs) {
     if (err)
       console.log(err);
     else {
@@ -100,13 +100,14 @@ app.post('/api/login', function(req, res) {
           });
         } else {
           var token = jwt.sign(req.body.username, app.get('superSecret'));
-          getTab(req.body.username, function(spike) {
+          getTab(req.body.username, req, function(spike) {
             var prices = getPrices();
             res.status(200).send({
               success: true,
               token: token,
               tab: spike,
-              prices: prices
+              prices: prices,
+              admin: docs.admin
             });
           })
         }
@@ -116,7 +117,7 @@ app.post('/api/login', function(req, res) {
 });
 
 app.get('/api/tab', function(req, res) {
-  getTab(req.username, function(spike) {
+  getTab(req.username, req, function(spike) {
     res.status(200).send({
       tab: spike,
       success: true
@@ -125,7 +126,6 @@ app.get('/api/tab', function(req, res) {
 });
 
 app.post('/api/tab', function(req, res) {
-  console.log(req.body.amount);
   addTab(req.username, req.body, false, function(resp) {
     res.status(200).send(resp);
   });
@@ -172,24 +172,34 @@ app.post('/api/getusers', function(req, res) {
   })
 });
 
-app.post('/api/toplist', function(req, res) {
+app.get('/api/toplist', function(req, res) {
+  var matchParams = {
+    amount: {
+      $gt: 0
+    }
+  };
+  if (req.query.type) {
+    matchParams.product = req.query.type;
+  }
   Transaction.aggregate(
     [{
-      $match: {
-        amount: {
-          $gt: 0
-        }
-      }
+      $match: matchParams
     }, {
       $group: {
         _id: "$username",
-        tab: {
+        amount: {
           $sum: "$amount"
         }
       }
     }, {
+      $project: {
+        username: "$_id",
+        _id: 0,
+        amount: 1,
+      }
+    }, {
       $sort: {
-        sum: -1
+        tab: -1
       }
     }],
     function(err, result) {
@@ -197,7 +207,7 @@ app.post('/api/toplist', function(req, res) {
         console.log(err);
         res.status(500);
       } else {
-        res.status(200).send(result);
+        res.status(200).send(_.merge({success:true}, result));
       }
     })
 });
@@ -237,7 +247,7 @@ app.get('/api/drinkstats', function(req, res) {
 //////////////////
 
 app.post('/api/admin/tab', function(req, res) {
-  addTab(req.body.username, req.body, true, function(resp) {
+  addTab(req.body.username, req.body, req.admin, function(resp) {
     res.status(200).send(resp);
   });
 });
@@ -250,11 +260,11 @@ function addTab(username, body, admin, cb) {
   var productsAdded = {};
   async.forEachOf(body, function(value, key, callback) {
     var amountFromDb = prices[key];
-    var price = amountFromDb ? amountFromDb * value : value;
-    if (price >= 0 ||  admin) {
+    if (value >= 0 ||  admin) {
       var newtrans = new Transaction({
         username: username,
-        amount: price,
+        amount: amountFromDb ? value : 1,
+        pricePer: amountFromDb ? amountFromDb : value,
         date: Date.now(),
         product: key,
       });
@@ -284,21 +294,25 @@ function getPrices() {
   return prices;
 }
 
-function getTab(username, cb) {
-  Transaction.find({
+function getTab(username, req, cb) {
+  var matchOpts = {
     username: username
-  }, 'amount', function(err, docs) {
-    if (err)
-      console.log(err);
-    else {
-      var spike = 0;
-      docs.forEach(function(args) {
-        spike += args.amount;
-      });
-      cb(spike);
+  };
+  Transaction.aggregate([{
+    $match: matchOpts
+  }, {
+    $group: {
+      _id: "$username",
+      tab: {
+        $sum: {$multiply: ["$amount", "$pricePer"]}
+      }
     }
-  })
-};
+  }], function(err, res) {
+        if (err)
+          console.log(err)
+        cb(res[0].tab)
+  });
+}
 
 //////////////////////////
 // Middleware functions //
@@ -311,7 +325,6 @@ function authUser(req, res, next) {
   if (req.path == '/' ||  req.path == '/api/register' ||  req.path == '/api/login') return next();
   var token = req.body.token || req.query.token || req.headers['x-access-token'];
   if (token) {
-    console.log(token);
     jwt.verify(token, app.get('superSecret'), function(err, user) {
       if (err) {
         return res.json({
@@ -333,11 +346,9 @@ function authUser(req, res, next) {
 
 function checkUserClass(req, res, next) {
   if (req.username) {
-    console.log(req.username);
     User.findOne({
       username: req.username
     }, 'admin', function(err, docs) {
-      console.log(docs);
       if (err) {
         console.log(err);
         res.status(500);
@@ -355,7 +366,6 @@ function checkUserClass(req, res, next) {
 }
 
 function adminCheck(req, res, next) {
-  console
   if (req.admin) {
     next();
   } else {
