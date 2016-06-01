@@ -152,7 +152,7 @@ app.post('/api/alltabs', function(req, res) {
 
 app.get('/api/prices', function(req, res) {
   var prices = getPrices();
-  getTab(req.username, function(spike) {
+  getTab(req.username, req, function(spike) {
     res.status(200).send({
       prices: prices,
       tab: spike,

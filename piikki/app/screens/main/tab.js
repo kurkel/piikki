@@ -184,7 +184,7 @@ var Tab = React.createClass({
 
 		return(
 			<View style={{flex: 1}}>
-          	<Image style={styles.bg} source={{uri: 'http://i.imgur.com/xlQ56UK.jpg'}} />
+          	<Image style={styles.bg} source={{uri: 'https://media.giphy.com/media/l396RbDse6BMN0A8M/giphy.gif'}} />
 			<ScrollView style={styles.container}>
 				<View style={styles.headerContainer}>
 					<Text style={styles.header}>Spike</Text>

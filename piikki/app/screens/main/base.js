@@ -21,18 +21,23 @@ var AdminPage = require('./admin');
 
 var MainPage = React.createClass({
 
-  is_admin: function() {
-
-  },
+  is_admin: async function() {
+    AsyncStorage.getItem('admin', function(err, res){
+      if(res) {
+        return <AdminPage tabLabel='gavel' />;
+      }
+      else {
+        return;
+      }
+  });
+},
 
   render: function() {
     return (
       <ScrollableTabView renderTabBar={() => <CustomTabBar />}>
       	<TabPage tabLabel='beer'>
-          <Image style={styles.bg} source={{uri: 'http://i.imgur.com/xlQ56UK.jpg'}} />
         </TabPage>
       	<StatsPage tabLabel='bar-chart-o' />
-      	<AdminPage tabLabel='gavel' />
       </ScrollableTabView>
     );
   }
