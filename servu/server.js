@@ -161,17 +161,6 @@ app.get('/api/prices', function(req, res) {
   });
 })
 
-app.post('/api/getusers', function(req, res) {
-  User.find({}, function(err, docs) {
-    if (err) {
-      console.log(err);
-      res.status(500)
-    } else {
-      return res.status(200).send(docs);
-    }
-  })
-});
-
 app.get('/api/toplist', function(req, res) {
   var matchParams = {
     amount: {
@@ -214,14 +203,21 @@ app.get('/api/toplist', function(req, res) {
     })
 });
 
+
+//TODO: add aikaväli
 app.get('/api/drinkstats', function(req, res) {
+  var matchOpts = {
+    amount: {
+      $gt: 0
+    }
+  };
+  if (req.query.username) {
+    matchOpts.username = req.query.username;
+  }
+  matchOpts = _.merge(matchOpts, makeMonthOpts())
   Transaction.aggregate(
     [{
-      $match: {
-        amount: {
-          $gt: 0
-        }
-      }
+      $match: matchOpts
     }, {
       $group: {
         _id: "$product",
@@ -232,6 +228,12 @@ app.get('/api/drinkstats', function(req, res) {
     }, {
       $sort: {
         total: -1
+      }
+    }, {
+      $project: {
+        product: "$_id",
+        _id: 0,
+        total: 1,
       }
     }],
     function(err, result) {
@@ -252,6 +254,17 @@ app.post('/api/admin/tab', function(req, res) {
   addTab(req.body.username, req.body, req.admin, function(resp) {
     res.status(200).send(resp);
   });
+});
+
+app.get('/api/admin/getusers', function(req, res) {
+  User.find({}, 'username tabMaxed admin', function(err, docs) {
+    if (err) {
+      console.log(err);
+      res.status(500)
+    } else {
+      return res.status(200).send(docs);
+    }
+  })
 });
 
 /////////////
@@ -296,35 +309,40 @@ function getPrices() {
   return prices;
 }
 
-function getTab(username, req, cb) {
-  var now = new Date();
-  var startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  var endOfMonth = new Date(now.getFullYear(), now.getMonth(), daysInMonth(now.getYear(), now.getMonth()));
+function makeMonthOpts(start, end) {
+  var start = new Date(1970);
+  var end = new Date();
   if (req.query.startYear) {
-    startOfMonth.setFullYear(req.query.startYear);
+    start.setFullYear(req.query.startYear);
   }
   if (req.query.startMonth) {
-    startOfMonth.setMonth(req.query.startMonth)
+    start.setMonth(req.query.startMonth)
   }
   if (req.query.startDay) {
-    startOfMonth.setDate(req.query.startDay);
+    start.setDate(req.query.startDay);
   }
   if (req.query.endYear) {
-    endOfMonth.setFullYear(req.query.endYear);
+    end.setFullYear(req.query.endYear);
   }
   if (req.query.endMonth) {
-    endOfMonth.setMonth(req.query.endMonth);
+    end.setMonth(req.query.endMonth);
   }
   if (req.query.endDay) {
-    endOfMonth.setDate(req.query.endDay);
+    end.setDate(req.query.endDay);
   }
-  var matchOpts = {
-    username: username,
+  return {
     date: {
-      $gte: startOfMonth,
-      $lte: endOfMonth
+      $gte: start,
+      $lte: end
     }
   };
+}
+
+function getTab(username, req, cb) {
+  var matchOpts = _.merge({
+    username: username
+  }, makeMonthOpts);
+
   Transaction.aggregate([{
     $match: matchOpts
   }, {
@@ -339,10 +357,9 @@ function getTab(username, req, cb) {
   }], function(err, res) {
     if (err)
       console.log(err)
-    if(res[0]){
+    if (res[0]) {
       cb(res[0].tab);
-    }
-    else {
+    } else {
       cb(0);
     }
   });
