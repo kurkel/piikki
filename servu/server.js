@@ -199,7 +199,7 @@ app.get('/api/toplist', function(req, res) {
       }
     }, {
       $sort: {
-        tab: -1
+        amount: -1
       }
     }],
     function(err, result) {
@@ -207,7 +207,9 @@ app.get('/api/toplist', function(req, res) {
         console.log(err);
         res.status(500);
       } else {
-        res.status(200).send(_.merge({success:true}, result));
+        res.status(200).send(_.merge({
+          success: true
+        }, result));
       }
     })
 });
@@ -295,8 +297,33 @@ function getPrices() {
 }
 
 function getTab(username, req, cb) {
+  var now = new Date();
+  var startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  var endOfMonth = new Date(now.getFullYear(), now.getMonth(), daysInMonth(now.getYear(), now.getMonth()));
+  if (req.query.startYear) {
+    startOfMonth.setFullYear(req.query.startYear);
+  }
+  if (req.query.startMonth) {
+    startOfMonth.setMonth(req.query.startMonth)
+  }
+  if (req.query.startDay) {
+    startOfMonth.setDate(req.query.startDay);
+  }
+  if (req.query.endYear) {
+    endOfMonth.setFullYear(req.query.endYear);
+  }
+  if (req.query.endMonth) {
+    endOfMonth.setMonth(req.query.endMonth);
+  }
+  if (req.query.endDay) {
+    endOfMonth.setDate(req.query.endDay);
+  }
   var matchOpts = {
-    username: username
+    username: username,
+    date: {
+      $gte: startOfMonth,
+      $lte: endOfMonth
+    }
   };
   Transaction.aggregate([{
     $match: matchOpts
@@ -304,14 +331,25 @@ function getTab(username, req, cb) {
     $group: {
       _id: "$username",
       tab: {
-        $sum: {$multiply: ["$amount", "$pricePer"]}
+        $sum: {
+          $multiply: ["$amount", "$pricePer"]
+        }
       }
     }
   }], function(err, res) {
-        if (err)
-          console.log(err)
-        cb(res[0].tab)
+    if (err)
+      console.log(err)
+    if(res[0]){
+      cb(res[0].tab);
+    }
+    else {
+      cb(0);
+    }
   });
+}
+
+function daysInMonth(year, month) {
+  return new Date(year, month, 0).getDate();
 }
 
 //////////////////////////
