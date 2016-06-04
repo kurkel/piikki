@@ -161,17 +161,6 @@ app.get('/api/prices', function(req, res) {
   });
 })
 
-app.post('/api/getusers', function(req, res) {
-  User.find({}, function(err, docs) {
-    if (err) {
-      console.log(err);
-      res.status(500)
-    } else {
-      return res.status(200).send(docs);
-    }
-  })
-});
-
 app.get('/api/toplist', function(req, res) {
   var matchParams = {
     amount: {
@@ -215,13 +204,17 @@ app.get('/api/toplist', function(req, res) {
 });
 
 app.get('/api/drinkstats', function(req, res) {
+  var matchOpts = {
+    amount: {
+      $gt: 0
+    }
+  };
+  if (req.query.username) {
+    matchOpts.username = req.query.username;
+  }
   Transaction.aggregate(
     [{
-      $match: {
-        amount: {
-          $gt: 0
-        }
-      }
+      $match: matchOpts
     }, {
       $group: {
         _id: "$product",
@@ -232,6 +225,12 @@ app.get('/api/drinkstats', function(req, res) {
     }, {
       $sort: {
         total: -1
+      }
+    }, {
+      $project: {
+        product: "$_id",
+        _id: 0,
+        total: 1,
       }
     }],
     function(err, result) {
@@ -252,6 +251,17 @@ app.post('/api/admin/tab', function(req, res) {
   addTab(req.body.username, req.body, req.admin, function(resp) {
     res.status(200).send(resp);
   });
+});
+
+app.get('/api/admin/getusers', function(req, res) {
+  User.find({}, 'username tabMaxed admin', function(err, docs) {
+    if (err) {
+      console.log(err);
+      res.status(500)
+    } else {
+      return res.status(200).send(docs);
+    }
+  })
 });
 
 /////////////
@@ -296,7 +306,7 @@ function getPrices() {
   return prices;
 }
 
-function getTab(username, req, cb) {
+function makeMonthOpts(start, end) {
   var now = new Date();
   var startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   var endOfMonth = new Date(now.getFullYear(), now.getMonth(), daysInMonth(now.getYear(), now.getMonth()));
@@ -318,13 +328,19 @@ function getTab(username, req, cb) {
   if (req.query.endDay) {
     endOfMonth.setDate(req.query.endDay);
   }
-  var matchOpts = {
-    username: username,
+  return {
     date: {
       $gte: startOfMonth,
       $lte: endOfMonth
     }
   };
+}
+
+function getTab(username, req, cb) {
+  var matchOpts = _.merge({
+    username: username
+  }, makeMonthOpts);
+
   Transaction.aggregate([{
     $match: matchOpts
   }, {
@@ -339,10 +355,9 @@ function getTab(username, req, cb) {
   }], function(err, res) {
     if (err)
       console.log(err)
-    if(res[0]){
+    if (res[0]) {
       cb(res[0].tab);
-    }
-    else {
+    } else {
       cb(0);
     }
   });
