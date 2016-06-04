@@ -22,9 +22,11 @@ var AdminPage = require('./admin');
 var MainPage = React.createClass({
 
   is_admin: async function() {
+    var resp = [];
     AsyncStorage.getItem('admin', function(err, res){
       if(res) {
-        return <AdminPage tabLabel='gavel' />;
+        resp.push(<AdminPage tabLabel='gavel' />);
+        return resp;
       }
       else {
         return;
@@ -38,6 +40,7 @@ var MainPage = React.createClass({
       	<TabPage tabLabel='beer'>
         </TabPage>
       	<StatsPage tabLabel='bar-chart-o' />
+        {this.is_admin()}
       </ScrollableTabView>
     );
   }
