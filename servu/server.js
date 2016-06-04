@@ -203,6 +203,8 @@ app.get('/api/toplist', function(req, res) {
     })
 });
 
+
+//TODO: add aikaväli
 app.get('/api/drinkstats', function(req, res) {
   var matchOpts = {
     amount: {
@@ -212,6 +214,7 @@ app.get('/api/drinkstats', function(req, res) {
   if (req.query.username) {
     matchOpts.username = req.query.username;
   }
+  matchOpts = _.merge(matchOpts, makeMonthOpts())
   Transaction.aggregate(
     [{
       $match: matchOpts
@@ -307,31 +310,30 @@ function getPrices() {
 }
 
 function makeMonthOpts(start, end) {
-  var now = new Date();
-  var startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  var endOfMonth = new Date(now.getFullYear(), now.getMonth(), daysInMonth(now.getYear(), now.getMonth()));
+  var start = new Date(1970);
+  var end = new Date();
   if (req.query.startYear) {
-    startOfMonth.setFullYear(req.query.startYear);
+    start.setFullYear(req.query.startYear);
   }
   if (req.query.startMonth) {
-    startOfMonth.setMonth(req.query.startMonth)
+    start.setMonth(req.query.startMonth)
   }
   if (req.query.startDay) {
-    startOfMonth.setDate(req.query.startDay);
+    start.setDate(req.query.startDay);
   }
   if (req.query.endYear) {
-    endOfMonth.setFullYear(req.query.endYear);
+    end.setFullYear(req.query.endYear);
   }
   if (req.query.endMonth) {
-    endOfMonth.setMonth(req.query.endMonth);
+    end.setMonth(req.query.endMonth);
   }
   if (req.query.endDay) {
-    endOfMonth.setDate(req.query.endDay);
+    end.setDate(req.query.endDay);
   }
   return {
     date: {
-      $gte: startOfMonth,
-      $lte: endOfMonth
+      $gte: start,
+      $lte: end
     }
   };
 }
