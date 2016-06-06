@@ -87,7 +87,7 @@ var Stats = React.createClass({
 
 
   renderTab: function() {
-    return <Text style={styles.currentTabText}>Current Tab: {this.state.tab}€</Text>;
+    return <Text style={styles.currentTabText}>{this.state.tab}€</Text>;
   },
 
   renderOwnOverall: function() {
@@ -105,7 +105,7 @@ var Stats = React.createClass({
       resp.push(
         <View style={styles.toplistItem}>
           <Text style={[styles.toplistName, styles.toplistText]}>{this.state.toplist[key].username}</Text>
-          <Text style={[styles.toplistAmount, styles.toplistText]}>{this.state.toplist[key].amount}</Text>
+          <Text style={[styles.toplistAmount, styles.toplistText]}>{this.state.toplist[key].amount} drinks</Text>
         </View>
       );
     }
@@ -135,8 +135,12 @@ var Stats = React.createClass({
       <View style={{flex: 1}}>
         <Image style={styles.bg} source={{uri: 'https://media.giphy.com/media/l3973Km00kUiLkBi0/giphy.gif'}} />
         <ScrollView>
+          <View style={styles.header}>
+            <Text style={styles.headerText}>Stats:</Text>
+          </View>
           <View >
             <View style={styles.currentTab}>
+              <Text style={styles.subTopic}>Current Tab:</Text>
               {this.renderOrSpinner(this.state.currentTabRdy, this.renderTab)}
             </View>
             <View style={styles.ownOverall}>
@@ -146,6 +150,7 @@ var Stats = React.createClass({
               {this.renderOrSpinner(this.state.ownMonthRdy, this.renderOwnMonth)}
             </View>
             <View style={styles.topList}>
+            <Text style={styles.subTopic}>Top drunks alltime:</Text>
             {this.renderOrSpinner(this.state.topListRdy, this.renderTopList)}
             </View>
           </View>
@@ -164,12 +169,58 @@ var styles = StyleSheet.create({
     bottom: 0,
     right:-200,
   },
+  header: {
+    padding:20,
+    justifyContent: 'center',
+    flex: 0.5,
+    borderWidth: 1,
+    borderBottomColor: "#CCC",
+    borderColor: "transparent",
+  },
+  subTopic: {
+    textAlign: 'center',
+    fontWeight:'bold',
+    fontSize: 25,
+    color: 'white',
+    textShadowColor: "#000000",
+    textShadowOffset: {width: 1, height: 1},
+    textShadowRadius: 3,
+  },
+  headerText: {
+    textAlign: 'center',
+    fontWeight:'bold',
+    fontSize: 30,
+    color: 'white',
+    textShadowColor: "#000000",
+    textShadowOffset: {width: 1, height: 1},
+    textShadowRadius: 3,
+  },
   currentTab: {
-    flex: 1,
+    padding: 15,
+    flex: 0.3,
     borderWidth: 1,
     borderBottomColor: "#CCC",
     borderColor: "transparent",
 
+  },
+  ownOverall: {
+    padding: 15,
+    flex: 0.3,
+    borderWidth: 1,
+    borderBottomColor: "#CCC",
+    borderColor: "transparent",
+
+  },
+  ownMonth: {
+    padding: 15,
+    flex: 0.3,
+    borderWidth: 1,
+    borderBottomColor: "#CCC",
+    borderColor: "transparent",
+
+  },
+  topList: {
+    padding:15,
   },
   currentTabText:{
     textAlign: 'center',
@@ -183,7 +234,7 @@ var styles = StyleSheet.create({
 
   toplistText:{
     fontWeight:'bold',
-    fontSize: 25,
+    fontSize: 20,
     color: 'white',
     textShadowColor: "#000000",
     textShadowOffset: {width: 1, height: 1},

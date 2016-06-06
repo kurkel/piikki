@@ -21,20 +21,35 @@ var {
 var Admin = React.createClass({
   getInitialState: function() {
     return {
-      username: '',
-      password: ''
-    }
+      users: {},
+    };
   },
 
   componentDidMount: function() {
-    //this.getUsers();
+    this.getUsers();
+  },
+
+  getUsers: async function() {
+    var app = this
+    var asd = AsyncStorage.getItem('token', async function(err, result){
+      try {
+            let response = await fetch('http://localhost:8080/api/admin/getusers', { 
+                method: 'GET', 
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
+            let responseJson = await response.json();
+            console.log(responseJson);
+          } 
+          catch(error) {  // Handle error
+            console.error(error); }
+    });
   },
 
   render: function() {
       return(
       <View>
+        <Text>Moi</Text>
       </View>
-      )
+      );
   }
 });
 

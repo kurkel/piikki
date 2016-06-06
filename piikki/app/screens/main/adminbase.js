@@ -17,17 +17,19 @@ var {
 
 var TabPage = require('./tab');
 var StatsPage = require('./stats');
+var AdminPage = require('./admin');
 
-var MainPage = React.createClass({
+var AdminMainPage = React.createClass({
 
   render: function() {
     return <ScrollableTabView renderTabBar={() => <CustomTabBar />}>
         <TabPage tabLabel='beer'>
         </TabPage>
         <StatsPage tabLabel='bar-chart-o' />
+        <AdminPage tabLabel='gavel' />
       </ScrollableTabView>;
   }
 });
 
 
-module.exports = MainPage;
+module.exports = AdminMainPage;
