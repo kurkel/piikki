@@ -22,6 +22,10 @@ var prices = require('./prices');
 var port = process.env.PORT || 8080; // used to create, sign, and verify tokens
 mongoose.connect(config.database); // connect to database
 app.set('superSecret', config.secret); // secret variable
+app.use(function(req, res, next) {
+  req.headers['if-none-match'] = 'no-match-for-this';
+  next();    
+});
 
 /////////////////
 // Middlewares //
@@ -251,7 +255,9 @@ app.get('/api/drinkstats', function(req, res) {
 //////////////////
 
 app.post('/api/admin/tab', function(req, res) {
-  addTab(req.body.username, req.body, req.admin, function(resp) {
+  console.log(req.body.username);
+  console.log(req.body.drinks);
+  addTab(req.body.username, req.body.drinks, req.admin, function(resp) {
     res.status(200).send(resp);
   });
 });
