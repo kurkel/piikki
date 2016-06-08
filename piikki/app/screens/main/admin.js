@@ -58,6 +58,7 @@ var Admin = React.createClass({
   },
 
   changeTab: function(id) {
+    console.log(id);
     var name = "name"+id+"Value";
     var app = this;
     var asd = AsyncStorage.getItem('token', async function(err, result){
@@ -65,10 +66,12 @@ var Admin = React.createClass({
             let response = await fetch('http://localhost:8080/api/admin/tab', { 
               method: 'POST', 
               headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }, 
-              body: JSON.stringify({'username':app.state.users[id].username, 'drinks':{'payback': -10}})
+              body: JSON.stringify({'username':app.state.users[id].username, 'drinks':{'payback': app.state.name}})
             }); 
             let responseJson = await response.json();
-            console.log(responseJson);
+            if(responseJson.success) {
+              app.state.name = 0
+            }
           } 
           catch(error) {  // Handle error
             console.error(error); }
@@ -97,8 +100,8 @@ var Admin = React.createClass({
         <View style={styles.accordionInputRow}>
           <TextInput
             style={{height:30, flex:0.7, borderColor: 'gray', borderWidth: 1, color:'red',}}
-            onChangeText={(text) => this.setState({name:text})}
-            value={this.state[name]}
+            onChangeText={(text) => this.state.name=text}
+            value={this.state.name}
           />
           <View style={{flex:0.1}} />
           <View style={styles.changeTabButton}>
