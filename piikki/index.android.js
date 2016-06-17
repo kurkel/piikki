@@ -9,6 +9,8 @@ var LoginPage = require('./app/screens/login/login1');
 
 var MainPage = require('./app/screens/main/base');
 
+var AdminMainPage = require('./app/screens/main/adminbase')
+
 var RegisterPage = require('./app/screens/login/register');
 
 
@@ -31,6 +33,12 @@ var piikki = React.createClass({
 		    if (routeId === 'MainPage') {
 		      return (
 		        <MainPage
+		          navigator={navigator} onBack={() => { if (route.index > 0) { navigator.pop(); } }} />
+		      );
+		    }
+		    if (routeId === 'AdminMainPage') {
+		      return (
+		        <AdminMainPage
 		          navigator={navigator} onBack={() => { if (route.index > 0) { navigator.pop(); } }} />
 		      );
 		    }

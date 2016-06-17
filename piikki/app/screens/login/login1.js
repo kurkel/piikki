@@ -43,6 +43,7 @@ var Login1 = React.createClass({
         password: '',
         error: '',
         token: '',
+        admin: false,
       };
     },
 
@@ -72,11 +73,14 @@ var Login1 = React.createClass({
         this.showError();
       }
       else {
-        console.log(responseJson);
+        var app = this;
         var asdasd = this.loggedin;
-        AsyncStorage.setItem('admin', responseJson.admin);
-        AsyncStorage.setItem('token', this.state.token);
-        asdasd();
+        AsyncStorage.setItem("admin", responseJson.admin.toString(), function(err, resp) {
+          AsyncStorage.setItem('token', app.state.token, function(err, resp) {
+            asdasd();
+          });  
+        });
+        
       }
     } 
     catch(error) {  // Handle error
@@ -84,14 +88,26 @@ var Login1 = React.createClass({
   },
 
   loggedin: function() {
+    var app = this
     if(!this.state.token) {
       this.state.error = "Something went wrong";
       this.showError();
     }
-    this.props.navigator.push({
-      id: 'MainPage',
-      name: 'Main',
-    });
+    AsyncStorage.getItem("admin", function(err, resp) {
+      if (resp === "true") {
+        app.props.navigator.push({
+          id: 'AdminMainPage',
+          name: 'AdminMain',
+        });  
+      }
+      else {
+        app.props.navigator.push({
+          id: 'MainPage',
+          name: 'Main',
+        });
+      }
+    })
+    
   },
 
   showSpinner: function() {
