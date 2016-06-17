@@ -45,7 +45,7 @@ app.use(/^\/api\/admin\/\w*/, adminCheck);
 /////////////////
 app.post('/api/register', function(req, res) {
   if (req.body.secret !== "ania patiossa") {
-    res.json({
+    return res.status(401).send({
       success: false,
       error: "Wrong secret."
     });
@@ -257,12 +257,49 @@ app.post('/api/admin/tab', function(req, res) {
 });
 
 app.get('/api/admin/getusers', function(req, res) {
-  User.find({}, 'username tabMaxed admin', function(err, docs) {
+  User.find({}, 'username', function(err, docs) {
     if (err) {
       console.log(err);
       res.status(500)
     } else {
-      return res.status(200).send(docs);
+      Transaction.aggregate(
+        [{
+          $group: {
+            _id: "$username",
+            amount: {
+              $sum: "$amount"
+            }
+          }
+        }, {
+          $project: {
+            username: "$_id",
+            _id: 0,
+            amount: 1,
+          }
+        }, {
+          $sort: {
+            amount: -1
+          }
+        }],
+        function(err, result) {
+          if (err) {
+            console.log(err);
+            res.status(500);
+          } else {
+            var resp = [];
+            for (doc of docs) {
+              for (single of result) {
+                if (doc.username == single.username) {
+                  var temp = {};
+                  temp.amount = single.amount;
+                  temp.username = doc.username;
+                  resp.push(temp);
+                }
+              }
+            }
+            res.status(200).send(resp);
+          }
+        })
     }
   })
 });
@@ -434,5 +471,6 @@ function adminCheck(req, res, next) {
 // =======================
 // start the server ======
 // =======================
+console.log(port);
 app.listen(port);
 console.log('Magic happens at http://localhost:' + port);
