@@ -33,13 +33,6 @@ var Button = React.createClass({
         <Text style={[styles.buttonText, colorStyle]}>{this.props.children}</Text> 
         </TouchableHighlight> ); } });
 
-var nav;
-
-BackAndroid.addEventListener('hardwareBackPress', function() {
-
-  nav.pop(); 
-  return true; 
-});
 
 var Register = React.createClass({
   getInitialState: function() {
@@ -49,6 +42,13 @@ var Register = React.createClass({
       error: '',
       spinnerVisible: false,
     }
+  },
+  componentDidMount: function() {
+    var app = this;
+    BackAndroid.addEventListener('hardwareBackPress', function() {
+      app.props.navigator.pop(); 
+      return true; 
+    });
   },
     async reg() {
 
@@ -64,7 +64,7 @@ var Register = React.createClass({
     try { 
 
 
-      let response = await fetch('http://localhost:8080/api/register', { 
+      let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/register', { 
           method: 'POST', 
           headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', }, 
           body: JSON.stringify(
@@ -91,7 +91,7 @@ var Register = React.createClass({
     }
 
     try { 
-      let response = await fetch('http://localhost:8080/api/login', { 
+      let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/login', { 
           method: 'POST', 
           headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', }, 
           body: JSON.stringify(
@@ -112,7 +112,6 @@ var Register = React.createClass({
       this.showError('Something went wrong');
     }
   },
-
   loggedin: function() {
     if(!this.state.token) {
       this.showError('Something went wrong');
@@ -148,10 +147,9 @@ var Register = React.createClass({
 
 
   render: function() {
-    nav = this.props.navigator;
         return (
         <View style={styles.container}>
-            <Image style={styles.bg} source={{uri: 'http://i.imgur.com/xlQ56UK.jpg'}} />
+            <Image style={styles.bg} source={require('./tausta.png')} />
             <View style={styles.headerContainer}>
               <Text style={styles.header}>Register</Text>
             </View>
@@ -160,7 +158,7 @@ var Register = React.createClass({
             </View>
             <View style={styles.inputs}>
                 <View style={styles.inputContainer}>
-                    <Image style={styles.inputUsername} source={{uri: 'http://i.imgur.com/iVVVMRX.png'}}/>
+                    <Image style={styles.inputUsername} source={require('./user.png')}/>
                     <TextInput 
                         style={[styles.input, styles.whiteFont]}
                         placeholder="Username"
@@ -170,7 +168,7 @@ var Register = React.createClass({
                     />
                 </View>
                 <View style={styles.inputContainer}>
-                    <Image style={styles.inputPassword} source={{uri: 'http://i.imgur.com/ON58SIG.png'}}/>
+                    <Image style={styles.inputPassword} source={require('./pwd.png')}/>
                     <TextInput
                         password={true}
                         style={[styles.input, styles.whiteFont]}
@@ -181,7 +179,7 @@ var Register = React.createClass({
                     />
                 </View>
                 <View style={styles.inputContainer}>
-                    <Image style={styles.inputPassword} source={{uri: 'http://i.imgur.com/ON58SIG.png'}}/>
+                    <Image style={styles.inputPassword} source={require('./pwd.png')}/>
                     <TextInput
                         password={true}
                         style={[styles.input, styles.whiteFont]}

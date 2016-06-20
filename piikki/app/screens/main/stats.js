@@ -17,6 +17,7 @@ var {
 } = React;
 
 var Spinner = require('react-native-spinkit');
+import Video from 'react-native-video';
 
 var Stats = React.createClass({
   getInitialState: function() {
@@ -35,7 +36,7 @@ var Stats = React.createClass({
     var app = this
     var asd = AsyncStorage.getItem('token', async function(err, result){
       try {
-            let response = await fetch('http://localhost:8080/api/prices', { 
+            let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/prices', { 
                 method: 'GET', 
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
             let responseJson = await response.json();
@@ -51,7 +52,7 @@ var Stats = React.createClass({
     var app = this
     var asd = AsyncStorage.getItem('token', async function(err, result){
       try {
-            let response = await fetch('http://localhost:8080/api/tab', { 
+            let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/tab', { 
                 method: 'GET', 
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
             let responseJson = await response.json();
@@ -67,7 +68,7 @@ var Stats = React.createClass({
     var app = this
     var asd = AsyncStorage.getItem('token', async function(err, result){
       try {
-            let response = await fetch('http://localhost:8080/api/toplist', { 
+            let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/toplist', { 
                 method: 'GET', 
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
             let responseJson = await response.json();
@@ -103,7 +104,7 @@ var Stats = React.createClass({
     var keys = Object.keys(this.state.toplist)
     for (key in keys) {
       resp.push(
-        <View style={styles.toplistItem}>
+        <View key={key} style={styles.toplistItem}>
           <Text style={[styles.toplistName, styles.toplistText]}>{this.state.toplist[key].username}</Text>
           <Text style={[styles.toplistAmount, styles.toplistText]}>{this.state.toplist[key].amount} drinks</Text>
         </View>
@@ -119,7 +120,7 @@ var Stats = React.createClass({
     }
     else {
       return(<View style={{justifyContent: 'center', alignItems:'center', flex: 0.8}}>
-        <Spinner size={100} type='ThreeBounce'/>
+        <Spinner size={100} type='ThreeBounce' color='#BBBBBB' />
         </View>);
     }
   },
@@ -133,7 +134,16 @@ var Stats = React.createClass({
   render: function() {
     return(
       <View style={{flex: 1}}>
-        <Image style={styles.bg} source={{uri: 'https://media.giphy.com/media/l3973Km00kUiLkBi0/giphy.gif'}} />
+        <Video source={{uri: 'stats'}} // Can be a URL or a local file.
+               rate={1.0}                   // 0 is paused, 1 is normal.
+               volume={0}                 // 0 is muted, 1 is normal.
+               muted={false}                // Mutes the audio entirely.
+               paused={false}               // Pauses playback entirely.
+               resizeMode="cover"           // Fill the whole screen at aspect ratio.
+               repeat={true}                // Repeat forever.
+               playInBackground={false}     // Audio continues to play when app entering background.
+               playWhenInactive={false}     // [iOS] Video continues to play when control or notification center are shown.
+               style={styles.bg} />
         <ScrollView>
           <View style={styles.header}>
             <Text style={styles.headerText}>Stats:</Text>
@@ -167,7 +177,9 @@ var styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    right:-200,
+    right: 0,
+    height: windowSize.height,
+    width: windowSize.width,
   },
   header: {
     padding:20,

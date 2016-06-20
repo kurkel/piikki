@@ -3,6 +3,7 @@ var React = require('react-native');
 var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
 
+
 var {
   AppRegistry,
   StyleSheet,
@@ -61,7 +62,7 @@ var Login1 = React.createClass({
     }
 
     try { 
-      let response = await fetch('http://localhost:8080/api/login', { 
+      let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/login', { 
           method: 'POST', 
           headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', }, 
           body: JSON.stringify(
@@ -139,10 +140,10 @@ var Login1 = React.createClass({
 
   renderHeader: function() {
     if(this.state.logoVisible) {
-      return <Image style={[styles.mark]} source={{uri: 'https://scontent-arn2-1.xx.fbcdn.net/v/t1.0-9/11009997_10207606930672465_3737485251735034342_n.jpg?oh=b8f0e293d9a6d5196ee23e17b2148b13&oe=57AEB043'}} />;
+      return <Image style={[styles.mark]} source={require('./applogo.png')} />;
     }
     else if(this.state.spinnerVisible){
-      return <Spinner size={40} type='ThreeBounce'/>;
+      return <Spinner size={40} type='ThreeBounce' color='#BBBBBB'/>;
     }
     else {
       return <Text style={[styles.errorText]}>{this.state.error}</Text>;
@@ -170,14 +171,15 @@ var Login1 = React.createClass({
   render: function() {
         return (
         <View style={styles.container}>
-            <Image style={styles.bg} source={{uri: 'http://i.imgur.com/xlQ56UK.jpg'}} />
+            <Image style={styles.bg} source={require('./tausta.png')} />
             <View style={styles.header}>
               {this.renderHeader()}
             </View>
             <View style={styles.inputs}>
                 <View style={styles.inputContainer}>
-                    <Image style={styles.inputUsername} source={{uri: 'http://i.imgur.com/iVVVMRX.png'}}/>
-                    <TextInput 
+                    <Image style={styles.inputUsername} source={require('./user.png')}/>
+                    <TextInput
+                        autoCapitalize='none'
                         style={[styles.input, styles.whiteFont]}
                         placeholder="Username"
                         placeholderTextColor="#FFF"
@@ -186,7 +188,7 @@ var Login1 = React.createClass({
                     />
                 </View>
                 <View style={styles.inputContainer}>
-                    <Image style={styles.inputPassword} source={{uri: 'http://i.imgur.com/ON58SIG.png'}}/>
+                    <Image style={styles.inputPassword} source={require('./pwd.png')}/>
                     <TextInput
                         password={true}
                         style={[styles.input, styles.whiteFont]}

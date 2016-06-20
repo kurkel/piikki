@@ -13,6 +13,7 @@ var {
   Text,
   AsyncStorage,
   Image,
+  BackAndroid
 } = React;
 
 var TabPage = require('./tab');
@@ -20,6 +21,13 @@ var StatsPage = require('./stats');
 var AdminPage = require('./admin');
 
 var AdminMainPage = React.createClass({
+  componentDidMount: function() {
+    var app = this;
+    BackAndroid.addEventListener('hardwareBackPress', function() {
+      app.props.navigator.pop(); 
+      return true; 
+    });
+  },
 
   render: function() {
     return <ScrollableTabView renderTabBar={() => <CustomTabBar />}>

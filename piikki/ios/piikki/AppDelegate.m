@@ -11,12 +11,16 @@
 
 #import "RCTRootView.h"
 
+#import <AVFoundation/AVFoundation.h>
+
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
   NSURL *jsCodeLocation;
 
+  
+  [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryAmbient error:nil];  // allow
   /**
    * Loading JavaScript code - uncomment the one you want.
    *

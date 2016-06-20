@@ -18,9 +18,13 @@ var {
 } = React;
 
 import Icon from 'react-native-vector-icons/FontAwesome';
+import Collapsible from 'react-native-collapsible';
+
+
 
 var LinearGradient = require('react-native-linear-gradient');
 var Spinner = require('react-native-spinkit');
+import Video from 'react-native-video';
 
 var Tab = React.createClass({
 	 getInitialState: function() {
@@ -30,6 +34,9 @@ var Tab = React.createClass({
 	 		prices: {},
 	 		tab: 0,
 	 		cart: [],
+            message: '',
+            otherAmount: "",
+            toggled: true,
 	 	}
 	 },
 	 componentDidMount: function() {
@@ -38,7 +45,12 @@ var Tab = React.createClass({
 
 	commitCart: function() {
 		var app = this;
+        app.setState({message: ""});
 		var cart = {};
+        if(this.state.cart.length === 0) {
+            app.setState({message: "Cart is empty!"});
+            return;
+        }
 		for (var key in this.state.cart)
 		{
 			var k = Object.keys(this.state.cart[key])[0];
@@ -50,43 +62,67 @@ var Tab = React.createClass({
 		var asd = AsyncStorage.getItem('token', async function(err, result){
 	    	try {
 		    	console.log(cart); 
-		      	let response = await fetch('http://localhost:8080/api/tab', { 
+		      	let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/tab', { 
 		          method: 'POST', 
 		          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }, 
 		          body: JSON.stringify(cart) 
 		      	}); 
 		      	let responseJson = await response.json();
-		      	console.log(responseJson);
+		      	if(responseJson.success) {
+                    var keys = Object.keys(responseJson.message);
+                    var temp_cart = app.state.cart;
+			      	for (var k in keys) {
+                        if (responseJson.message[keys[k]]) {
+                            
+                            for (var v in temp_cart) {
+                                if (Object.keys(temp_cart[v])[0] === keys[k])
+                                    temp_cart.splice(v, 1);
+                            }
+                        }
+			      	}
+                    app.setState({cart:temp_cart});
+                    app.setState({message: "Enjoy responsibly!"})
+
+		      	}
 	      	} 
 	      	catch(error) {  // Handle error
+                app.setState({message: "Error in tabbing!"})
 	        	console.error(error); }
 	  	});
 	},
 
 	addToCart: function(item) {
-		console.log(this.state.prices["Beer"])
-		console.log(item);
 		var cart = this.state.cart
 		var new_item = {}
 		new_item[item] = this.state.prices[item]
-		console.log(new_item);
 		cart.push(new_item);
-		console.log(cart);
 		this.setState({cart: cart});
+        this.setState({message: ""});
 	},
+    addOtherToCart: function() {
+        if(this.state.otherAmount > 0) {
+            var cart = this.state.cart
+            var new_item = {}
+            new_item["Misc"] = this.state.otherAmount
+            cart.push(new_item);
+            this.setState({cart: cart});
+            this.setState({message: ""});
+        }
+        this.setState({toggled: false})
+    },
 
 	deleteCart: function(item) {
 		var cart = this.state.cart;
-		console.log(item);
 		cart.splice(item, 1);
 		this.setState({cart: cart});
+        this.setState({message: ""});
 	},
 
 	getPrices: async function() {
 		var app = this
 		var asd = AsyncStorage.getItem('token', async function(err, result){
 			try {
-	      		let response = await fetch('http://localhost:8080/api/prices', { 
+	      		let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/prices', { 
 	          		method: 'GET', 
 	          		headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
 	      		let responseJson = await response.json();
@@ -95,6 +131,7 @@ var Tab = React.createClass({
 	      		app.setState({pricesAvailable: true})
 	      	} 
 	      	catch(error) {  // Handle error
+                app.setState({message: "Could not fetch prices :("})
 	        	console.error(error); }
 		});
 	},
@@ -124,7 +161,7 @@ var Tab = React.createClass({
 	renderPrices: function() {
 		if(!this.state.pricesAvailable) {
 			return(<View style={{justifyContent: 'center', alignItems:'center', flex: 0.8}}>
-				<Spinner size={100} type='ThreeBounce'/>
+				<Spinner size={100} type='ThreeBounce' color='#BBBBBB'/>
 				</View>);
 		}
 		else {
@@ -142,6 +179,39 @@ var Tab = React.createClass({
 					</View>
 				);
 			}
+
+            resp.push(
+                <View style={styles.buttonrow}>
+                    <View style={{flex:0.08}} />
+                    <LinearGradient start={[0.0, 0.0]} end={[1.0, 1.0]} colors={['rgba(180,180,180,0.7)', 'rgba(120,120,120,0.6)', 'rgba(90,90,90,0.5)']} style={[styles.button3, {borderRadius: 30}]} >
+                    <TouchableOpacity onPress={this.toggleOther} >
+                        <Text style={styles.amount}>Misc.</Text>
+                    </TouchableOpacity>
+                    <Collapsible collapsed={this.state.toggled}>
+                        <View style={styles.accordionInputRow}>
+                          <TextInput
+                            style={{height:30, flex:0.7, borderColor: 'black', borderWidth: 1, color:'#D8D8D8',}}
+                            onChangeText={(text) => this.state.otherAmount = text}
+                            keyboardType={'numeric'}
+                            ref='otherInput'
+                          />
+                          
+                          <View style={styles.changeTabButton}>
+                          <View style={{flex:0.1}} />
+                            <TouchableOpacity onPress={this.addOtherToCart}>
+                              <View style={styles.changeTabButtonInside}>
+                                <Text style={styles.changeTabButtonText}>Add</Text>
+                              </View>
+                            </TouchableOpacity>
+                            <View style={{flex:0.1}} />
+                          </View>
+                        </View>
+                    </Collapsible>
+                    </LinearGradient>
+                    <View style={{flex:0.08}} />
+                </View>
+            )
+
 			return resp;
 		}
 
@@ -152,7 +222,7 @@ var Tab = React.createClass({
 		for(var i = 0; i < this.state.cart.length; i++) {
 			var key = Object.keys(this.state.cart[i])[0];
 			resp.push(
-				<View style={{flexDirection: 'column', flex:1}}>
+				<View key={key} style={{flexDirection: 'column', flex:1}}>
 					<View style={{flex:0.1}}/>
 					<View style={styles.cartRow}>
 						<View style={{flex:0.2}}/>
@@ -179,12 +249,32 @@ var Tab = React.createClass({
 		}
 		return resp;
 	},
+    message: function() {
+        if (this.state.message !== '') {
+            return (<Text style={styles.message}>{this.state.message}</Text>)
+        }
+    },
+
+    toggleOther: function() {
+        this.setState({toggled: !this.state.toggled});
+        this.refs.otherInput.focus();
+    },
 
 	render: function() {
 
 		return(
 			<View style={{flex: 1}}>
-          	<Image style={styles.bg} source={{uri: 'https://media.giphy.com/media/l396RbDse6BMN0A8M/giphy.gif'}} />
+          	<Video source={{uri: 'admin'}} // Can be a URL or a local file.
+               rate={1.0}                   // 0 is paused, 1 is normal.
+               volume={0}                 // 0 is muted, 1 is normal.
+               muted={false}                // Mutes the audio entirely.
+               paused={false}               // Pauses playback entirely.
+               resizeMode="cover"           // Fill the whole screen at aspect ratio.
+               repeat={true}                // Repeat forever.
+               playInBackground={false}     // Audio continues to play when app entering background.
+               playWhenInactive={false}     // [iOS] Video continues to play when control or notification center are shown.
+               style={styles.bg} />
+
 			<ScrollView style={styles.container}>
 				<View style={styles.headerContainer}>
 					<Text style={styles.header}>Spike</Text>
@@ -195,12 +285,13 @@ var Tab = React.createClass({
 					</View>
 					<View style={styles.cart}>
 						<Text style={styles.currentTab}>Current tab: {this.state.tab}€</Text>
+                        {this.message()}
 						{this.renderCart()}
 					</View>
 					<View style={{flex:0.1}}>
 					</View>	
 				</View>
-				<View style={{flexDirection: 'row',}}>
+				<View style={{flexDirection: 'row', flex:0.1}}>
 					<View style={{flex: 0.1}} />
 					<View style={styles.commitCart}>
 						<TouchableOpacity onPress={this.commitCart} >
@@ -216,7 +307,7 @@ var Tab = React.createClass({
 				{this.renderPrices()}
 				<View style={{flex:0.1}}>
 				</View>
-				
+                <View style={{flex:0.1, padding:20}} />
 			</ScrollView>
 			</View>
 		)
@@ -232,7 +323,22 @@ var styles = StyleSheet.create({
 	},
 	headerContainer: {
 		flex: 0.2
-	},	
+	},
+    accordionInputRow: {
+    flexDirection: 'row',
+    flex:1,
+  },
+    message: {
+        flex: 0.1,
+        color: 'white',
+        justifyContent: 'center',
+        textAlign: 'center',
+        fontWeight: 'bold',
+        fontSize: 20,
+        textShadowColor: "#000000",
+        textShadowOffset: {width: 1, height: 1},
+        textShadowRadius: 2,
+    },
 	cart: {
 		flex: 0.8,
 		top: 10,
@@ -251,15 +357,18 @@ var styles = StyleSheet.create({
 		textShadowColor: "#000000",
 		textShadowOffset: {width: 2, height: 2},
 		textShadowRadius: 4,
+        flex: 0.5
 
 	},
 
 	bg: {
 		position: 'absolute',
         left: 0,
-        top: 0,
         bottom: 0,
+        top:0,
         right:0,
+        height:windowSize.height,
+        width: windowSize.width,
 	},
 
 	buttonrow: {
@@ -284,21 +393,15 @@ var styles = StyleSheet.create({
 		width: 130,
 		justifyContent: 'center',
 		borderRadius: 30,
-
-
 	},
 
-	amount: {
-		textAlign: 'center',
-		justifyContent: 'center',
-		fontSize: 20,
-		color: 'white',
-		fontWeight: 'bold',
-	},
-	
-	cartRow: {
-		
-	},
+    button3: {
+        height:130,
+        width: 230,
+        borderRadius: 30,
+        justifyContent: 'center',
+
+    },
 	rowName: {
 		fontSize:20,
 		flex:0.5,
@@ -333,6 +436,7 @@ var styles = StyleSheet.create({
 		borderRadius:5,
 		flex:0.8,
 		flexDirection: 'row',
+        borderWidth: 1,
 
 	},
 	commitCart: {
@@ -352,7 +456,24 @@ var styles = StyleSheet.create({
 		textShadowOffset: {width: 1, height: 1},
 		textShadowRadius: 3,
 	},
-
+    changeTabButton: {
+    flex:0.3,
+  },
+  changeTabButtonInside: {
+    flex:1,
+    borderWidth:1,
+    borderRadius: 20,
+    justifyContent: 'center',
+  },
+  changeTabButtonText: {
+    textAlign: 'center',
+    fontWeight:'bold',
+    fontSize: 20,
+    color: 'white',
+    textShadowColor: "#000000",
+    textShadowOffset: {width: 1, height: 1},
+    textShadowRadius: 3,
+  },
 
 
 })
