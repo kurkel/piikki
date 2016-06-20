@@ -105,7 +105,7 @@ var Admin = React.createClass({
         <Text style={styles.accordionTab}>Add or decrease tab:</Text>
         <View style={styles.accordionInputRow}>
           <TextInput
-            style={{height:30, flex:0.7, borderColor: 'black', borderWidth: 1, color:'#D8D8D8',}}
+            style={{height:50, flex:0.7, borderColor: 'black', borderWidth: 1, color:'#D8D8D8',}}
             onChangeText={(text) => this.state[name] = text}
             keyboardType={'numeric'}
 

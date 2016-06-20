@@ -107,8 +107,9 @@ var Tab = React.createClass({
             cart.push(new_item);
             this.setState({cart: cart});
             this.setState({message: ""});
+            this.setState({toggled: true});
         }
-        this.setState({toggled: false})
+        
     },
 
 	deleteCart: function(item) {
@@ -181,7 +182,7 @@ var Tab = React.createClass({
 			}
 
             resp.push(
-                <View style={styles.buttonrow}>
+                <View key="moi" style={styles.buttonrow}>
                     <View style={{flex:0.08}} />
                     <LinearGradient start={[0.0, 0.0]} end={[1.0, 1.0]} colors={['rgba(180,180,180,0.7)', 'rgba(120,120,120,0.6)', 'rgba(90,90,90,0.5)']} style={[styles.button3, {borderRadius: 30}]} >
                     <TouchableOpacity onPress={this.toggleOther} >
@@ -189,22 +190,25 @@ var Tab = React.createClass({
                     </TouchableOpacity>
                     <Collapsible collapsed={this.state.toggled}>
                         <View style={styles.accordionInputRow}>
-                          <TextInput
-                            style={{height:30, flex:0.7, borderColor: 'black', borderWidth: 1, color:'#D8D8D8',}}
-                            onChangeText={(text) => this.state.otherAmount = text}
-                            keyboardType={'numeric'}
-                            ref='otherInput'
-                          />
-                          
-                          <View style={styles.changeTabButton}>
-                          <View style={{flex:0.1}} />
-                            <TouchableOpacity onPress={this.addOtherToCart}>
-                              <View style={styles.changeTabButtonInside}>
-                                <Text style={styles.changeTabButtonText}>Add</Text>
-                              </View>
-                            </TouchableOpacity>
                             <View style={{flex:0.1}} />
-                          </View>
+                            <TextInput
+                                style={{height:50, flex:0.5, borderColor: 'black', borderWidth: 1, color:'#D8D8D8',}}
+                                onChangeText={(text) => this.state.otherAmount = text}
+                                keyboardType={'numeric'}
+                                ref='otherInput'
+                            />
+                            <View style={{flex:0.1}} />
+                                <View style={styles.changeTabButton}>
+                                <TouchableOpacity onPress={this.addOtherToCart}>
+                                    <View style={{flex:1.0}}>
+                                    <View style={styles.changeTabButtonInside}>
+                                        <Text style={styles.changeTabButtonText}>Add</Text>
+                                    </View>
+                                    </View>
+                                </TouchableOpacity>
+                                </View>
+
+                            <View style={{flex:0.1}} />
                         </View>
                     </Collapsible>
                     </LinearGradient>
@@ -256,8 +260,12 @@ var Tab = React.createClass({
     },
 
     toggleOther: function() {
-        this.setState({toggled: !this.state.toggled});
-        this.refs.otherInput.focus();
+        this.setState({toggled: !this.state.toggled}, function() {
+            if(!this.state.toggled) {
+                this.refs.otherInput.focus();
+            }
+        });
+        
     },
 
 	render: function() {
@@ -457,7 +465,7 @@ var styles = StyleSheet.create({
 		textShadowRadius: 3,
 	},
     changeTabButton: {
-    flex:0.3,
+    flex:0.5,
   },
   changeTabButtonInside: {
     flex:1,

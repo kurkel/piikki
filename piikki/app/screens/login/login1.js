@@ -180,6 +180,7 @@ var Login1 = React.createClass({
                     <Image style={styles.inputUsername} source={require('./user.png')}/>
                     <TextInput
                         autoCapitalize='none'
+                        autoCorrect={false}
                         style={[styles.input, styles.whiteFont]}
                         placeholder="Username"
                         placeholderTextColor="#FFF"
@@ -191,6 +192,7 @@ var Login1 = React.createClass({
                     <Image style={styles.inputPassword} source={require('./pwd.png')}/>
                     <TextInput
                         password={true}
+                        autoCorrect={false}
                         style={[styles.input, styles.whiteFont]}
                         placeholder="Password"
                         placeholderTextColor="#FFF"
