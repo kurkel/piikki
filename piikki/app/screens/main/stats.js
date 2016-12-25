@@ -1,6 +1,7 @@
-var React = require('react-native');
+var React = require('react');
 var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
+var env = require('../env');
 
 var {
   AppRegistry,
@@ -14,10 +15,9 @@ var {
   AsyncStorage,
   Modal,
   ScrollView
-} = React;
+} = require('react-native');
 
 var Spinner = require('react-native-spinkit');
-import Video from 'react-native-video';
 
 var Stats = React.createClass({
   getInitialState: function() {
@@ -36,7 +36,7 @@ var Stats = React.createClass({
     var app = this
     var asd = AsyncStorage.getItem('token', async function(err, result){
       try {
-            let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/prices', { 
+            let response = await fetch(env.host, { 
                 method: 'GET', 
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
             let responseJson = await response.json();
@@ -52,7 +52,7 @@ var Stats = React.createClass({
     var app = this
     var asd = AsyncStorage.getItem('token', async function(err, result){
       try {
-            let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/tab', { 
+            let response = await fetch(env.host, { 
                 method: 'GET', 
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
             let responseJson = await response.json();
@@ -68,7 +68,7 @@ var Stats = React.createClass({
     var app = this
     var asd = AsyncStorage.getItem('token', async function(err, result){
       try {
-            let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/toplist', { 
+            let response = await fetch(env.host, { 
                 method: 'GET', 
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
             let responseJson = await response.json();
@@ -134,16 +134,6 @@ var Stats = React.createClass({
   render: function() {
     return(
       <View style={{flex: 1}}>
-        <Video source={{uri: 'stats'}} // Can be a URL or a local file.
-               rate={1.0}                   // 0 is paused, 1 is normal.
-               volume={0}                 // 0 is muted, 1 is normal.
-               muted={false}                // Mutes the audio entirely.
-               paused={false}               // Pauses playback entirely.
-               resizeMode="cover"           // Fill the whole screen at aspect ratio.
-               repeat={true}                // Repeat forever.
-               playInBackground={false}     // Audio continues to play when app entering background.
-               playWhenInactive={false}     // [iOS] Video continues to play when control or notification center are shown.
-               style={styles.bg} />
         <ScrollView>
           <View style={styles.header}>
             <Text style={styles.headerText}>Stats:</Text>

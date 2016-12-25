@@ -1,9 +1,9 @@
 'use strict';
-var React = require('react-native');
+var React = require('react');
 var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
-import Video from 'react-native-video';
 var Spinner = require('react-native-spinkit');
+var env = require('../env');
 import Accordion from 'react-native-collapsible/Accordion';
 
 var {
@@ -18,7 +18,7 @@ var {
   AsyncStorage,
   Modal,
   ListView,
-} = React;
+} = require('react-native');
 
 var Admin = React.createClass({
   getInitialState: function() {
@@ -37,7 +37,7 @@ var Admin = React.createClass({
     var app = this
     var asd = AsyncStorage.getItem('token', async function(err, result){
       try {
-            let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/admin/getusers', { 
+            let response = await fetch(env.host, { 
                 method: 'GET', 
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
             let responseJson = await response.json();
@@ -69,7 +69,7 @@ var Admin = React.createClass({
     var app = this;
     var asd = AsyncStorage.getItem('token', async function(err, result){
         try {
-            let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/admin/tab', { 
+            let response = await fetch(env.host, { 
               method: 'POST', 
               headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }, 
               body: JSON.stringify({'username':app.state.users[id].username, 'drinks':{'payback': app.state[name]}})
@@ -159,16 +159,6 @@ var Admin = React.createClass({
   render: function() {
       return(
       <View style={styles.rootView}>
-        <Video source={{uri: 'tab'}} // Can be a URL or a local file.
-               rate={1.0}                   // 0 is paused, 1 is normal.
-               volume={0}                 // 0 is muted, 1 is normal.
-               muted={false}                // Mutes the audio entirely.
-               paused={false}               // Pauses playback entirely.
-               resizeMode="cover"           // Fill the whole screen at aspect ratio.
-               repeat={true}                // Repeat forever.
-               playInBackground={false}     // Audio continues to play when app entering background.
-               playWhenInactive={false}     // [iOS] Video continues to play when control or notification center are shown.
-               style={styles.bg} />
         <View style={styles.header}>
           <Text style={styles.headerText}>Piikki Admin:</Text>
           <Text style={styles.headerHelp}>Positive values are withdrawals and degative values are deposits</Text>

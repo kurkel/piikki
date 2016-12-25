@@ -1,7 +1,8 @@
 'use strict';
-var React = require('react-native');
+var React = require('react');
 var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
+var env = require('../env');
 
 var {
   AppRegistry,
@@ -15,7 +16,7 @@ var {
   AsyncStorage,
   Modal,
   BackAndroid
-} = React;
+} = require('react-native');
 
 var Spinner = require('react-native-spinkit');
 
@@ -64,7 +65,7 @@ var Register = React.createClass({
     try { 
 
 
-      let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/register', { 
+      let response = await fetch(env.host+'register', { 
           method: 'POST', 
           headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', }, 
           body: JSON.stringify(
@@ -91,7 +92,7 @@ var Register = React.createClass({
     }
 
     try { 
-      let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/login', { 
+      let response = await fetch(env.host+'login', { 
           method: 'POST', 
           headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', }, 
           body: JSON.stringify(

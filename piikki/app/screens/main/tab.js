@@ -1,7 +1,9 @@
 'use strict';
-var React = require('react-native');
+var React = require('react');
 var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
+var env = require('../env');
+
 
 var {
   AppRegistry,
@@ -15,16 +17,13 @@ var {
   AsyncStorage,
   Modal,
   ScrollView
-} = React;
+} = require('react-native');;
 
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Collapsible from 'react-native-collapsible';
 
 
-
-var LinearGradient = require('react-native-linear-gradient');
 var Spinner = require('react-native-spinkit');
-import Video from 'react-native-video';
 
 var Tab = React.createClass({
 	 getInitialState: function() {
@@ -62,7 +61,7 @@ var Tab = React.createClass({
 		var asd = AsyncStorage.getItem('token', async function(err, result){
 	    	try {
 		    	console.log(cart); 
-		      	let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/tab', { 
+		      	let response = await fetch(env.host+'tab', { 
 		          method: 'POST', 
 		          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }, 
 		          body: JSON.stringify(cart) 
@@ -123,7 +122,7 @@ var Tab = React.createClass({
 		var app = this
 		var asd = AsyncStorage.getItem('token', async function(err, result){
 			try {
-	      		let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/prices', { 
+	      		let response = await fetch(env.host+'prices', { 
 	          		method: 'GET', 
 	          		headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
 	      		let responseJson = await response.json();
@@ -148,11 +147,9 @@ var Tab = React.createClass({
 			resp.push(
 
 				<TouchableOpacity key={keys[i*2+j]} onPress={this.addToCart.bind(this,keys[i*2+j])}>
-					<LinearGradient cstart={[0.0, 0.0]} end={[1.0, 1.0]} colors={['rgba(180,180,180,0.7)', 'rgba(120,120,120,0.88)', 'rgba(90,90,90,1)']} style={((j == 0) ? styles.button1 : styles.button2)}>
 					<View>
 						<Text style={styles.amount}>{keys[i*2+j]}</Text>
 					</View>
-					</LinearGradient>
 				</TouchableOpacity>
 			);
 		}	
@@ -184,8 +181,7 @@ var Tab = React.createClass({
             resp.push(
                 <View key="moi" style={styles.buttonrow}>
                     <View style={{flex:0.08}} />
-                    <LinearGradient start={[0.0, 0.0]} end={[1.0, 1.0]} colors={['rgba(180,180,180,0.7)', 'rgba(120,120,120,0.6)', 'rgba(90,90,90,0.5)']} style={[styles.button3, {borderRadius: 30}]} >
-                    <TouchableOpacity onPress={this.toggleOther} >
+                    <TouchableOpacity>
                         <Text style={styles.amount}>Misc.</Text>
                     </TouchableOpacity>
                     <Collapsible collapsed={this.state.toggled}>
@@ -211,7 +207,6 @@ var Tab = React.createClass({
                             <View style={{flex:0.1}} />
                         </View>
                     </Collapsible>
-                    </LinearGradient>
                     <View style={{flex:0.08}} />
                 </View>
             )
@@ -230,7 +225,6 @@ var Tab = React.createClass({
 					<View style={{flex:0.1}}/>
 					<View style={styles.cartRow}>
 						<View style={{flex:0.2}}/>
-						<LinearGradient start={[0.0, 0.0]} end={[1.0, 1.0]} colors={['rgba(180,180,180,0.7)', 'rgba(120,120,120,0.6)', 'rgba(90,90,90,0.5)']} style={styles.cartPill}>
 							<View style={{flex:0.05}}/>
 							<Text style={styles.rowName}>{key}</Text>
 							<View style={{flex:0.1}}>
@@ -243,7 +237,6 @@ var Tab = React.createClass({
 								</TouchableOpacity>
 							</View>
 							<View style={{flex:0.05}}/>
-						</LinearGradient>
 						<View style={{flex:0.2}}/>
 					</View>
 					<View style={{flex:0.1}}/>
@@ -272,51 +265,38 @@ var Tab = React.createClass({
 
 		return(
 			<View style={{flex: 1}}>
-          	<Video source={{uri: 'admin'}} // Can be a URL or a local file.
-               rate={1.0}                   // 0 is paused, 1 is normal.
-               volume={0}                 // 0 is muted, 1 is normal.
-               muted={false}                // Mutes the audio entirely.
-               paused={false}               // Pauses playback entirely.
-               resizeMode="cover"           // Fill the whole screen at aspect ratio.
-               repeat={true}                // Repeat forever.
-               playInBackground={false}     // Audio continues to play when app entering background.
-               playWhenInactive={false}     // [iOS] Video continues to play when control or notification center are shown.
-               style={styles.bg} />
-
-			<ScrollView style={styles.container}>
-				<View style={styles.headerContainer}>
-					<Text style={styles.header}>Spike</Text>
-				</View>
-				<View style={{flex:0.1}}/>
-				<View style={{flexDirection: 'row', flex:0.7}}>
-					<View style={{flex:0.1}}>
+				<ScrollView style={styles.container}>
+					<View style={styles.headerContainer}>
+						<Text style={styles.header}>Spike</Text>
 					</View>
-					<View style={styles.cart}>
-						<Text style={styles.currentTab}>Current tab: {this.state.tab}€</Text>
-                        {this.message()}
-						{this.renderCart()}
+					<View style={{flex:0.1}}/>
+					<View style={{flexDirection: 'row', flex:0.7}}>
+						<View style={{flex:0.1}}>
+						</View>
+						<View style={styles.cart}>
+							<Text style={styles.currentTab}>Current tab: {this.state.tab}€</Text>
+	                        {this.message()}
+							{this.renderCart()}
+						</View>
+						<View style={{flex:0.1}}>
+						</View>	
+					</View>
+					<View style={{flexDirection: 'row', flex:0.1}}>
+						<View style={{flex: 0.1}} />
+						<View style={styles.commitCart}>
+							<TouchableOpacity onPress={this.commitCart} >
+									<Text style={styles.amount}>Tab me!</Text>
+							</TouchableOpacity>
+						</View>
+						<View style={{flex: 0.1}} />
 					</View>
 					<View style={{flex:0.1}}>
 					</View>	
-				</View>
-				<View style={{flexDirection: 'row', flex:0.1}}>
-					<View style={{flex: 0.1}} />
-					<View style={styles.commitCart}>
-						<TouchableOpacity onPress={this.commitCart} >
-							<LinearGradient start={[0.0, 0.0]} end={[1.0, 1.0]} colors={['rgba(180,180,180,0.7)', 'rgba(120,120,120,0.6)', 'rgba(90,90,90,0.5)']} style={{borderRadius: 30}} >
-								<Text style={styles.amount}>Tab me!</Text>
-							</LinearGradient>
-						</TouchableOpacity>
+					{this.renderPrices()}
+					<View style={{flex:0.1}}>
 					</View>
-					<View style={{flex: 0.1}} />
-				</View>
-				<View style={{flex:0.1}}>
-				</View>	
-				{this.renderPrices()}
-				<View style={{flex:0.1}}>
-				</View>
-                <View style={{flex:0.1, padding:20}} />
-			</ScrollView>
+	                <View style={{flex:0.1, padding:20}} />
+				</ScrollView>
 			</View>
 		)
 	}

@@ -1,10 +1,12 @@
-import React, {
+import React from 'react';
+
+var {
   StyleSheet,
   Text,
   View,
   TouchableOpacity,
   Animated,
-} from 'react-native';
+} = require('react-native');
 
 import Icon from 'react-native-vector-icons/FontAwesome';
 

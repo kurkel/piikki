@@ -1,5 +1,5 @@
 'use strict';
-var React = require('react-native');
+var React = require('react');
 var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
 var ScrollableTabView = require('react-native-scrollable-tab-view');
@@ -14,7 +14,7 @@ var {
   AsyncStorage,
   Image,
   BackAndroid
-} = React;
+} = require('react-native');
 
 var TabPage = require('./tab');
 var StatsPage = require('./stats');

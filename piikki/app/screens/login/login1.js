@@ -1,7 +1,9 @@
 'use strict';
-var React = require('react-native');
+var React = require('react');
 var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
+const dismissKeyboard = require('dismissKeyboard');
+var env = require('../env');
 
 
 var {
@@ -14,10 +16,11 @@ var {
   Navigator,
   TouchableOpacity,
   AsyncStorage,
-  Modal
-} = React;
+  Modal,
+  TouchableWithoutFeedback,
+  ActivityIndicator
+} = require('react-native');;
 
-var Spinner = require('react-native-spinkit');
 
 
 var Button = React.createClass({ 
@@ -62,7 +65,7 @@ var Login1 = React.createClass({
     }
 
     try { 
-      let response = await fetch('http://vituttaa.paitsiossa.net:1337/api/login', { 
+      let response = await fetch(env.host+'login', { 
           method: 'POST', 
           headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', }, 
           body: JSON.stringify(
@@ -85,6 +88,7 @@ var Login1 = React.createClass({
       }
     } 
     catch(error) {  // Handle error
+      console.log(error);
       console.error(error); }
   },
 
@@ -143,7 +147,7 @@ var Login1 = React.createClass({
       return <Image style={[styles.mark]} source={require('./applogo.png')} />;
     }
     else if(this.state.spinnerVisible){
-      return <Spinner size={40} type='ThreeBounce' color='#BBBBBB'/>;
+      return <ActivityIndicator/>;
     }
     else {
       return <Text style={[styles.errorText]}>{this.state.error}</Text>;
@@ -170,50 +174,50 @@ var Login1 = React.createClass({
 
   render: function() {
         return (
-        <View style={styles.container}>
-            <Image style={styles.bg} source={require('./tausta.png')} />
-            <View style={styles.header}>
-              {this.renderHeader()}
-            </View>
-            <View style={styles.inputs}>
-                <View style={styles.inputContainer}>
-                    <Image style={styles.inputUsername} source={require('./user.png')}/>
-                    <TextInput
-                        autoCapitalize='none'
-                        autoCorrect={false}
-                        style={[styles.input, styles.whiteFont]}
-                        placeholder="Username"
-                        placeholderTextColor="#FFF"
-                        onChangeText={(username) => this.setState({username})}
-                        value={this.state.username}
-                    />
-                </View>
-                <View style={styles.inputContainer}>
-                    <Image style={styles.inputPassword} source={require('./pwd.png')}/>
-                    <TextInput
-                        password={true}
-                        autoCorrect={false}
-                        style={[styles.input, styles.whiteFont]}
-                        placeholder="Password"
-                        placeholderTextColor="#FFF"
-                        onChangeText={(password) => this.setState({password})}
-                        value={this.state.password}
-                    />
-                </View>
-            </View>
-            <TouchableOpacity onPress={this.login}>
-              <View style={styles.signin}>
-                  <Text style={styles.whiteFont}>Sign In</Text>
+        <TouchableWithoutFeedback onPress={()=> dismissKeyboard()}>
+          <View style={styles.container}>
+              <Image style={styles.bg} source={require('./tausta.png')} />
+              <View style={styles.header}>
+                {this.renderHeader()}
               </View>
-            </TouchableOpacity>
-            <View style={styles.signup}>
-                <Text style={styles.greyFont}>Dont have an account?
-                </Text>
-                <TouchableOpacity onPress={this.register}>
-                  <Text style={styles.whiteFont}>  Sign Up</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
+              <View style={styles.inputs}>
+                  <View style={styles.inputContainer}>
+                      <TextInput
+                          autoCapitalize='none'
+                          autoCorrect={false}
+                          style={[styles.input, styles.whiteFont]}
+                          placeholder="Username"
+                          placeholderTextColor="#FFF"
+                          onChangeText={(username) => this.setState({username})}
+                          value={this.state.username}
+                      />
+                  </View>
+                  <View style={styles.inputContainer}>
+                      <TextInput
+                          password={true}
+                          autoCorrect={false}
+                          style={[styles.input, styles.whiteFont]}
+                          placeholder="Password"
+                          placeholderTextColor="#FFF"
+                          onChangeText={(password) => this.setState({password})}
+                          value={this.state.password}
+                      />
+                  </View>
+              </View>
+              <TouchableOpacity onPress={this.login}>
+                <View style={styles.signin}>
+                    <Text style={styles.whiteFont}>Sign In</Text>
+                </View>
+              </TouchableOpacity>
+              <View style={styles.signup}>
+                  <Text style={styles.greyFont}>Dont have an account?
+                  </Text>
+                  <TouchableOpacity onPress={this.register}>
+                    <Text style={styles.whiteFont}>  Sign Up</Text>
+                  </TouchableOpacity>
+              </View>
+          </View>
+        </TouchableWithoutFeedback>
     );
   }
 });
@@ -275,8 +279,6 @@ var styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: 1,
-        borderWidth: 1,
-        borderBottomColor: '#CCC',
         borderColor: 'transparent'
     },
     input: {
