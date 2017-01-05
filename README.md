@@ -6,6 +6,13 @@ kiva ja pieni piikki native-reactilla
 ### Install on Ubuntu for Android
 
 1. Install node [https://nodejs.org/en/download/package-manager/](https://nodejs.org/en/download/package-manager/)
+2. Install java
+```
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get update
+sudo apt-get install oracle-java8-installer
+sudo apt-get install oracle-java8-set-default
+```
 2. Install Android studio [https://developer.android.com/studio/install.html](https://developer.android.com/studio/install.html)
 	(Custom install with AVD)
 3. Download depencies for build and emulator using android ~/Android/Sdk/tools/ & run ./android sdk
