@@ -1,4 +1,4 @@
 module.exports = {
-	host:"http://paitsiossa.net:8080/api/",
+	host:"http://eevertti.xyz:8080/api/",
 	dev: true
 }

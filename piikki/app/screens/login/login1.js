@@ -5,6 +5,7 @@ var windowSize = Dimensions.get('window');
 const dismissKeyboard = require('dismissKeyboard');
 var env = require('../env');
 
+var gel = require('../GlobalElements');
 
 var {
   AppRegistry,
@@ -19,7 +20,7 @@ var {
   Modal,
   TouchableWithoutFeedback,
   ActivityIndicator
-} = require('react-native');;
+} = require('react-native');
 
 
 
@@ -204,18 +205,28 @@ var Login1 = React.createClass({
                       />
                   </View>
               </View>
-              <TouchableOpacity onPress={this.login}>
-                <View style={styles.signin}>
-                    <Text style={styles.whiteFont}>Sign In</Text>
-                </View>
-              </TouchableOpacity>
-              <View style={styles.signup}>
-                  <Text style={styles.greyFont}>Dont have an account?
-                  </Text>
-                  <TouchableOpacity onPress={this.register}>
-                    <Text style={styles.whiteFont}>  Sign Up</Text>
+              <View style={styles.buttons}>
+                <View style={{flex: 0.3}} />
+                <View style={styles.button}>
+                  <TouchableOpacity onPress={this.login}>
+                    <View style={styles.signin}>
+                        <Text style={styles.whiteFont}>Sign In</Text>
+                    </View>
                   </TouchableOpacity>
+                </View>
+                <View style={{flex: 0.3}} />
+                <View style={styles.button}>
+                  <TouchableOpacity onPress={this.register}>
+                    <View style={styles.signin}>
+                        <Text style={styles.whiteFont}>Register</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+                <View style={{flex: 0.3}} />
+
               </View>
+              <View style={gel.footer} />
+              
           </View>
         </TouchableWithoutFeedback>
     );
@@ -238,10 +249,17 @@ var styles = StyleSheet.create({
         width: windowSize.width,
         height: windowSize.height
     },
+    buttons: {
+      flex: 0.05,
+      flexDirection: 'row',
+    },
+    button: {
+      flex:0.5
+    },
     header: {
         justifyContent: 'center',
         alignItems: 'center',
-        flex: .3,
+        flex: 0.25,
         backgroundColor: 'transparent'
     },
     mark: {
@@ -249,9 +267,9 @@ var styles = StyleSheet.create({
         height: 150
     },
     signin: {
-        backgroundColor: '#FF3366',
-        padding: 20,
-        alignItems: 'center'
+        backgroundColor: '#4BAF4F',
+        padding: 12,
+        alignItems: 'center',
     },
     signup: {
       justifyContent: 'center',
@@ -261,7 +279,7 @@ var styles = StyleSheet.create({
     inputs: {
         marginTop: 10,
         marginBottom: 10,
-        flex: .25
+        flex: 0.12
     },
     inputPassword: {
         alignItems: "flex-start",
@@ -274,7 +292,7 @@ var styles = StyleSheet.create({
       height: 20
     },
     inputContainer: {
-        flex:0.01,
+        flex:0.3,
         flexDirection: "row",
         justifyContent: 'center',
         alignItems: 'center',
@@ -282,10 +300,12 @@ var styles = StyleSheet.create({
         borderColor: 'transparent'
     },
     input: {
+        textAlign: "center",
         alignItems: "flex-end",
         width: 200,
         fontSize: 14,
         left: 10,
+        borderColor: "white",
     },
     forgotContainer: {
       alignItems: 'flex-end',
@@ -308,8 +328,6 @@ var styles = StyleSheet.create({
       justifyContent: 'center',
       alignItems: 'center'
     },
-    button: { borderRadius: 5, flex: 1, height: 44, alignSelf: 'stretch', justifyContent: 'center', overflow: 'hidden', }, 
-    buttonText: { fontSize: 18, margin: 5, textAlign: 'center', },
 })
 
 
