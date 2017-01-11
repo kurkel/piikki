@@ -4,6 +4,7 @@ var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
 var env = require('../env');
 
+var gel = require('../GlobalElements');
 
 var {
   AppRegistry,
@@ -16,14 +17,15 @@ var {
   TouchableOpacity,
   AsyncStorage,
   Modal,
-  ScrollView
+  ScrollView,
+  ActivityIndicator
 } = require('react-native');;
 
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Collapsible from 'react-native-collapsible';
 
 
-var Spinner = require('react-native-spinkit');
+
 
 var Tab = React.createClass({
 	 getInitialState: function() {
@@ -32,6 +34,7 @@ var Tab = React.createClass({
 	 		token: '',
 	 		prices: {},
 	 		tab: 0,
+	 		total: 0.0,
 	 		cart: [],
             message: '',
             otherAmount: "",
@@ -41,7 +44,12 @@ var Tab = React.createClass({
 	 componentDidMount: function() {
 	 	this.getPrices();
 	 },
-
+	 calcTotal: function(cart) {
+    	return cart.reduce((a, b) => {
+    		a += b.amount * b.price;
+    		return a;
+    	}, 0);
+    },
 	commitCart: function() {
 		var app = this;
         app.setState({message: ""});
@@ -50,14 +58,9 @@ var Tab = React.createClass({
             app.setState({message: "Cart is empty!"});
             return;
         }
-		for (var key in this.state.cart)
-		{
-			var k = Object.keys(this.state.cart[key])[0];
-			if (cart[k])
-				cart[k] = cart[k] + 1;
-			else
-				cart[k] = 1;
-		}
+		this.state.cart.map((item) => {
+			cart[item.name] = item.amount;
+		})
 		var asd = AsyncStorage.getItem('token', async function(err, result){
 	    	try {
 		    	console.log(cart); 
@@ -68,20 +71,20 @@ var Tab = React.createClass({
 		      	}); 
 		      	let responseJson = await response.json();
 		      	if(responseJson.success) {
-                    var keys = Object.keys(responseJson.message);
                     var temp_cart = app.state.cart;
-			      	for (var k in keys) {
-                        if (responseJson.message[keys[k]]) {
-                            
+			      	for (let k of Object.keys(responseJson.message)) {
+                        if (responseJson.message[k]) {  
                             for (var v in temp_cart) {
-                                if (Object.keys(temp_cart[v])[0] === keys[k])
+                                if (temp_cart[v].name === k)
                                     temp_cart.splice(v, 1);
                             }
                         }
 			      	}
                     app.setState({cart:temp_cart});
+                    app.setState({total:app.calcTotal(temp_cart)});
                     app.setState({message: "Enjoy responsibly!"})
-
+                    if (temp_cart.length === 0)
+                    	app.getPrices();
 		      	}
 	      	} 
 	      	catch(error) {  // Handle error
@@ -91,10 +94,25 @@ var Tab = React.createClass({
 	},
 
 	addToCart: function(item) {
-		var cart = this.state.cart
-		var new_item = {}
-		new_item[item] = this.state.prices[item]
-		cart.push(new_item);
+		var cart = this.state.cart;
+		var total = this.state.total;
+		var new_item = {"name": item};
+		var items = cart.filter((item) => {return item.name === new_item.name});
+		if (items.length > 0) {
+			cart = cart.map((item) => {
+				if (item.name === new_item.name) {
+					item.amount += 1
+				}
+				return item
+
+			});
+		} else {
+			new_item["price"] = this.state.prices[item];
+			new_item["amount"] = 1;
+			cart.push(new_item);
+		}
+		total += this.state.prices[item];
+		this.setState({total: this.calcTotal(cart)});
 		this.setState({cart: cart});
         this.setState({message: ""});
 	},
@@ -110,10 +128,18 @@ var Tab = React.createClass({
         }
         
     },
-
-	deleteCart: function(item) {
+	deleteCart: function(name) {
 		var cart = this.state.cart;
-		cart.splice(item, 1);
+		var total = this.state.total;
+		cart = cart.map((item) => {
+			if (name === item.name) {
+				item.amount -= 1
+			}
+			return item;
+		});
+		cart = cart.filter((item) => {return item.amount > 0});
+		total -= this.state.prices[item]
+		this.setState({total: this.calcTotal(calc)});
 		this.setState({cart: cart});
         this.setState({message: ""});
 	},
@@ -147,7 +173,7 @@ var Tab = React.createClass({
 			resp.push(
 
 				<TouchableOpacity key={keys[i*2+j]} onPress={this.addToCart.bind(this,keys[i*2+j])}>
-					<View>
+					<View style={[gel.itemBackGroundColor, styles.button]}>
 						<Text style={styles.amount}>{keys[i*2+j]}</Text>
 					</View>
 				</TouchableOpacity>
@@ -159,7 +185,7 @@ var Tab = React.createClass({
 	renderPrices: function() {
 		if(!this.state.pricesAvailable) {
 			return(<View style={{justifyContent: 'center', alignItems:'center', flex: 0.8}}>
-				<Spinner size={100} type='ThreeBounce' color='#BBBBBB'/>
+				<ActivityIndicator style={{marginTop: 20, height: 200, width: 200}}/>
 				</View>);
 		}
 		else {
@@ -182,7 +208,9 @@ var Tab = React.createClass({
                 <View key="moi" style={styles.buttonrow}>
                     <View style={{flex:0.08}} />
                     <TouchableOpacity>
-                        <Text style={styles.amount}>Misc.</Text>
+						<View style={[gel.itemBackGroundColor, styles.button]}>
+                        	<Text style={styles.amount}>Any sum</Text>
+                        </View>
                     </TouchableOpacity>
                     <Collapsible collapsed={this.state.toggled}>
                         <View style={styles.accordionInputRow}>
@@ -218,28 +246,28 @@ var Tab = React.createClass({
 
 	renderCart: function() {
 		var resp = [];
-		for(var i = 0; i < this.state.cart.length; i++) {
-			var key = Object.keys(this.state.cart[i])[0];
+		for(let item of this.state.cart) {
 			resp.push(
-				<View key={key} style={{flexDirection: 'column', flex:1}}>
-					<View style={{flex:0.1}}/>
-					<View style={styles.cartRow}>
-						<View style={{flex:0.2}}/>
-							<View style={{flex:0.05}}/>
-							<Text style={styles.rowName}>{key}</Text>
-							<View style={{flex:0.1}}>
-							</View>
-							<Text style={styles.rowAmount}>{this.state.cart[i][key]}€</Text>
-							<View style={{flex:0.1}}/>
-							<View style={styles.deleteButton}>
-								<TouchableOpacity key={'cartrow' + i} onPress={this.deleteCart.bind(this, i)}>
-									<Icon name="remove" size={25} color="#ff0000"/>
-								</TouchableOpacity>
-							</View>
-							<View style={{flex:0.05}}/>
-						<View style={{flex:0.2}}/>
+				<View key={item.name} style={{flexDirection: 'row', flex:1, height: 30}}>
+					<View style={{flex:0.03}}/>
+					<View style={[gel.row, {flex:1, justifyContent: 'center', alignItems: 'center'}]}>
+						<Text style={styles.rowName}>{item.name}</Text>
+						<View style={{flex:0.05}} />
+						<Text style={styles.rowAmount}>{item.price}€</Text>
+						<View style={{flex:0.05}}/>
+						<View style={styles.deleteButton}>
+							<TouchableOpacity key={'decreaseAmount' + item.name} onPress={this.deleteCart.bind(this, item.name)}>
+								<Icon style={{alignItems: 'center', justifyContent: 'center'}} name="minus" size={20} color="#000000"/>
+							</TouchableOpacity>
+						</View>
+						<Text style={[styles.rowAmount, {flex: 0.15}]}>{item.amount}</Text>
+						<View style={styles.deleteButton}>
+							<TouchableOpacity key={'addAmount' + item.name} onPress={this.addToCart.bind(this, item.name)}>
+								<Icon style={{alignItems: 'center', justifyContent: 'center'}} name="plus" size={20} color="#000000"/>
+							</TouchableOpacity>
+						</View>
 					</View>
-					<View style={{flex:0.1}}/>
+					<View style={{flex:0.03}}/>
 				</View>
 
 			);
@@ -264,35 +292,28 @@ var Tab = React.createClass({
 	render: function() {
 
 		return(
-			<View style={{flex: 1}}>
+			<View style={[{flex: 1}, gel.baseBackgroundColor]}>
 				<ScrollView style={styles.container}>
-					<View style={styles.headerContainer}>
-						<Text style={styles.header}>Spike</Text>
-					</View>
-					<View style={{flex:0.1}}/>
-					<View style={{flexDirection: 'row', flex:0.7}}>
-						<View style={{flex:0.1}}>
-						</View>
+					<View style={{flex:0.1}} />
+					<View style={styles.cartContainer}>
 						<View style={styles.cart}>
-							<Text style={styles.currentTab}>Current tab: {this.state.tab}€</Text>
 	                        {this.message()}
 							{this.renderCart()}
 						</View>
-						<View style={{flex:0.1}}>
-						</View>	
-					</View>
-					<View style={{flexDirection: 'row', flex:0.1}}>
-						<View style={{flex: 0.1}} />
 						<View style={styles.commitCart}>
-							<TouchableOpacity onPress={this.commitCart} >
-									<Text style={styles.amount}>Tab me!</Text>
+							<Text style={styles.currentTab}>Total Tab: {this.state.tab}€</Text>
+							<View style={{flex: 0.3}} />
+							<TouchableOpacity style={styles.commitButton} onPress={this.commitCart} >
+								<Text style={styles.tabMe}>Tab me ({this.state.total}€)</Text>
 							</TouchableOpacity>
 						</View>
+					</View>
+					<View style={{flexDirection: 'row', flex:0.1}}>
 						<View style={{flex: 0.1}} />
 					</View>
 					<View style={{flex:0.1}}>
 					</View>	
-					{this.renderPrices()}
+						{this.renderPrices()}
 					<View style={{flex:0.1}}>
 					</View>
 	                <View style={{flex:0.1, padding:20}} />
@@ -304,10 +325,35 @@ var Tab = React.createClass({
 })
 
 var styles = StyleSheet.create({
+	tabMe: {
+		textAlign: 'center',
+		justifyContent: 'center',
+		color: "#FEFEFE",
+		fontSize: 15,
+		textShadowColor: "#000000",
+		textShadowOffset: {width: 1, height: 1},
+		textShadowRadius: 3,
+	},
 	container: {
 		flexDirection: 'column',
 		flex: 1,
 		backgroundColor: 'transparent'
+	},
+	commitButton: {
+		borderRadius: 3,
+		padding: 10,
+		backgroundColor: '#388E3C',
+		justifyContent: 'center',
+		alignItems: 'center',
+
+	},
+	cartContainer: {
+		borderRadius: 3,
+		marginTop: 5,
+		marginRight: 3,
+		marginLeft: 3,
+		flex: 0.4,
+		backgroundColor: '#FFFFFF'
 	},
 	headerContainer: {
 		flex: 0.2
@@ -328,12 +374,10 @@ var styles = StyleSheet.create({
         textShadowRadius: 2,
     },
 	cart: {
+		borderTopLeftRadius: 3,
+		borderTopRightRadius:3,
 		flex: 0.8,
-		top: 10,
-		borderWidth:1,
-		borderRadius: 20,
-		padding: 10,
-		backgroundColor:'rgba(140,140,140,0.8)'
+		backgroundColor:'#C8E6C9'
 	},	
 	header: {
 		color: 'white',
@@ -348,7 +392,14 @@ var styles = StyleSheet.create({
         flex: 0.5
 
 	},
+	button: {
+		height:100,
+		width: 160,
+		justifyContent: 'center',
+		alignItems: 'center',
+		borderRadius: 3,
 
+	},
 	bg: {
 		position: 'absolute',
         left: 0,
@@ -360,65 +411,37 @@ var styles = StyleSheet.create({
 	},
 
 	buttonrow: {
-		top:20,
+		marginTop: 5,
 		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'center',
-		height: 140,
+		height: 105,
 
 	},
-
-	button1: {
-		height:130,
-		width: 130,
-		borderRadius: 30,
-		justifyContent: 'center',
-
-	},
-
-	button2: {
-		height:130,
-		width: 130,
-		justifyContent: 'center',
-		borderRadius: 30,
-	},
-
-    button3: {
-        height:130,
-        width: 230,
-        borderRadius: 30,
-        justifyContent: 'center',
-
-    },
 	rowName: {
-		fontSize:20,
+		fontSize:18,
 		flex:0.5,
-		color: 'white',
-		textShadowColor: "#000000",
-		textShadowOffset: {width: 1, height: 1},
-		textShadowRadius: 2,
-
+		color: '#111111',
 	},
 	rowAmount: {
-		fontSize: 20,
+		textAlign: 'center',
+		justifyContent: 'center',
+		fontSize: 16,
 		flex: 0.2,
-		color: 'white',
-		textShadowColor: "#000000",
-		textShadowOffset: {width: 1, height: 1},
-		textShadowRadius: 2,
+		color: '#111111',
 	},
 	deleteButton: {
-		flex: 0.1,
-		shadowColor: "#000000",
-		shadowRadius: 3,
+		flex: 0.05,
+		alignItems: 'center',
+		justifyContent: 'center'
 	},
 	currentTab: {
+		flex: 0.3,
+		textAlign: 'center',
+		justifyContent: 'center',
 		fontWeight:'bold',
-		fontSize: 25,
-		color: 'white',
-		textShadowColor: "#000000",
-		textShadowOffset: {width: 1, height: 1},
-		textShadowRadius: 3,
+		fontSize: 14,
+		color: 'black',
 	},
 	cartPill: {
 		borderRadius:5,
@@ -428,21 +451,17 @@ var styles = StyleSheet.create({
 
 	},
 	commitCart: {
-		flex: 0.8,
-		top: 15,
-		borderRadius: 30,
-		borderWidth: 1,
+		margin: 3,
+		alignItems: 'center',
+		flexDirection: 'row',
+		height: 30,
 
 	},
 	amount: {
 		textAlign: 'center',
 		justifyContent: 'center',
-		fontWeight: 'bold',
-		color: "#FFFFFF",
-		fontSize: 25,
-		textShadowColor: "#000000",
-		textShadowOffset: {width: 1, height: 1},
-		textShadowRadius: 3,
+		color: "#101010",
+		fontSize: 22,
 	},
     changeTabButton: {
     flex:0.5,

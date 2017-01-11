@@ -5,7 +5,7 @@ var {
   Navigator
 } = require('react-native');
 
-var LoginPage = require('./app/screens/login/login1');
+var LoginPage = require('./app/screens/login/login');
 
 var MainPage = require('./app/screens/main/base');
 

@@ -30,7 +30,7 @@ var MainPage = React.createClass({
 
   render: function() {
     return <ScrollableTabView renderTabBar={() => <CustomTabBar />}>
-        <TabPage tabLabel='beer'>
+        <TabPage tabLabel='glass'>
         </TabPage>
         <StatsPage tabLabel='bar-chart-o' />
       </ScrollableTabView>;

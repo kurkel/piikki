@@ -31,10 +31,9 @@ var AdminMainPage = React.createClass({
 
   render: function() {
     return <ScrollableTabView renderTabBar={() => <CustomTabBar />}>
-        <TabPage tabLabel='beer'>
-        </TabPage>
+        <TabPage tabLabel='glass' />
         <StatsPage tabLabel='bar-chart-o' />
-        <AdminPage tabLabel='gavel' />
+        <AdminPage tabLabel='bank' />
       </ScrollableTabView>;
   }
 });

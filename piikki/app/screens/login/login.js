@@ -23,22 +23,7 @@ var {
 } = require('react-native');
 
 
-
-var Button = React.createClass({ 
-  getInitialState() { 
-    return { active: false, }; }, 
-    _onHighlight() { this.setState({active: true}); },
-     _onUnhighlight() { this.setState({active: false}); },
-      render() { var colorStyle = { color: this.state.active ? '#fff' : '#000', }; 
-      return ( <TouchableOpacity 
-        onHideUnderlay={this._onUnhighlight} 
-        onPress={this.props.onPress} 
-        onShowUnderlay={this._onHighlight} 
-        style={[styles.button, this.props.style]} underlayColor="#a9d9d4"> 
-        <Text style={[styles.buttonText, colorStyle]}>{this.props.children}</Text> 
-        </TouchableOpacity> ); } });
-
-var Login1 = React.createClass({
+var Login = React.createClass({
     getInitialState: function() {
       return {
         errorVisible: false,
@@ -178,6 +163,7 @@ var Login1 = React.createClass({
         <TouchableWithoutFeedback onPress={()=> dismissKeyboard()}>
           <View style={styles.container}>
               <Image style={styles.bg} source={require('./tausta.png')} />
+              <View style={{flex: 0.05}} />
               <View style={styles.header}>
                 {this.renderHeader()}
               </View>
@@ -209,15 +195,15 @@ var Login1 = React.createClass({
                 <View style={{flex: 0.3}} />
                 <View style={styles.button}>
                   <TouchableOpacity onPress={this.login}>
-                    <View style={styles.signin}>
-                        <Text style={styles.whiteFont}>Sign In</Text>
+                    <View style={[styles.signin, gel.loginButtonColor]}>
+                        <Text style={styles.whiteFont}>Sign In</Text> 
                     </View>
                   </TouchableOpacity>
                 </View>
                 <View style={{flex: 0.3}} />
                 <View style={styles.button}>
                   <TouchableOpacity onPress={this.register}>
-                    <View style={styles.signin}>
+                    <View style={[styles.signin, gel.loginButtonColor]}>
                         <Text style={styles.whiteFont}>Register</Text>
                     </View>
                   </TouchableOpacity>
@@ -239,9 +225,6 @@ var styles = StyleSheet.create({
       flex: 1,
       backgroundColor: 'transparent'
     },
-    modalButton: { marginTop: 10, },
-    modalcontainer: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: 'rgba(0, 0, 0, 0.5)' },
-    innerContainer: { borderRadius: 10, alignItems: 'center', backgroundColor: '#D8D8D8'},
     bg: {
         position: 'absolute',
         left: 0,
@@ -259,7 +242,7 @@ var styles = StyleSheet.create({
     header: {
         justifyContent: 'center',
         alignItems: 'center',
-        flex: 0.25,
+        flex: 0.15,
         backgroundColor: 'transparent'
     },
     mark: {
@@ -267,29 +250,13 @@ var styles = StyleSheet.create({
         height: 150
     },
     signin: {
-        backgroundColor: '#4BAF4F',
         padding: 12,
         alignItems: 'center',
-    },
-    signup: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      flex: .15
     },
     inputs: {
         marginTop: 10,
         marginBottom: 10,
-        flex: 0.12
-    },
-    inputPassword: {
-        alignItems: "flex-start",
-        width: 20,
-        height: 20
-    },
-    inputUsername: {
-      alignItems: "flex-start",
-      width: 20,
-      height: 20
+        flex: 0.1
     },
     inputContainer: {
         flex:0.3,
@@ -307,28 +274,15 @@ var styles = StyleSheet.create({
         left: 10,
         borderColor: "white",
     },
-    forgotContainer: {
-      alignItems: 'flex-end',
-      padding: 15,
-    },
-    greyFont: {
-      color: '#D8D8D8'
-    },
     whiteFont: {
       color: '#FFF'
     },
     errorText: {
-
       color: '#FF4F4D',
       fontSize: 20,
       fontWeight: 'bold',
     },
-    textWrapper: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center'
-    },
 })
 
 
-module.exports = Login1;
+module.exports = Login;

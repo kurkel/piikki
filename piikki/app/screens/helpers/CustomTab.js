@@ -48,7 +48,7 @@ const CustomTabBar = React.createClass({
       <View style={[styles.tabs, this.props.style, ]}>
         {this.props.tabs.map((tab, i) => {
           return (<TouchableOpacity key={tab+i} onPress={() => this.props.goToPage(i)} style={styles.tab}>
-            <Icon name={tab} size={20} color='#BBBBBB'/>
+            <Icon name={tab} size={20} color='#FFFFFF'/>
           </TouchableOpacity>);
         })}
       </View>
@@ -68,6 +68,7 @@ const styles = StyleSheet.create({
     height: 45,
     flexDirection: 'row',
     paddingTop: 5,
+    backgroundColor: '#388E3C',
     borderWidth: 1,
     borderTopWidth: 0,
     borderLeftWidth: 0,
@@ -77,7 +78,7 @@ const styles = StyleSheet.create({
   tabUnderlineStyle: {
     position: 'absolute',
     height: 3,
-    backgroundColor: '#3b5998',
+    backgroundColor: '#FFFFFF',
     bottom: 0,
   },
 });

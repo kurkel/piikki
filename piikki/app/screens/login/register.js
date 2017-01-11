@@ -3,6 +3,9 @@ var React = require('react');
 var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
 var env = require('../env');
+const dismissKeyboard = require('dismissKeyboard');
+
+var gel = require('../GlobalElements');
 
 var {
   AppRegistry,
@@ -15,25 +18,10 @@ var {
   TouchableHighlight,
   AsyncStorage,
   Modal,
-  BackAndroid
+  BackAndroid,
+  TouchableWithoutFeedback,
+  ActivityIndicator
 } = require('react-native');
-
-var Spinner = require('react-native-spinkit');
-
-var Button = React.createClass({ 
-  getInitialState() { 
-    return { active: false, }; }, 
-    _onHighlight() { this.setState({active: true}); },
-     _onUnhighlight() { this.setState({active: false}); },
-      render() { var colorStyle = { color: this.state.active ? '#fff' : '#000', }; 
-      return ( <TouchableHighlight 
-        onHideUnderlay={this._onUnhighlight} 
-        onPress={this.props.onPress} 
-        onShowUnderlay={this._onHighlight} 
-        style={[styles.button, this.props.style]} underlayColor="#a9d9d4"> 
-        <Text style={[styles.buttonText, colorStyle]}>{this.props.children}</Text> 
-        </TouchableHighlight> ); } });
-
 
 var Register = React.createClass({
   getInitialState: function() {
@@ -42,6 +30,8 @@ var Register = React.createClass({
       password: '',
       error: '',
       spinnerVisible: false,
+      logoVisible: true,
+      errorVisible: false
     }
   },
   componentDidMount: function() {
@@ -135,82 +125,101 @@ var Register = React.createClass({
     }
   },
 
-  showError: function(errorMsg) {
+  showSpinner: function() {
+    this.setState({logoVisible: false});
+    this.setState({errorVisible: false});
+    this.setState({spinnerVisible: true});
+  },
+
+  showLogo: function() {
+    this.setState({errorVisible: false});
     this.setState({spinnerVisible: false});
-    this.setState({error: errorMsg});
+    this.setState({logoVisible: true});
+    
+  },
+
+  showError: function() {
+    this.setState({logoVisible: false});
+    this.setState({spinnerVisible: false});
+    this.setState({errorVisible: true});
 
   },
- 
- showSpinner: function() {
-    this.setState({error: ''});
-    this.setState({spinnerVisible: true});
- },
+
+ renderHeader: function() {
+    if(this.state.logoVisible) {
+      return <Image style={[styles.mark]} source={require('./applogo.png')} />;
+    }
+    else if(this.state.spinnerVisible){
+      return <ActivityIndicator/>;
+    }
+    else {
+      return <Text style={[styles.errorText]}>{this.state.error}</Text>;
+    }
+  },
 
 
   render: function() {
         return (
+        <TouchableWithoutFeedback onPress={()=> dismissKeyboard()}>
         <View style={styles.container}>
-            <Image style={styles.bg} source={require('./tausta.png')} />
-            <View style={styles.headerContainer}>
-              <Text style={styles.header}>Register</Text>
+          <Image style={styles.bg} source={require('./tausta.png')} />
+          <View style={{flex:0.05}} />
+          <View style={styles.header}>
+            {this.renderHeader()}
+          </View>
+          <View style={{flex:0.05}} />
+          <View style={styles.inputs}>
+            <View style={styles.inputContainer}>
+                <TextInput 
+                    style={[styles.input, styles.whiteFont]}
+                    placeholder="Username"
+                    placeholderTextColor="#FFF"
+                    onChangeText={(username) => this.setState({username})}
+                    value={this.state.username}
+                />
             </View>
-            <View style={styles.errors}>
-              {this.renderErrors()}
+            <View style={styles.inputContainer}>
+                <TextInput
+                    password={true}
+                    style={[styles.input, styles.whiteFont]}
+                    placeholder="Password"
+                    placeholderTextColor="#FFF"
+                    onChangeText={(password) => this.setState({password})}
+                    value={this.state.password}
+                />
             </View>
-            <View style={styles.inputs}>
-                <View style={styles.inputContainer}>
-                    <Image style={styles.inputUsername} source={require('./user.png')}/>
-                    <TextInput 
-                        style={[styles.input, styles.whiteFont]}
-                        placeholder="Username"
-                        placeholderTextColor="#FFF"
-                        onChangeText={(username) => this.setState({username})}
-                        value={this.state.username}
-                    />
-                </View>
-                <View style={styles.inputContainer}>
-                    <Image style={styles.inputPassword} source={require('./pwd.png')}/>
-                    <TextInput
-                        password={true}
-                        style={[styles.input, styles.whiteFont]}
-                        placeholder="Password"
-                        placeholderTextColor="#FFF"
-                        onChangeText={(password) => this.setState({password})}
-                        value={this.state.password}
-                    />
-                </View>
-                <View style={styles.inputContainer}>
-                    <Image style={styles.inputPassword} source={require('./pwd.png')}/>
-                    <TextInput
-                        password={true}
-                        style={[styles.input, styles.whiteFont]}
-                        placeholder="Password again"
-                        placeholderTextColor="#FFF"
-                        onChangeText={(password2) => this.setState({password2})}
-                        value={this.state.password2}
-                    />
-                </View>
-                <View style={styles.inputContainer}>
-                    <Text style={styles.inputUsername}>?</Text>
-                    <TextInput 
-                        style={[styles.input, styles.whiteFont]}
-                        placeholder="Secret"
-                        placeholderTextColor="#FFF"
-                        onChangeText={(secret) => this.setState({secret})}
-                        value={this.state.secret}
-                    />
-                </View>
+            <View style={styles.inputContainer}>
+                <TextInput
+                    password={true}
+                    style={[styles.input, styles.whiteFont]}
+                    placeholder="Re-enter password"
+                    placeholderTextColor="#FFF"
+                    onChangeText={(password2) => this.setState({password2})}
+                    value={this.state.password2}
+                />
             </View>
-            <View style={{flex:0.15}} />
-            <TouchableHighlight style={{flex:0.1, justifyContent:'center'}} onPress={this.reg}>
-              
-              <View style={styles.signin}>
-                  <Text style={styles.whiteFont}>Register</Text>
-              </View>
-            </TouchableHighlight>
-            <View style={{flex:0.15}} />
-
+            <View style={styles.inputContainer}>
+                <TextInput 
+                    style={[styles.input, styles.whiteFont]}
+                    placeholder="Secret"
+                    placeholderTextColor="#FFF"
+                    onChangeText={(secret) => this.setState({secret})}
+                    value={this.state.secret}
+                />
+            </View>
+          </View>
+            <View style={{flex: 0.1, justifyContent:'center' , flexDirection: 'row'}}>
+              <View style={{flex:0.1}} />
+              <TouchableHighlight style={{flex: 0.1}} onPress={this.reg}>
+                <View style={[styles.signin, gel.loginButtonColor]}>
+                    <Text style={styles.whiteFont}>Register</Text>
+                </View>
+              </TouchableHighlight>
+              <View style={{flex:0.1}} />
+            </View>
+            <View style={{flex:0.4}} />
         </View>
+        </TouchableWithoutFeedback>
     );
   }
 });
@@ -221,9 +230,6 @@ var styles = StyleSheet.create({
       flex: 1,
       backgroundColor: 'transparent'
     },
-    modalButton: { marginTop: 10, },
-    modalcontainer: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: 'rgba(0, 0, 0, 0.5)' },
-    innerContainer: { borderRadius: 10, alignItems: 'center', backgroundColor: '#D8D8D8'},
     bg: {
         position: 'absolute',
         left: 0,
@@ -231,82 +237,45 @@ var styles = StyleSheet.create({
         width: windowSize.width,
         height: windowSize.height
     },
-    errors: {
-      flex: 0.1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
     errorText: {
       color: '#FF4F4D',
       fontSize: 20,
       fontWeight: 'bold',
     },
     header: {
-        fontWeight: 'bold',
-        fontSize: 30,
-        backgroundColor: 'transparent',
-        color: '#FFF'
-
-    },
-    headerContainer: {
-      flex: 0.2,
-      justifyContent: 'center',
-      alignItems: 'center',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flex: 0.35,
+        backgroundColor: 'transparent'
     },
     mark: {
         width: 150,
         height: 150
     },
     signin: {
-        backgroundColor: '#FF3366',
+        backgroundColor: '#4BAF4F',
         alignItems: 'center',
         justifyContent: 'center',
-        flex: 0.2
-    },
-    signup: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      flex: .15
+        flex: 0.5
     },
     inputs: {
-        marginTop: 50,
         marginBottom: 10,
-        flex: .3
-    },
-    inputPassword: {
-        alignItems: "flex-start",
-        width: 20,
-        height: 20
-    },
-    inputUsername: {
-      alignItems: "flex-start",
-      width: 20,
-      height: 20
+        flex: 0.4
     },
     inputContainer: {
         flexDirection: "row",
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 1,
-        borderWidth: 1,
-        borderBottomColor: '#CCC',
-        borderColor: 'transparent',
         flex: 0.25,
     },
     input: {
-        alignItems: "flex-end",
+        textAlign: 'center',
         width: 200,
         fontSize: 14,
-        left: 10,
-    },
-    greyFont: {
-      color: '#D8D8D8'
     },
     whiteFont: {
       color: '#FFF'
     },
-    button: { borderRadius: 5, flex: 1, height: 44, alignSelf: 'stretch', justifyContent: 'center', overflow: 'hidden', }, 
-    buttonText: { fontSize: 18, margin: 5, textAlign: 'center', },
 })
 
 
