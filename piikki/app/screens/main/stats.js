@@ -14,10 +14,10 @@ var {
   TouchableOpacity,
   AsyncStorage,
   Modal,
-  ScrollView
+  ScrollView,
+  ActivityIndicator
 } = require('react-native');
 
-var Spinner = require('react-native-spinkit');
 
 var Stats = React.createClass({
   getInitialState: function() {
@@ -120,7 +120,7 @@ var Stats = React.createClass({
     }
     else {
       return(<View style={{justifyContent: 'center', alignItems:'center', flex: 0.8}}>
-        <Spinner size={100} type='ThreeBounce' color='#BBBBBB' />
+        <ActivityIndicator style={{marginTop: 20, height: 100, width: 100}}/>
         </View>);
     }
   },

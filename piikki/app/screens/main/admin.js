@@ -2,7 +2,6 @@
 var React = require('react');
 var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
-var Spinner = require('react-native-spinkit');
 var env = require('../env');
 import Accordion from 'react-native-collapsible/Accordion';
 
@@ -18,6 +17,7 @@ var {
   AsyncStorage,
   Modal,
   ListView,
+  ActivityIndicator
 } = require('react-native');
 
 var Admin = React.createClass({
@@ -142,7 +142,7 @@ var Admin = React.createClass({
     }
     else {
       return(<View style={{justifyContent: 'center', alignItems:'center', flex: 0.8}}>
-        <Spinner size={100} type='ThreeBounce' color='#BBBBBB'/>
+        <ActivityIndicator style={{marginTop: 20, height: 100, width: 100}}/>
         </View>);
     }
   },

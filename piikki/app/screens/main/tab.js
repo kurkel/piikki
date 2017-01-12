@@ -26,7 +26,6 @@ import Collapsible from 'react-native-collapsible';
 
 
 
-
 var Tab = React.createClass({
 	 getInitialState: function() {
 	 	return {
@@ -38,7 +37,8 @@ var Tab = React.createClass({
 	 		cart: [],
             message: '',
             otherAmount: "",
-            toggled: true,
+            toggled: false,
+            comment: '',
 	 	}
 	 },
 	 componentDidMount: function() {
@@ -120,11 +120,16 @@ var Tab = React.createClass({
         if(this.state.otherAmount > 0) {
             var cart = this.state.cart
             var new_item = {}
-            new_item["Misc"] = this.state.otherAmount
+            new_item["name"] = "Misc";
+            new_item["price"] = this.state.otherAmount;
+            new_item["comment"] = this.state.comment;
+            new_item["amount"] = 1;
             cart.push(new_item);
+            this.setState({total: this.calcTotal(cart)});
             this.setState({cart: cart});
             this.setState({message: ""});
             this.setState({toggled: true});
+            this.toggleOther();
         }
         
     },
@@ -138,8 +143,7 @@ var Tab = React.createClass({
 			return item;
 		});
 		cart = cart.filter((item) => {return item.amount > 0});
-		total -= this.state.prices[item]
-		this.setState({total: this.calcTotal(calc)});
+		this.setState({total: this.calcTotal(cart)});
 		this.setState({cart: cart});
         this.setState({message: ""});
 	},
@@ -205,36 +209,13 @@ var Tab = React.createClass({
 			}
 
             resp.push(
-                <View key="moi" style={styles.buttonrow}>
+                <View key="moi" style={styles.collapsibleButtonrow}>
                     <View style={{flex:0.08}} />
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={this.toggleOther}>
 						<View style={[gel.itemBackGroundColor, styles.button]}>
-                        	<Text style={styles.amount}>Any sum</Text>
+                        	<Text style={styles.amount}>Any</Text>
                         </View>
                     </TouchableOpacity>
-                    <Collapsible collapsed={this.state.toggled}>
-                        <View style={styles.accordionInputRow}>
-                            <View style={{flex:0.1}} />
-                            <TextInput
-                                style={{height:50, flex:0.5, borderColor: 'black', borderWidth: 1, color:'#D8D8D8',}}
-                                onChangeText={(text) => this.state.otherAmount = text}
-                                keyboardType={'numeric'}
-                                ref='otherInput'
-                            />
-                            <View style={{flex:0.1}} />
-                                <View style={styles.changeTabButton}>
-                                <TouchableOpacity onPress={this.addOtherToCart}>
-                                    <View style={{flex:1.0}}>
-                                    <View style={styles.changeTabButtonInside}>
-                                        <Text style={styles.changeTabButtonText}>Add</Text>
-                                    </View>
-                                    </View>
-                                </TouchableOpacity>
-                                </View>
-
-                            <View style={{flex:0.1}} />
-                        </View>
-                    </Collapsible>
                     <View style={{flex:0.08}} />
                 </View>
             )
@@ -281,10 +262,8 @@ var Tab = React.createClass({
     },
 
     toggleOther: function() {
-        this.setState({toggled: !this.state.toggled}, function() {
-            if(!this.state.toggled) {
-                this.refs.otherInput.focus();
-            }
+        this.setState({toggled: !this.state.toggled}, ()=>{
+            if (this.state.toggled) this.refs.otherInput.focus();
         });
         
     },
@@ -317,7 +296,33 @@ var Tab = React.createClass({
 					<View style={{flex:0.1}}>
 					</View>
 	                <View style={{flex:0.1, padding:20}} />
-				</ScrollView>
+	                <Modal animationType={"slide"} transparent={true} visible={this.state.toggled}
+	                onRequestClose={() => {this.setState({'toggled': !this.state.toggled});}} >
+	                	<View style={styles.accordionInputRow}>
+                            <View style={{flex:0.1}} />
+                            <Text style={styles.modalHeader}>Custom amount</Text>
+                            <View style={{flex:0.1}} />
+                            <TextInput
+                                style={{height:20, flex:0.2, color:'#D8D8D8', textAlign:'center'}}
+                                onChangeText={(text) => this.state.otherAmount = text}
+                                keyboardType={'numeric'}
+                                ref='otherInput'
+                                placeholder='Amount'
+                            />
+                            <TextInput
+                                style={{height:20, flex:0.2, color:'#D8D8D8', textAlign:'center'}}
+                                onChangeText={(text) => this.state.comment = text}
+                                ref='otherCommentInput'
+                                placeholder='Reason'
+                            />
+                            <View style={{flex:0.1}} />
+                            <TouchableOpacity style={styles.modalButton} onPress={this.addOtherToCart} >
+								<Text style={styles.tabMe}>Add to Cart</Text>
+							</TouchableOpacity>
+                            <View style={{flex:0.1}} />
+                        </View>
+	                </Modal>				
+                </ScrollView>
 			</View>
 		)
 	}
@@ -334,12 +339,26 @@ var styles = StyleSheet.create({
 		textShadowOffset: {width: 1, height: 1},
 		textShadowRadius: 3,
 	},
+	modalHeader: {
+		'textAlign': 'center',
+		fontSize: 18,
+
+	},
 	container: {
 		flexDirection: 'column',
 		flex: 1,
 		backgroundColor: 'transparent'
 	},
 	commitButton: {
+		borderRadius: 3,
+		padding: 10,
+		backgroundColor: '#388E3C',
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	modalButton: {
+		marginRight: 20,
+		marginLeft: 20,
 		borderRadius: 3,
 		padding: 10,
 		backgroundColor: '#388E3C',
@@ -359,8 +378,13 @@ var styles = StyleSheet.create({
 		flex: 0.2
 	},
     accordionInputRow: {
-    flexDirection: 'row',
-    flex:1,
+    flexDirection: 'column',
+    margin: 10,
+    marginTop: windowSize.height/4,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 5,
+    height: windowSize.height/2,
+    padding: 5
   },
     message: {
         flex: 0.1,
@@ -418,6 +442,15 @@ var styles = StyleSheet.create({
 		height: 105,
 
 	},
+	collapsibleButtonrow: {
+		marginTop: 5,
+
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+		height: 100,
+
+	},
 	rowName: {
 		fontSize:18,
 		flex:0.5,
@@ -454,7 +487,7 @@ var styles = StyleSheet.create({
 		margin: 3,
 		alignItems: 'center',
 		flexDirection: 'row',
-		height: 30,
+		height: 40,
 
 	},
 	amount: {
