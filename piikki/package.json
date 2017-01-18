@@ -10,7 +10,10 @@
     "react": "^15.4.1",
     "react-native": "^0.40.0",
     "react-native-collapsible": "git://github.com/relayfoods/react-native-collapsible.git#collapsible-not-expanding-temp-fix",
+    "react-native-push-notification": "^2.2.1",
     "react-native-scrollable-tab-view": "^0.7.0",
-    "react-native-vector-icons": "^3.0.0"
+    "react-native-vector-icons": "^3.0.0",
+    "react-native-wifi-manager": "^0.1.2",
+    "react-native-workers": "^0.3.1"
   }
 }

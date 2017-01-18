@@ -2,6 +2,7 @@ var React = require('react');
 var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
 var env = require('../env');
+var gel = require('../GlobalElements');
 
 var {
   AppRegistry,
@@ -15,7 +16,8 @@ var {
   AsyncStorage,
   Modal,
   ScrollView,
-  ActivityIndicator
+  ActivityIndicator,
+  RefreshControl
 } = require('react-native');
 
 
@@ -23,11 +25,12 @@ var Stats = React.createClass({
   getInitialState: function() {
     return {
       currentTabRdy: false,
-      ownOverallRdy: false,
-      ownMonthRdy: false,
+      drinkStatsRdy: false,
       topListRdy: false,
+      drinkStats: false,
       tab: 0,
       toplist: {},
+      refreshing: false,
 
     }
   },
@@ -36,23 +39,7 @@ var Stats = React.createClass({
     var app = this
     var asd = AsyncStorage.getItem('token', async function(err, result){
       try {
-            let response = await fetch(env.host, { 
-                method: 'GET', 
-                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
-            let responseJson = await response.json();
-            app.setState({tab: responseJson.tab})
-            app.setState({currentTabRdy: true})
-          } 
-          catch(error) {  // Handle error
-            console.error(error); }
-    });
-  },
-
-  getCurrentOwn: function() {
-    var app = this
-    var asd = AsyncStorage.getItem('token', async function(err, result){
-      try {
-            let response = await fetch(env.host, { 
+            let response = await fetch(env.host+'tab', { 
                 method: 'GET', 
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
             let responseJson = await response.json();
@@ -68,7 +55,7 @@ var Stats = React.createClass({
     var app = this
     var asd = AsyncStorage.getItem('token', async function(err, result){
       try {
-            let response = await fetch(env.host, { 
+            let response = await fetch(env.host + 'toplist', { 
                 method: 'GET', 
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
             let responseJson = await response.json();
@@ -81,11 +68,37 @@ var Stats = React.createClass({
     });
   },
 
-  componentDidMount: function() {
-    this.getCurrentTab();
-    this.getTopList();
+  getDrinkStats: function () {
+    var app = this
+    var asd = AsyncStorage.getItem('token', async function(err, result){
+      try {
+            let response = await fetch(env.host + 'drinkstats', { 
+                method: 'GET', 
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
+            let responseJson = await response.json();
+            delete responseJson.success
+            app.setState({drinkStats: responseJson})
+            app.setState({drinkStatsRdy: true})
+          } 
+          catch(error) {  // Handle error
+            console.error(error); }
+    });
   },
 
+  componentDidMount: function() {
+    this.fetchStats();
+  },
+
+  fetchStats: function() {
+    this.setState({refreshing: true});
+    this.getCurrentTab()
+    .then(this.getTopList)
+    .then(() => {
+      this.setState({refreshing: false});
+    });
+    
+    //this.getDrinkStats();
+  },
 
   renderTab: function() {
     return <Text style={styles.currentTabText}>{this.state.tab}€</Text>;
@@ -95,20 +108,33 @@ var Stats = React.createClass({
     return <Text>Moi</Text>;
   },
 
-  renderOwnMonth: function() {
+  renderOwnOverall: function() {
+    return <Text>Moi</Text>;
+  },
+
+  renderList: function() {
     return <Text>Moi</Text>;
   },
 
   renderTopList: function() {
     var resp = [];
     var keys = Object.keys(this.state.toplist)
-    for (key in keys) {
-      resp.push(
+    for (var key = 0; key < keys.length; key++) {
+      if (key === 0) {
+        resp.push(
         <View key={key} style={styles.toplistItem}>
-          <Text style={[styles.toplistName, styles.toplistText]}>{this.state.toplist[key].username}</Text>
-          <Text style={[styles.toplistAmount, styles.toplistText]}>{this.state.toplist[key].amount} drinks</Text>
+          <Text style={[styles.toplistName, styles.toplistTextFirst]}>{this.state.toplist[keys[key]].username}</Text>
+          <Text style={[styles.toplistAmount, styles.toplistTextFirst]}>{this.state.toplist[keys[key]].amount} drinks</Text>
         </View>
       );
+      } else {
+        resp.push(
+        <View key={key} style={styles.toplistItem}>
+          <Text style={[styles.toplistName, styles.toplistText]}>{this.state.toplist[keys[key]].username}</Text>
+          <Text style={[styles.toplistAmount, styles.toplistText]}>{this.state.toplist[keys[key]].amount} drinks</Text>
+        </View>
+      );
+      }
     }
     return resp;
 
@@ -125,35 +151,21 @@ var Stats = React.createClass({
     }
   },
 
-
-
-  getStats: function() {
-
-  },
-
   render: function() {
     return(
-      <View style={{flex: 1}}>
-        <ScrollView>
-          <View style={styles.header}>
-            <Text style={styles.headerText}>Stats:</Text>
-          </View>
-          <View >
-            <View style={styles.currentTab}>
-              <Text style={styles.subTopic}>Current Tab:</Text>
-              {this.renderOrSpinner(this.state.currentTabRdy, this.renderTab)}
+      <View style={[{flex: 1}, gel.baseBackgroundColor]}>
+        <ScrollView refreshControl={
+          <RefreshControl refreshing={this.state.refreshing} onRefresh={this.fetchStats} />}
+        >
+            <View style={styles.card}>
+              <View style={[styles.cardContent, gel.itemBackGroundColor]}>
+              {this.renderOrSpinner(this.state.topListRdy, this.renderTopList)}
+              </View>
+              <View style={styles.cardFooter}>
+                <Text style={styles.cardFooterText}>TOP DRUNK</Text>
+              </View>
             </View>
-            <View style={styles.ownOverall}>
-              {this.renderOrSpinner(this.state.ownOverallRdy, this.renderOwnOverall)}
-            </View>
-            <View style={styles.ownMonth}>
-              {this.renderOrSpinner(this.state.ownMonthRdy, this.renderOwnMonth)}
-            </View>
-            <View style={styles.topList}>
-            <Text style={styles.subTopic}>Top drunks alltime:</Text>
-            {this.renderOrSpinner(this.state.topListRdy, this.renderTopList)}
-            </View>
-          </View>
+
         </ScrollView>
       </View>
     );
@@ -170,6 +182,27 @@ var styles = StyleSheet.create({
     right: 0,
     height: windowSize.height,
     width: windowSize.width,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    margin: 5,
+    borderRadius: 3,
+    elevation: 5,
+  },
+  cardContent: {
+    borderTopLeftRadius: 3,
+    borderTopRightRadius: 3,
+    paddingTop: 10,
+    paddingBottom: 10,
+  },
+  cardFooterText: {
+  },
+  cardFooterText: {
+    marginLeft: 20,
+    fontSize: 20,
+    color: '#757575',
+    paddingBottom: 10,
+    paddingTop: 10
   },
   header: {
     padding:20,
@@ -237,10 +270,14 @@ var styles = StyleSheet.create({
   toplistText:{
     fontWeight:'bold',
     fontSize: 20,
-    color: 'white',
-    textShadowColor: "#000000",
-    textShadowOffset: {width: 1, height: 1},
-    textShadowRadius: 3,
+    color: '#757575',
+  },
+  toplistTextFirst:{
+    marginTop: 10,
+    marginBottom: 10,
+    fontWeight:'bold',
+    fontSize: 25,
+    color: 'black',
   },
 
   toplistItem: {

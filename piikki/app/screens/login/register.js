@@ -42,7 +42,7 @@ var Register = React.createClass({
     });
   },
     async reg() {
-
+    dismissKeyboard();
     this.showSpinner()
     if(this.state.username === '' || this.state.password === '') {
        this.showError("Fill out both fields first!");
@@ -61,8 +61,9 @@ var Register = React.createClass({
           body: JSON.stringify(
             { username: this.state.username, password: this.state.password, secret: this.state.secret, admin: false}) }); 
       let responseJson = await response.json(); 
-      if(responseJson.success == false) {
+      if(responseJson.success === false) {
         this.state.error = responseJson.error;
+        this.showError(responseJson.error);
       }
       else {
         var loggers = this.login;
@@ -180,7 +181,8 @@ var Register = React.createClass({
             </View>
             <View style={styles.inputContainer}>
                 <TextInput
-                    password={true}
+                    secureTextEntry={true}
+                    autoCorrect={false}
                     style={[styles.input, styles.whiteFont]}
                     placeholder="Password"
                     placeholderTextColor="#FFF"
@@ -190,7 +192,7 @@ var Register = React.createClass({
             </View>
             <View style={styles.inputContainer}>
                 <TextInput
-                    password={true}
+                    secureTextEntry={true}
                     style={[styles.input, styles.whiteFont]}
                     placeholder="Re-enter password"
                     placeholderTextColor="#FFF"

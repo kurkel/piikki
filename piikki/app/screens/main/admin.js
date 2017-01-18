@@ -3,10 +3,16 @@ var React = require('react');
 var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
 var env = require('../env');
+var gel = require('../GlobalElements');
+
+
 import Accordion from 'react-native-collapsible/Accordion';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 var {
   AppRegistry,
+  Animated,
+  Easing,
   StyleSheet,
   View,
   Text,
@@ -17,7 +23,9 @@ var {
   AsyncStorage,
   Modal,
   ListView,
-  ActivityIndicator
+  ActivityIndicator,
+  ScrollView,
+  RefreshControl
 } = require('react-native');
 
 var Admin = React.createClass({
@@ -26,18 +34,22 @@ var Admin = React.createClass({
       usersRdy: false,
       users: {},
       userKeys: [],
+      refreshing: false,
     };
   },
 
   componentDidMount: function() {
-    this.getUsers();
+    this.setState({'refreshing': true});
+    this.getUsers().then(()=> {
+      this.setState({'refreshing': false});
+    })
   },
 
   getUsers: async function() {
     var app = this
     var asd = AsyncStorage.getItem('token', async function(err, result){
       try {
-            let response = await fetch(env.host, { 
+            let response = await fetch(env.host + 'admin/getusers', { 
                 method: 'GET', 
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
             let responseJson = await response.json();
@@ -69,7 +81,7 @@ var Admin = React.createClass({
     var app = this;
     var asd = AsyncStorage.getItem('token', async function(err, result){
         try {
-            let response = await fetch(env.host, { 
+            let response = await fetch(env.host + 'admin/tab', { 
               method: 'POST', 
               headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }, 
               body: JSON.stringify({'username':app.state.users[id].username, 'drinks':{'payback': app.state[name]}})
@@ -88,8 +100,11 @@ var Admin = React.createClass({
 
   _renderHeader: function(section, index) {
     return (
-      <View style={styles.accordionPill}>
-        <Text style={styles.accordionPillText}>{section.username}</Text>
+      <View style={styles.accordionHeader}>
+        <Text style={[styles.accordionHeaderText, styles.accordionHeaderName]}>{section.username}</Text>
+        <Text style={[styles.accordionHeaderText, styles.accordionHeaderAmount]}>{section.amount}€</Text>
+        <Icon ref={'cheron'+index} style={[styles.accordionHeaderAmount, {alignItems: 'center', justifyContent: 'center'}]}
+        name={'chevron-right'} size={20} color='#000' />
       </View>
     );
   },
@@ -100,24 +115,31 @@ var Admin = React.createClass({
   var name = "user"+index+"Value";
 
     return (
-      <View style={styles.accordionContent}>
-        <Text style={styles.accordionTab}>Current Tab: {section.amount}€</Text>
+      <View style={[styles.accordionContent, gel.itemBackGroundColor]}>
         <Text style={styles.accordionTab}>Add or decrease tab:</Text>
         <View style={styles.accordionInputRow}>
           <TextInput
-            style={{height:50, flex:0.7, borderColor: 'black', borderWidth: 1, color:'#D8D8D8',}}
-            onChangeText={(text) => this.state[name] = text}
+            style={{height:50, flex:0.7, borderColor: 'black', color:'#000', textAlign: 'center'}}
+            ref = {name}
+            onChangeText={(text) => {
+              var reg = /^-?\d*\.?\d*$/
+              if(reg.test(text)) {
+                var obj = {};
+                obj[name] = text;
+                this.setState(obj);
+              }
+            }}
             keyboardType={'numeric'}
+            placeholder={'Amount'}
+            value={this.state[name]}
 
           />
           <View style={{flex:0.1}} />
-          <View style={styles.changeTabButton}>
-            <TouchableOpacity key={name} onPress={this.changeTab.bind(this, index)}>
-              <View style={styles.changeTabButtonInside}>
-                <Text style={styles.changeTabButtonText}>Tab!</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity key={name} onPress={this.changeTab.bind(this, index)}>
+            <View style={[styles.changeTabButtonInside, gel.loginButtonColor]}>
+              <Text style={styles.changeTabButtonText}>Tab!</Text>
+            </View>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -158,15 +180,17 @@ var Admin = React.createClass({
 
   render: function() {
       return(
-      <View style={styles.rootView}>
+      <ScrollView contentContainerStyle={{flex:1}} refreshControl={
+                        <RefreshControl refreshing={this.state.refreshing} onRefresh={this.componentDidMount} />
+                      } 
+        style={styles.rootView}>
         <View style={styles.header}>
-          <Text style={styles.headerText}>Piikki Admin:</Text>
-          <Text style={styles.headerHelp}>Positive values are withdrawals and degative values are deposits</Text>
+          <Text style={styles.headerHelp}>Positive values are withdrawals and negative values are deposits</Text>
           <View style={{flex:0.05}}/>
             {this.message()}
-        </View>
+          </View>
         {this.renderOrSpinner(this.state.usersRdy, this.renderUsers)}
-      </View>
+      </ScrollView>
       );
   }
 });
@@ -184,14 +208,10 @@ var styles = StyleSheet.create({
   accordionInputRow: {
     flexDirection: 'row',
   },
-  changeTabButton: {
-    flex:0.3,
-  },
   changeTabButtonInside: {
-    flex:1,
-    borderWidth:1,
-    borderRadius: 20,
+    borderRadius: 3,
     justifyContent: 'center',
+    padding: 10,
   },
   changeTabButtonText: {
     textAlign: 'center',
@@ -215,10 +235,7 @@ var styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight:'bold',
     fontSize: 20,
-    color: 'white',
-    textShadowColor: "#000000",
-    textShadowOffset: {width: 1, height: 1},
-    textShadowRadius: 2,
+    color: '#121212',
   },
   headerText: {
     flex:0.5,
@@ -245,27 +262,37 @@ var styles = StyleSheet.create({
   error: {
     color: 'red',
   },
-  accordionPill: {
+  accordionHeader: {
     padding: 5,
-    backgroundColor: "rgba(0,0,0,0.2)",
-    justifyContent: 'center',
+    marginLeft: 10,
+    marginRight: 10,
+    height: 40,
     borderWidth: 1,
-    borderBottomColor: "#CCC",
-    borderTopColor: "#CCC",
+    borderBottomColor: "#000000",
     borderColor: "transparent",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  accordionPillText: {
+  accordionHeaderText: {
+    fontSize: 20,
+    color: 'black',
+  },
+  accordionHeaderName: {
     textAlign: 'center',
-    fontWeight:'bold',
-    fontSize: 30,
-    color: 'white',
-    textShadowColor: "#000000",
-    textShadowOffset: {width: 1, height: 1},
-    textShadowRadius: 3,
+    flex: 0.7,
+  },
+  accordionHeaderAmount: {
+    textAlign: 'center',
+    flex: 0.3,
   },
   accordionContent: {
+    marginLeft: 10,
+    marginRight: 10,
+    marginBottom: 10,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
     padding: 5,
-    backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: 'center',
     borderWidth: 1,
     borderBottomColor: "#CCC",

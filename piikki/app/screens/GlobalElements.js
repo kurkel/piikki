@@ -20,10 +20,6 @@ module.exports = StyleSheet.create({
 		backgroundColor: '#4BAE4F'
 	},
 	itemBackGroundColor: {
-		elevation: 5,
-		shadowColor: '#000000',
-		shadowOffset: {width: 5, height: 5},
-		shadowRadius: 2,
 		backgroundColor: '#C8E6C9',
 	}
 });

@@ -303,14 +303,14 @@ var Tab = React.createClass({
                             <Text style={styles.modalHeader}>Custom amount</Text>
                             <View style={{flex:0.1}} />
                             <TextInput
-                                style={{height:20, flex:0.2, color:'#D8D8D8', textAlign:'center'}}
+                                style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
                                 onChangeText={(text) => this.state.otherAmount = text}
                                 keyboardType={'numeric'}
                                 ref='otherInput'
                                 placeholder='Amount'
                             />
                             <TextInput
-                                style={{height:20, flex:0.2, color:'#D8D8D8', textAlign:'center'}}
+                                style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
                                 onChangeText={(text) => this.state.comment = text}
                                 ref='otherCommentInput'
                                 placeholder='Reason'
@@ -378,13 +378,13 @@ var styles = StyleSheet.create({
 		flex: 0.2
 	},
     accordionInputRow: {
-    flexDirection: 'column',
-    margin: 10,
-    marginTop: windowSize.height/4,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 5,
-    height: windowSize.height/2,
-    padding: 5
+	    flexDirection: 'column',
+	    margin: 10,
+	    marginTop: windowSize.height/4,
+	    backgroundColor: '#FFFFFF',
+	    borderRadius: 5,
+	    height: windowSize.height/2,
+	    padding: 5
   },
     message: {
         flex: 0.1,
@@ -422,6 +422,10 @@ var styles = StyleSheet.create({
 		justifyContent: 'center',
 		alignItems: 'center',
 		borderRadius: 3,
+		elevation: 5,
+		shadowColor: '#000000',
+		shadowOffset: {width: 5, height: 5},
+		shadowRadius: 2,
 
 	},
 	bg: {
@@ -473,7 +477,7 @@ var styles = StyleSheet.create({
 		textAlign: 'center',
 		justifyContent: 'center',
 		fontWeight:'bold',
-		fontSize: 14,
+		fontSize: 18,
 		color: 'black',
 	},
 	cartPill: {

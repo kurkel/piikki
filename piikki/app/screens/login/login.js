@@ -19,7 +19,8 @@ var {
   AsyncStorage,
   Modal,
   TouchableWithoutFeedback,
-  ActivityIndicator
+  ActivityIndicator,
+  ScrollView
 } = require('react-native');
 
 
@@ -43,6 +44,7 @@ var Login = React.createClass({
 
     async login() {
       this.showSpinner();
+      dismissKeyboard();
 
     if(this.state.username === '' || this.state.password === '') {
       this.state.error = "Username or password empty";
@@ -181,7 +183,7 @@ var Login = React.createClass({
                   </View>
                   <View style={styles.inputContainer}>
                       <TextInput
-                          password={true}
+                          secureTextEntry={true}
                           autoCorrect={false}
                           style={[styles.input, styles.whiteFont]}
                           placeholder="Password"
