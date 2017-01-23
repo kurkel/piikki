@@ -396,7 +396,8 @@ var styles = StyleSheet.create({
 	    padding: 5
   },
     message: {
-        flex: 0.1,
+        flex: 0.2,
+        margin: 5,
         color: 'white',
         justifyContent: 'center',
         textAlign: 'center',

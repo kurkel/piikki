@@ -91,7 +91,7 @@ var Stats = React.createClass({
           <View style={styles.card} key={item.time + item.name}>
             <View style={[styles.cardBody, gel.itemBackGroundColor]}>
               <Text style={styles.drinkName}>{item.name}</Text>
-              <Text style={styles.drinkAmount}>{item.amount}</Text>
+              <Text style={styles.drinkAmount}>{item.amount} pcs.</Text>
               <Text style={styles.drinkPrice}>{item.price}€</Text>
             </View>
             <View style={styles.cardFooter}>
