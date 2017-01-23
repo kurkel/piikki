@@ -2,18 +2,21 @@
 var React = require('react');
 var {
   AppRegistry,
-  Navigator
+  Navigator,
 } = require('react-native');
+AppRegistry.registerHeadlessTask('NotificationTask', () => require('./app/NotificationWorker'));
 
 var LoginPage = require('./app/screens/login/login');
 
 var MainPage = require('./app/screens/main/base');
 
-var AdminMainPage = require('./app/screens/main/adminbase')
+var AdminMainPage = require('./app/screens/main/adminbase');
 
 var RegisterPage = require('./app/screens/login/register');
 
+var NotificationWorker = require('./app/NotificationWorker');
 
+NotificationWorker();
 var piikki = React.createClass({
   render: function() {
     return (

@@ -1,7 +1,6 @@
 package com.piikki;
 
 import com.facebook.react.ReactActivity;
-import co.apptailor.Worker.BaseReactPackage;
 
 public class MainActivity extends ReactActivity {
 

@@ -18,21 +18,16 @@ var {
 
 var TabPage = require('./tab');
 var StatsPage = require('./stats');
+var SettingsPage = require('./settings')
 var AdminPage = require('./admin');
 
 var AdminMainPage = React.createClass({
-  componentDidMount: function() {
-    var app = this;
-    BackAndroid.addEventListener('hardwareBackPress', function() {
-      app.props.navigator.pop(); 
-      return true; 
-    });
-  },
 
   render: function() {
-    return <ScrollableTabView renderTabBar={() => <CustomTabBar />}>
+    return <ScrollableTabView locked={true} renderTabBar={() => <CustomTabBar />}>
         <TabPage tabLabel='glass' />
         <StatsPage tabLabel='bar-chart-o' />
+        <SettingsPage tabLabel='user' navigator={this.props.navigator} />
         <AdminPage tabLabel='bank' />
       </ScrollableTabView>;
   }

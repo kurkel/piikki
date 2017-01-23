@@ -38,11 +38,16 @@ var Admin = React.createClass({
     };
   },
 
-  componentDidMount: function() {
+  refresh: function() {
     this.setState({'refreshing': true});
+    var app = this;
     this.getUsers().then(()=> {
-      this.setState({'refreshing': false});
-    })
+      app.setState({'refreshing': false});
+    });
+  },
+
+  componentDidMount: function() {
+    this.refresh();
   },
 
   getUsers: async function() {
@@ -181,7 +186,7 @@ var Admin = React.createClass({
   render: function() {
       return(
       <ScrollView contentContainerStyle={{flex:1}} refreshControl={
-                        <RefreshControl refreshing={this.state.refreshing} onRefresh={this.componentDidMount} />
+                        <RefreshControl refreshing={this.state.refreshing} onRefresh={this.refresh} />
                       } 
         style={styles.rootView}>
         <View style={styles.header}>

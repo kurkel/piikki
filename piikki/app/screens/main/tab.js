@@ -18,13 +18,11 @@ var {
   AsyncStorage,
   Modal,
   ScrollView,
-  ActivityIndicator
+  ActivityIndicator,
+  RefreshControl
 } = require('react-native');;
 
 import Icon from 'react-native-vector-icons/FontAwesome';
-import Collapsible from 'react-native-collapsible';
-
-
 
 var Tab = React.createClass({
 	 getInitialState: function() {
@@ -39,7 +37,16 @@ var Tab = React.createClass({
             otherAmount: "",
             toggled: false,
             comment: '',
+            refreshing: false,
 	 	}
+	 },
+
+	 refresh: function() {
+	 	this.setState({'refreshing': true});
+	    var app = this;
+	    this.getPrices().then(()=> {
+	      app.setState({'refreshing': false});
+    });
 	 },
 	 componentDidMount: function() {
 	 	this.getPrices();
@@ -272,7 +279,9 @@ var Tab = React.createClass({
 
 		return(
 			<View style={[{flex: 1}, gel.baseBackgroundColor]}>
-				<ScrollView style={styles.container}>
+				<ScrollView style={styles.container} refreshControl={
+                        <RefreshControl refreshing={this.state.refreshing} onRefresh={this.refresh} />
+                      }>
 					<View style={{flex:0.1}} />
 					<View style={styles.cartContainer}>
 						<View style={styles.cart}>
