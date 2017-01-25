@@ -12,7 +12,7 @@
     "react-native-easy-toast": "^1.0.5",
     "react-native-push-notification": "^2.2.1",
     "react-native-scrollable-tab-view": "^0.7.1",
-    "react-native-vector-icons": "^3.0.0",
+    "react-native-vector-icons": "^4.0.0",
     "react-native-wifi-manager": "^0.1.2",
     "react-native-collapsible": "^0.7.0"
   }
