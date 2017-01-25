@@ -5,6 +5,7 @@ var windowSize = Dimensions.get('window');
 var env = require('../env');
 var gel = require('../GlobalElements');
 
+var {get, post} = require('../../api');
 
 import Accordion from 'react-native-collapsible/Accordion';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -38,12 +39,10 @@ var Admin = React.createClass({
     };
   },
 
-  refresh: function() {
+  refresh: async function() {
     this.setState({'refreshing': true});
-    var app = this;
-    this.getUsers().then(()=> {
-      app.setState({'refreshing': false});
-    });
+    await this.getUsers();
+    this.setState({'refreshing': false});
   },
 
   componentDidMount: function() {
@@ -51,56 +50,41 @@ var Admin = React.createClass({
   },
 
   getUsers: async function() {
-    var app = this
-    var asd = AsyncStorage.getItem('token', async function(err, result){
-      try {
-            let response = await fetch(env.host + 'admin/getusers', { 
-                method: 'GET', 
-                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
-            let responseJson = await response.json();
-            var data = [];
-            for (var k in Object.keys(responseJson)) {
-              var name = "user" + k + "Value";
-              var obj = {};
-              obj[name] = "";
-              app.setState(obj);
-              var user = {};
-              user = responseJson[k];
-              user.id = k;
-              data.push(user);
-            }
-            app.setState({users: data});
-            app.setState({usersRdy: true});
-          } 
-          catch(error) {  // Handle error
-            app.setState({error:"Could not fetch users"});
-            console.error(error); }
+    var responseJson = await get('admin/getusers', (e)=> {
+      this.setState({error:"Could not fetch users"});
+      console.error(e);
     });
+    var data = [];
+    for (var k in Object.keys(responseJson)) {
+      var name = "user" + k + "Value";
+      var obj = {};
+      obj[name] = "";
+      this.setState(obj);
+      var user = {};
+      user = responseJson[k];
+      user.id = k;
+      data.push(user);
+    }
+    this.setState({users: data});
+    this.setState({usersRdy: true});
   },
 
-  changeTab: function(id) {
-    console.log(id);
+  changeTab: async function(id) {
     this.state.message="";
     this.state.error = "";
     var name = "name"+id+"Value";
-    var app = this;
-    var asd = AsyncStorage.getItem('token', async function(err, result){
-        try {
-            let response = await fetch(env.host + 'admin/tab', { 
-              method: 'POST', 
-              headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }, 
-              body: JSON.stringify({'username':app.state.users[id].username, 'drinks':{'payback': app.state[name]}})
-            }); 
-            let responseJson = await response.json();
-            if(responseJson.success) {
-              app.setState({message: "Successfully updated " + app.state.users[id].username + "'s tab"});
-              app.state[name] = ""
-            }
-          } 
-          catch(error) {  // Handle error
-            app.setState({error:"Could not update" + app.state.users[id].username + "'s tab"});
-            console.error(error); }
-      });
+    var payload = JSON.stringify({'username':this.state.users[id].username, 'drinks':{'payback': this.state[name]}});
+    console.warn(this.state[name]);
+    var responseJson = await post('admin/tab', payload, (e)=>{
+      this.setState({error:"Could not update" + this.state.users[id].username + "'s tab"});
+      console.error(error);
+    });
+    if(responseJson.success) {
+      this.setState({message: "Successfully updated " + this.state.users[id].username + "'s tab"});
+      this.state[name] = "";
+    } else {
+      this.setState({message: "Failed to update " + this.state.users[id].username + "'s tab"});
+    }
   },
 
   _renderHeader: function(section, index) {
@@ -201,15 +185,6 @@ var Admin = React.createClass({
 });
 
 var styles = StyleSheet.create({
-  bg: {
-    position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        right:0,
-        height: windowSize.height,
-        width: windowSize.width,
-  },
   accordionInputRow: {
     flexDirection: 'row',
   },
@@ -241,16 +216,6 @@ var styles = StyleSheet.create({
     fontWeight:'bold',
     fontSize: 20,
     color: '#121212',
-  },
-  headerText: {
-    flex:0.5,
-    textAlign: 'center',
-    fontWeight:'bold',
-    fontSize: 30,
-    color: 'white',
-    textShadowColor: "#000000",
-    textShadowOffset: {width: 1, height: 1},
-    textShadowRadius: 3,
   },
   stateMessage: {
     flex:0.4,

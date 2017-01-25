@@ -67,14 +67,13 @@ var Stats = React.createClass({
     this.setState({'toggled': !this.state.toggled});
   },
 
-  logout: function () {
-    var app = this;
-    AsyncStorage.removeItem("admin", function(err, resp) {
-      AsyncStorage.removeItem('token', function(err, resp) {
-        app.props.navigator.pop();
-      });  
+  logout: async function () {
+    await AsyncStorage.removeItem("admin");
+    await AsyncStorage.removeItem('token');
+    this.props.navigator.resetTo({
+      id: 'LoginPage',
+      name: 'Login',
     });
-    
   },
 
   componentDidMount: function() {

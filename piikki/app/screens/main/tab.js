@@ -3,6 +3,7 @@ var React = require('react');
 var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
 var env = require('../env');
+var {get, post} = require('../../api');
 
 var gel = require('../GlobalElements');
 
@@ -41,12 +42,10 @@ var Tab = React.createClass({
 	 	}
 	 },
 
-	 refresh: function() {
+	 refresh: async function() {
 	 	this.setState({'refreshing': true});
-	    var app = this;
-	    this.getPrices().then(()=> {
-	      app.setState({'refreshing': false});
-    });
+	    await this.getPrices();
+	    this.setState({'refreshing': false});
 	 },
 	 componentDidMount: function() {
 	 	this.getPrices();
@@ -57,47 +56,41 @@ var Tab = React.createClass({
     		return a;
     	}, 0);
     },
-	commitCart: function() {
-		var app = this;
-        app.setState({message: ""});
+	commitCart: async function() {
+        this.setState({message: ""});
 		var cart = {};
         if(this.state.cart.length === 0) {
-            app.setState({message: "Cart is empty!"});
+            this.setState({message: "Cart is empty!"});
             return;
         }
 		this.state.cart.map((item) => {
 			cart[item.name] = item.amount;
 		})
-		var asd = AsyncStorage.getItem('token', async function(err, result){
-	    	try {
-		    	console.log(cart); 
-		      	let response = await fetch(env.host+'tab', { 
-		          method: 'POST', 
-		          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }, 
-		          body: JSON.stringify(cart) 
-		      	}); 
-		      	let responseJson = await response.json();
-		      	if(responseJson.success) {
-                    var temp_cart = app.state.cart;
-			      	for (let k of Object.keys(responseJson.message)) {
-                        if (responseJson.message[k]) {  
-                            for (var v in temp_cart) {
-                                if (temp_cart[v].name === k)
-                                    temp_cart.splice(v, 1);
-                            }
-                        }
-			      	}
-                    app.setState({cart:temp_cart});
-                    app.setState({total:app.calcTotal(temp_cart)});
-                    app.setState({message: "Enjoy responsibly!"})
-                    if (temp_cart.length === 0)
-                    	app.getPrices();
-		      	}
-	      	} 
-	      	catch(error) {  // Handle error
-                app.setState({message: "Error in tabbing!"})
-	        	console.error(error); }
-	  	});
+		let payload = JSON.stringify(cart);
+		let responseJson = await post('tab', payload, (e) => {
+			this.setState({message: "Error in tabbing!"})
+	        console.error(e);
+		});
+	  	if(responseJson.success) {
+	        var temp_cart = this.state.cart;
+	      	for (let k of Object.keys(responseJson.message)) {
+	            if (responseJson.message[k]) {  
+	                for (var v in temp_cart) {
+	                    if (temp_cart[v].name === k)
+	                        temp_cart.splice(v, 1);
+	                }
+	            }
+	      	}
+            this.setState({cart:temp_cart});
+            this.setState({total:this.calcTotal(temp_cart)});
+            this.setState({message: "Enjoy responsibly!"})
+            if (temp_cart.length === 0)
+            	this.getPrices();
+      	}
+      	else {
+      		this.setState({message: "Error in tabbing!"});
+      		console.error(responseJson);
+      	}
 	},
 
 	addToCart: function(item) {
@@ -156,21 +149,17 @@ var Tab = React.createClass({
 	},
 
 	getPrices: async function() {
-		var app = this
-		var asd = AsyncStorage.getItem('token', async function(err, result){
-			try {
-	      		let response = await fetch(env.host+'prices', { 
-	          		method: 'GET', 
-	          		headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
-	      		let responseJson = await response.json();
-	      		app.setState({prices: responseJson.prices})
-	      		app.setState({tab: responseJson.tab})
-	      		app.setState({pricesAvailable: true})
-	      	} 
-	      	catch(error) {  // Handle error
-                app.setState({message: "Could not fetch prices :("})
-	        	console.error(error); }
+		let responseJson = await get('prices', (e) => {
+			this.setState({message: "Could not fetch prices :("});
+	        console.error(e);
 		});
+		if (responseJson.success) {
+			this.setState({prices: responseJson.prices})
+  			this.setState({tab: responseJson.tab})
+  			this.setState({pricesAvailable: true})
+		} else {
+			this.setState({message: "Could not fetch prices :("});
+		}
 	},
 
 	renderButtons: function(i) {
@@ -307,7 +296,7 @@ var Tab = React.createClass({
 	                <View style={{flex:0.1, padding:20}} />
 	                <Modal animationType={"slide"} transparent={true} visible={this.state.toggled}
 	                onRequestClose={() => {this.setState({'toggled': !this.state.toggled});}} >
-	                	<View style={styles.accordionInputRow}>
+	                	<View style={styles.modalBody}>
                             <View style={{flex:0.1}} />
                             <Text style={styles.modalHeader}>Custom amount</Text>
                             <View style={{flex:0.1}} />
@@ -383,10 +372,7 @@ var styles = StyleSheet.create({
 		flex: 0.4,
 		backgroundColor: '#FFFFFF'
 	},
-	headerContainer: {
-		flex: 0.2
-	},
-    accordionInputRow: {
+    modalBody: {
 	    flexDirection: 'column',
 	    margin: 10,
 	    marginTop: windowSize.height/4,
@@ -413,19 +399,6 @@ var styles = StyleSheet.create({
 		flex: 0.8,
 		backgroundColor:'#C8E6C9'
 	},	
-	header: {
-		color: 'white',
-		top: 10,
-		justifyContent: 'center',
-		textAlign: 'center',
-		fontSize: 40,
-		fontWeight: 'bold',
-		textShadowColor: "#000000",
-		textShadowOffset: {width: 2, height: 2},
-		textShadowRadius: 4,
-        flex: 0.5
-
-	},
 	button: {
 		height:100,
 		width: 160,
@@ -438,16 +411,6 @@ var styles = StyleSheet.create({
 		shadowRadius: 2,
 
 	},
-	bg: {
-		position: 'absolute',
-        left: 0,
-        bottom: 0,
-        top:0,
-        right:0,
-        height:windowSize.height,
-        width: windowSize.width,
-	},
-
 	buttonrow: {
 		marginTop: 5,
 		flexDirection: 'row',
@@ -458,12 +421,10 @@ var styles = StyleSheet.create({
 	},
 	collapsibleButtonrow: {
 		marginTop: 5,
-
 		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'center',
 		height: 100,
-
 	},
 	rowName: {
 		fontSize:18,
@@ -490,13 +451,6 @@ var styles = StyleSheet.create({
 		fontSize: 18,
 		color: 'black',
 	},
-	cartPill: {
-		borderRadius:5,
-		flex:0.8,
-		flexDirection: 'row',
-        borderWidth: 1,
-
-	},
 	commitCart: {
 		margin: 3,
 		alignItems: 'center',
@@ -510,26 +464,6 @@ var styles = StyleSheet.create({
 		color: "#101010",
 		fontSize: 22,
 	},
-    changeTabButton: {
-    flex:0.5,
-  },
-  changeTabButtonInside: {
-    flex:1,
-    borderWidth:1,
-    borderRadius: 20,
-    justifyContent: 'center',
-  },
-  changeTabButtonText: {
-    textAlign: 'center',
-    fontWeight:'bold',
-    fontSize: 20,
-    color: 'white',
-    textShadowColor: "#000000",
-    textShadowOffset: {width: 1, height: 1},
-    textShadowRadius: 3,
-  },
-
-
 })
 
 module.exports = Tab;

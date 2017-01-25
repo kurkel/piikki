@@ -4,6 +4,7 @@ var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
 var env = require('../env');
 const dismissKeyboard = require('dismissKeyboard');
+var {get, post} = require('../../api');
 
 var gel = require('../GlobalElements');
 
@@ -41,73 +42,48 @@ var Register = React.createClass({
       return true; 
     });
   },
-    async reg() {
+  async reg() {
     dismissKeyboard();
     this.showSpinner()
-    if(this.state.username === '' || this.state.password === '') {
-       this.showError("Fill out both fields first!");
+    if(this.state.username === '' || this.state.password === '' || this.state.secret === '') {
+       this.showError("Fill out all fields first!");
     }
 
     if(this.password !== this.password2) {
       this.showError("Passwords do not match!");
     }
 
-    try { 
-
-
-      let response = await fetch(env.host+'register', { 
-          method: 'POST', 
-          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', }, 
-          body: JSON.stringify(
-            { username: this.state.username, password: this.state.password, secret: this.state.secret, admin: false}) }); 
-      let responseJson = await response.json(); 
-      if(responseJson.success === false) {
-        this.state.error = responseJson.error;
-        this.showError(responseJson.error);
-      }
-      else {
-        var loggers = this.login;
-        loggers();
-      }
-    } 
-    catch(error) {  // Handle error
+    let payload = JSON.stringify({ username: this.state.username, password: this.state.password, secret: this.state.secret, admin: false});
+    let responseJson = await post('register', payload, (e) => {
       console.error(error);
       this.showError(error);
+    }); 
+    if(!responseJson.success) {
+      this.state.error = responseJson.error;
+      this.showError(responseJson.error);
+    }
+    else {
+      this.login();
     }
   },
 
   async login() {
-
-    if(this.state.username === '' || this.state.password === '') {
-      this.showError("Fill out both fields first!");
+    var payload = JSON.stringify({ username: this.state.username, password: this.state.password });
+    var responseJson = await post('login', payload, (e) => {
+      console.error(e);
+      this.state.error = "Something went wrong";
+      this.showError();
+    });
+    if(!responseJson.success) {
+      this.showError('Login after register failed');
     }
-
-    try { 
-      let response = await fetch(env.host+'login', { 
-          method: 'POST', 
-          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', }, 
-          body: JSON.stringify(
-            { username: this.state.username, password: this.state.password }) }); 
-      let responseJson = await response.json(); 
-      this.state.token = responseJson.token;
-      if(responseJson.success == false) {
-        this.showError('Login after register failed');
-      }
-      else {
-        var asdasd = this.loggedin;
-        AsyncStorage.setItem('token', this.state.token);
-        asdasd();
-      }
-    } 
-    catch(error) {  // Handle error
-      console.error(error); 
-      this.showError('Something went wrong');
+    else {
+      await AsyncStorage.setItem('token', responseJson.token);
+      this.loggedin();
     }
   },
+
   loggedin: function() {
-    if(!this.state.token) {
-      this.showError('Something went wrong');
-    }
     this.props.navigator.push({
       id: 'MainPage',
       name: 'Main',

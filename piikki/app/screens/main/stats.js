@@ -3,6 +3,7 @@ var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
 var env = require('../env');
 var gel = require('../GlobalElements');
+var {get, post} = require('../../api');
 
 var {
   AppRegistry,
@@ -36,84 +37,47 @@ var Stats = React.createClass({
   },
 
   getCurrentTab: async function() {
-    var app = this
-    var asd = AsyncStorage.getItem('token', async function(err, result){
-      try {
-            let response = await fetch(env.host+'tab', { 
-                method: 'GET', 
-                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
-            let responseJson = await response.json();
-            app.setState({tab: responseJson.tab})
-            app.setState({currentTabRdy: true})
-          } 
-          catch(error) {  // Handle error
-            console.error(error); }
+    let responseJson = await get('tab', (e) => {
+      console.error(error);
     });
+    if(responseJson.success) {
+      this.setState({tab: responseJson.tab});
+      this.setState({currentTabRdy: true});
+    } 
+    else {  // Handle error
+      console.error("Could not fetch tab");
+    }
   },
 
-  getTopList: function () {
-    var app = this
-    var asd = AsyncStorage.getItem('token', async function(err, result){
-      try {
-            let response = await fetch(env.host + 'toplist', { 
-                method: 'GET', 
-                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
-            let responseJson = await response.json();
-            delete responseJson.success
-            app.setState({toplist: responseJson})
-            app.setState({topListRdy: true})
-          } 
-          catch(error) {  // Handle error
-            console.error(error); }
+  getTopList: async function () {
+    let responseJson = await get('toplist', (e) => {
+      console.error(error);
     });
+    if(responseJson.success) {
+      delete responseJson.success
+      this.setState({toplist: responseJson})
+      this.setState({topListRdy: true})
+    }
+    else {  // Handle error
+      console.error(error);
+    }
   },
 
   getDrinkStats: function () {
-    var app = this
-    var asd = AsyncStorage.getItem('token', async function(err, result){
-      try {
-            let response = await fetch(env.host + 'drinkstats', { 
-                method: 'GET', 
-                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'x-access-token': result }});
-            let responseJson = await response.json();
-            delete responseJson.success
-            app.setState({drinkStats: responseJson})
-            app.setState({drinkStatsRdy: true})
-          } 
-          catch(error) {  // Handle error
-            console.error(error); }
-    });
+      //needs implementation
   },
 
   componentDidMount: function() {
     this.fetchStats();
   },
 
-  fetchStats: function() {
+  fetchStats: async function() {
     this.setState({refreshing: true});
-    this.getCurrentTab()
-    .then(this.getTopList)
-    .then(() => {
-      this.setState({refreshing: false});
-    });
+    await this.getCurrentTab();
+    await this.getTopList();
+    this.setState({refreshing: false});
     
     //this.getDrinkStats();
-  },
-
-  renderTab: function() {
-    return <Text style={styles.currentTabText}>{this.state.tab}€</Text>;
-  },
-
-  renderOwnOverall: function() {
-    return <Text>Moi</Text>;
-  },
-
-  renderOwnOverall: function() {
-    return <Text>Moi</Text>;
-  },
-
-  renderList: function() {
-    return <Text>Moi</Text>;
   },
 
   renderTopList: function() {
@@ -174,15 +138,6 @@ var Stats = React.createClass({
 });
 
 var styles = StyleSheet.create({
-  bg: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    right: 0,
-    height: windowSize.height,
-    width: windowSize.width,
-  },
   card: {
     backgroundColor: '#FFFFFF',
     margin: 5,
@@ -196,77 +151,12 @@ var styles = StyleSheet.create({
     paddingBottom: 10,
   },
   cardFooterText: {
-  },
-  cardFooterText: {
     marginLeft: 20,
     fontSize: 20,
     color: '#757575',
     paddingBottom: 10,
     paddingTop: 10
   },
-  header: {
-    padding:20,
-    justifyContent: 'center',
-    flex: 0.5,
-    borderWidth: 1,
-    borderBottomColor: "#CCC",
-    borderColor: "transparent",
-  },
-  subTopic: {
-    textAlign: 'center',
-    fontWeight:'bold',
-    fontSize: 25,
-    color: 'white',
-    textShadowColor: "#000000",
-    textShadowOffset: {width: 1, height: 1},
-    textShadowRadius: 3,
-  },
-  headerText: {
-    textAlign: 'center',
-    fontWeight:'bold',
-    fontSize: 30,
-    color: 'white',
-    textShadowColor: "#000000",
-    textShadowOffset: {width: 1, height: 1},
-    textShadowRadius: 3,
-  },
-  currentTab: {
-    padding: 15,
-    flex: 0.3,
-    borderWidth: 1,
-    borderBottomColor: "#CCC",
-    borderColor: "transparent",
-
-  },
-  ownOverall: {
-    padding: 15,
-    flex: 0.3,
-    borderWidth: 1,
-    borderBottomColor: "#CCC",
-    borderColor: "transparent",
-
-  },
-  ownMonth: {
-    padding: 15,
-    flex: 0.3,
-    borderWidth: 1,
-    borderBottomColor: "#CCC",
-    borderColor: "transparent",
-
-  },
-  topList: {
-    padding:15,
-  },
-  currentTabText:{
-    textAlign: 'center',
-    fontWeight:'bold',
-    fontSize: 25,
-    color: 'white',
-    textShadowColor: "#000000",
-    textShadowOffset: {width: 1, height: 1},
-    textShadowRadius: 3,
-  },
-
   toplistText:{
     fontWeight:'bold',
     fontSize: 20,

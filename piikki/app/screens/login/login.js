@@ -4,6 +4,7 @@ var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
 const dismissKeyboard = require('dismissKeyboard');
 var env = require('../env');
+var {get, post} = require('../../api');
 
 var gel = require('../GlobalElements');
 
@@ -46,61 +47,42 @@ var Login = React.createClass({
       this.showSpinner();
       dismissKeyboard();
 
-    if(this.state.username === '' || this.state.password === '') {
-      this.state.error = "Username or password empty";
-      this.showError();
-      return;
-    }
+      if(this.state.username === '' || this.state.password === '') {
+        this.state.error = "Username or password empty";
+        this.showError();
+        return;
+      }
 
-    try { 
-      let response = await fetch(env.host+'login', { 
-          method: 'POST', 
-          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', }, 
-          body: JSON.stringify(
-            { username: this.state.username, password: this.state.password }) }); 
-      let responseJson = await response.json(); 
-      this.state.token = responseJson.token;
-      if(responseJson.success == false) {
+      var payload = JSON.stringify({ username: this.state.username, password: this.state.password });
+      var responseJson = await post('login', payload, (e) => {
+        console.error(e);
+        this.state.error = "Something went wrong";
+        this.showError();
+        return;
+      });
+
+      if(!responseJson.success) {
         this.state.error = "Wrong username or password";
         this.showError();
       }
       else {
         var app = this;
-        var asdasd = this.loggedin;
-        AsyncStorage.setItem("admin", responseJson.admin.toString(), function(err, resp) {
-          AsyncStorage.setItem('token', app.state.token, function(err, resp) {
-            asdasd();
-          });  
-        });
-        
+        await AsyncStorage.setItem("admin", responseJson.admin.toString());
+        await AsyncStorage.setItem('token', responseJson.token);
+        routeLogIn(responseJson.admin.toString());
       }
-    } 
-    catch(error) {  // Handle error
-      console.log(error);
-      console.error(error); }
   },
 
-  loggedin: function() {
-    var app = this
-    if(!this.state.token) {
-      this.state.error = "Something went wrong";
-      this.showError();
-    }
-    AsyncStorage.getItem("admin", function(err, resp) {
-      if (resp === "true") {
-        app.props.navigator.push({
-          id: 'AdminMainPage',
-          name: 'AdminMain',
-        });  
-      }
-      else {
-        app.props.navigator.push({
-          id: 'MainPage',
-          name: 'Main',
-        });
-      }
-    })
-    
+  routeLogIn: function(admin) {
+    let route = (admin === "true") ? {
+        id: 'AdminMainPage',
+        name: 'AdminMain',
+      } : 
+      {
+        id: 'MainPage',
+        name: 'Main',
+      };
+    this.props.navigator.push(route);
   },
 
   showSpinner: function() {
@@ -127,7 +109,7 @@ var Login = React.createClass({
     this.props.navigator.push({
       id: 'RegisterPage',
       name: 'Register',
-    })
+    });
   },
 
   renderHeader: function() {
@@ -146,16 +128,12 @@ var Login = React.createClass({
     this.setState({token:value});
   },
 
-  checkSession: function() {
-    var setter = this.tokenSetter;
-    var logged = this.loggedin;
-    AsyncStorage.getItem('token', function(err, res){
-      if(res) {
-        setter(res);
-        logged();
-      }
-
-    })
+  checkSession: async function() {
+    var token = await AsyncStorage.getItem('token');
+    var admin = await AsyncStorage.getItem('admin');
+    if(token) {
+      this.routeLogIn(admin);
+    }
   },
 
   _setModalVisible(visible) { this.setState({modalVisible: visible}); },
