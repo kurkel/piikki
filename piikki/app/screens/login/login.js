@@ -66,7 +66,7 @@ var Login = React.createClass({
       var app = this;
       await AsyncStorage.setItem("admin", responseJson.admin.toString());
       await AsyncStorage.setItem('token', responseJson.token);
-      routeLogIn(responseJson.admin.toString());
+      this.routeLogIn(responseJson.admin.toString());
     }
   },
 

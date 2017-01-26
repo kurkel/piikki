@@ -13,18 +13,20 @@ var {
   Text,
   AsyncStorage,
   Image,
-  BackAndroid
+  BackAndroid,
+  Platform
 } = require('react-native');
 
 var TabPage = require('./tab');
 var StatsPage = require('./stats');
 var SettingsPage = require('./settings')
 var AdminPage = require('./admin');
+const marg = Platform.OS === 'ios' ? 20 : 0;
 
 var AdminMainPage = React.createClass({
 
   render: function() {
-    return <ScrollableTabView locked={true} renderTabBar={() => <CustomTabBar />}>
+    return <ScrollableTabView locked={true} renderTabBar={() => <CustomTabBar />} style={{marginTop: marg}}>
         <TabPage tabLabel='glass' />
         <StatsPage tabLabel='bar-chart-o' />
         <SettingsPage tabLabel='user' navigator={this.props.navigator} />
