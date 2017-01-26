@@ -9,16 +9,13 @@ var {get, post} = require('../../api');
 var gel = require('../GlobalElements');
 
 var {
-  AppRegistry,
   StyleSheet,
   View,
   Text,
   TextInput,
   Image,
-  Navigator,
   TouchableHighlight,
   AsyncStorage,
-  Modal,
   BackAndroid,
   TouchableWithoutFeedback,
   ActivityIndicator

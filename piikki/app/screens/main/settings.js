@@ -44,16 +44,17 @@ var Stats = React.createClass({
   },
 
   getTransactions: async function() {
-    this.setState({'transactions':[
-      {'name':'Beer', 'amount':2, 'price':1, 'time': new Date()},
-      {'name':'Vodka + Mixer', 'amount':1, price:'3', 'time': new Date()},
-      {'name':'Vodka + Mixer2', 'amount':1, price:'3', 'time': new Date()},
-      {'name':'Vodka + Mixer3', 'amount':1, price:'3', 'time': new Date()},
-      {'name':'Vodka + Mixer4', 'amount':1, price:'3', 'time': new Date()},
-      {'name':'Vodka + Mixer5', 'amount':1, price:'3', 'time': new Date()},
-      {'name':'Vodka + Mixer6', 'amount':1, price:'3', 'time': new Date()},
-      {'name':'Vodka + Mixer7', 'amount':1, price:'3', 'time': new Date()},
-    ]});
+    this.setState({'transactions': []});
+    // this.setState({'transactions':[
+    //   {'name':'Beer', 'amount':2, 'price':1, 'time': new Date()},
+    //   {'name':'Vodka + Mixer', 'amount':1, price:'3', 'time': new Date()},
+    //   {'name':'Vodka + Mixer2', 'amount':1, price:'3', 'time': new Date()},
+    //   {'name':'Vodka + Mixer3', 'amount':1, price:'3', 'time': new Date()},
+    //   {'name':'Vodka + Mixer4', 'amount':1, price:'3', 'time': new Date()},
+    //   {'name':'Vodka + Mixer5', 'amount':1, price:'3', 'time': new Date()},
+    //   {'name':'Vodka + Mixer6', 'amount':1, price:'3', 'time': new Date()},
+    //   {'name':'Vodka + Mixer7', 'amount':1, price:'3', 'time': new Date()},
+    // ]});
     this.setState({'rdy': true});
   },
 
@@ -81,7 +82,7 @@ var Stats = React.createClass({
   },
 
   renderTransactions: function() {
-    if (this.state.transactions) {
+    if (this.state.transactions && this.state.transactions.length > 0) {
       var resp = [];
       for(let item of this.state.transactions) {
         const d = item.time;
@@ -101,7 +102,7 @@ var Stats = React.createClass({
       }
       return resp;
     } else {
-      return <Text style={styles.noneTransactions}>None yet!</Text>
+      return <Text style={styles.noneTransactions}>{"<None yet>"}</Text>
     }
   },
 
@@ -174,7 +175,7 @@ var Stats = React.createClass({
               />
               <View style={{flex:0.1}} />
               <TouchableOpacity style={styles.modalButton} onPress={this.changePassword} >
-                <Text style={styles.tabMe}>Change password</Text>
+                <Text style={styles.changePass}>Change password</Text>
               </TouchableOpacity>
               <View style={{flex:0.1}} />
             </View>
@@ -191,6 +192,8 @@ var styles = StyleSheet.create({
     textAlign: 'center',
     color: '#FFF',
     fontSize: 25,
+    marginTop: 15,
+    fontWeight: 'bold',
     textShadowOffset: {width: 1, height: 1},
     textShadowRadius: 2,
   },
@@ -198,7 +201,7 @@ var styles = StyleSheet.create({
     flex: 0.3,
     alignItems: 'center',
   },
-  tabMe: {
+  changePass: {
     textAlign: 'center',
     justifyContent: 'center',
     color: "#FEFEFE",
@@ -246,7 +249,13 @@ var styles = StyleSheet.create({
     color: '#000'
   },
   noneTransactions: {
-
+    textAlign: 'center',
+    textShadowColor: "#000000",
+    textShadowOffset: {width: 1, height: 1},
+    textShadowRadius: 3,
+    fontSize: 20,
+    color: '#FFF',
+    marginTop: 10,
   },
   signin: {
     padding: 12,
@@ -284,12 +293,6 @@ var styles = StyleSheet.create({
     alignItems: 'flex-end'
 
   },
-  cardContent: {
-    borderTopLeftRadius: 3,
-    borderTopRightRadius: 3,
-    paddingTop: 10,
-    paddingBottom: 10,
-  },
   whiteFont: {
       color: '#FFF',
       textShadowColor: '#000',
@@ -299,103 +302,6 @@ var styles = StyleSheet.create({
       },
       textShadowRadius: 3
   },
-  cardFooterText: {
-    marginLeft: 20,
-    fontSize: 20,
-    color: '#757575',
-    paddingBottom: 10,
-    paddingTop: 10
-  },
-  header: {
-    padding:20,
-    justifyContent: 'center',
-    flex: 0.5,
-    borderWidth: 1,
-    borderBottomColor: "#CCC",
-    borderColor: "transparent",
-  },
-  subTopic: {
-    textAlign: 'center',
-    fontWeight:'bold',
-    fontSize: 25,
-    color: 'white',
-    textShadowColor: "#000000",
-    textShadowOffset: {width: 1, height: 1},
-    textShadowRadius: 3,
-  },
-  headerText: {
-    textAlign: 'center',
-    fontWeight:'bold',
-    fontSize: 30,
-    color: 'white',
-    textShadowColor: "#000000",
-    textShadowOffset: {width: 1, height: 1},
-    textShadowRadius: 3,
-  },
-  currentTab: {
-    padding: 15,
-    flex: 0.3,
-    borderWidth: 1,
-    borderBottomColor: "#CCC",
-    borderColor: "transparent",
-
-  },
-  ownOverall: {
-    padding: 15,
-    flex: 0.3,
-    borderWidth: 1,
-    borderBottomColor: "#CCC",
-    borderColor: "transparent",
-
-  },
-  ownMonth: {
-    padding: 15,
-    flex: 0.3,
-    borderWidth: 1,
-    borderBottomColor: "#CCC",
-    borderColor: "transparent",
-
-  },
-  topList: {
-    padding:15,
-  },
-  currentTabText:{
-    textAlign: 'center',
-    fontWeight:'bold',
-    fontSize: 25,
-    color: 'white',
-    textShadowColor: "#000000",
-    textShadowOffset: {width: 1, height: 1},
-    textShadowRadius: 3,
-  },
-
-  toplistText:{
-    fontWeight:'bold',
-    fontSize: 20,
-    color: '#757575',
-  },
-  toplistTextFirst:{
-    marginTop: 10,
-    marginBottom: 10,
-    fontWeight:'bold',
-    fontSize: 25,
-    color: 'black',
-  },
-
-  toplistItem: {
-    flexDirection: 'row',
-
-  },
-  toplistName: {
-    flex:0.5,
-    textAlign: 'center',
-    justifyContent: 'center'
-  },
-  toplistAmount: {
-    flex:0.5,
-    textAlign: 'center',
-    justifyContent: 'center'
-  }
 });
 
 module.exports = Stats

@@ -11,23 +11,16 @@ import Accordion from 'react-native-collapsible/Accordion';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 var {
-  AppRegistry,
-  Animated,
-  Easing,
   StyleSheet,
   View,
   Text,
   TextInput,
-  Image,
-  Navigator,
   TouchableOpacity,
-  AsyncStorage,
-  Modal,
-  ListView,
   ActivityIndicator,
   ScrollView,
   RefreshControl
 } = require('react-native');
+
 
 var Admin = React.createClass({
   getInitialState: function() {
@@ -36,6 +29,7 @@ var Admin = React.createClass({
       users: {},
       userKeys: [],
       refreshing: false,
+      amounts: {},
     };
   },
 
@@ -72,16 +66,16 @@ var Admin = React.createClass({
   changeTab: async function(id) {
     this.state.message="";
     this.state.error = "";
-    var name = "name"+id+"Value";
-    var payload = JSON.stringify({'username':this.state.users[id].username, 'drinks':{'payback': this.state[name]}});
-    console.warn(this.state[name]);
+    var name = "user"+id+"Value";
+    var payload = JSON.stringify({'username':this.state.users[id].username, 'drinks':{'payback': this.state.amounts[name]}});
     var responseJson = await post('admin/tab', payload, (e)=>{
       this.setState({error:"Could not update" + this.state.users[id].username + "'s tab"});
       console.error(error);
     });
     if(responseJson.success) {
       this.setState({message: "Successfully updated " + this.state.users[id].username + "'s tab"});
-      this.state[name] = "";
+      this.state.amounts[name] = "";
+      this.refresh();
     } else {
       this.setState({message: "Failed to update " + this.state.users[id].username + "'s tab"});
     }
@@ -92,7 +86,7 @@ var Admin = React.createClass({
       <View style={styles.accordionHeader}>
         <Text style={[styles.accordionHeaderText, styles.accordionHeaderName]}>{section.username}</Text>
         <Text style={[styles.accordionHeaderText, styles.accordionHeaderAmount]}>{section.amount}€</Text>
-        <Icon ref={'cheron'+index} style={[styles.accordionHeaderAmount, {alignItems: 'center', justifyContent: 'center'}]}
+        <Icon ref={'chevron'+index} style={[styles.accordionHeaderAmount, {alignItems: 'center', justifyContent: 'center'}]}
         name={'chevron-right'} size={20} color='#000' />
       </View>
     );
@@ -100,7 +94,6 @@ var Admin = React.createClass({
 
   _renderRow: function(section, index)   {
     
- 
   var name = "user"+index+"Value";
 
     return (
@@ -109,18 +102,18 @@ var Admin = React.createClass({
         <View style={styles.accordionInputRow}>
           <TextInput
             style={{height:50, flex:0.7, borderColor: 'black', color:'#000', textAlign: 'center'}}
-            ref = {name}
+            ref = {(input) => { this['input'+index] = input; }}
             onChangeText={(text) => {
               var reg = /^-?\d*\.?\d*$/
               if(reg.test(text)) {
                 var obj = {};
                 obj[name] = text;
-                this.setState(obj);
+                this.setState({'amounts': obj});
               }
             }}
             keyboardType={'numeric'}
             placeholder={'Amount'}
-            value={this.state[name]}
+            value={this.state.amounts[name]}
 
           />
           <View style={{flex:0.1}} />
@@ -128,10 +121,16 @@ var Admin = React.createClass({
             <View style={[styles.changeTabButtonInside, gel.loginButtonColor]}>
               <Text style={styles.changeTabButtonText}>Tab!</Text>
             </View>
-          </TouchableOpacity>
+          </TouchableOpacity> 
         </View>
       </View>
     );
+  },
+
+  _focusKeyboard: function(index) {
+    if(index !== false) {
+      this['input'+index].focus();
+    }
   },
 
   renderUsers: function() {
@@ -142,6 +141,7 @@ var Admin = React.createClass({
           renderContent={this._renderRow}
           renderHeader={this._renderHeader}
           style={{backgroundColor: 'transparent'}}
+          onChange={this._focusKeyboard}
           />
       </View>
       );

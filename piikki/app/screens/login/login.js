@@ -9,16 +9,13 @@ var {get, post} = require('../../api');
 var gel = require('../GlobalElements');
 
 var {
-  AppRegistry,
   StyleSheet,
   View,
   Text,
   TextInput,
   Image,
-  Navigator,
   TouchableOpacity,
   AsyncStorage,
-  Modal,
   TouchableWithoutFeedback,
   ActivityIndicator,
   ScrollView
@@ -26,51 +23,51 @@ var {
 
 
 var Login = React.createClass({
-    getInitialState: function() {
-      return {
-        errorVisible: false,
-        spinnerVisible: false,
-        logoVisible: true,
-        username: '',
-        password: '',
-        error: '',
-        token: '',
-        admin: false,
-      };
-    },
+  getInitialState: function() {
+    return {
+      errorVisible: false,
+      spinnerVisible: false,
+      logoVisible: true,
+      username: '',
+      password: '',
+      error: '',
+      token: '',
+      admin: false,
+    };
+  },
 
-    componentDidMount: function() {
-      this.checkSession();
-    },
+  componentDidMount: function() {
+    this.checkSession();
+  },
 
-    async login() {
-      this.showSpinner();
-      dismissKeyboard();
+  async login() {
+    this.showSpinner();
+    dismissKeyboard();
 
-      if(this.state.username === '' || this.state.password === '') {
-        this.state.error = "Username or password empty";
-        this.showError();
-        return;
-      }
+    if(this.state.username === '' || this.state.password === '') {
+      this.state.error = "Username or password empty";
+      this.showError();
+      return;
+    }
 
-      var payload = JSON.stringify({ username: this.state.username, password: this.state.password });
-      var responseJson = await post('login', payload, (e) => {
-        console.error(e);
-        this.state.error = "Something went wrong";
-        this.showError();
-        return;
-      });
+    var payload = JSON.stringify({ username: this.state.username, password: this.state.password });
+    var responseJson = await post('login', payload, (e) => {
+      console.error(e);
+      this.state.error = "Something went wrong";
+      this.showError();
+      return;
+    });
 
-      if(!responseJson.success) {
-        this.state.error = "Wrong username or password";
-        this.showError();
-      }
-      else {
-        var app = this;
-        await AsyncStorage.setItem("admin", responseJson.admin.toString());
-        await AsyncStorage.setItem('token', responseJson.token);
-        routeLogIn(responseJson.admin.toString());
-      }
+    if(!responseJson.success) {
+      this.state.error = "Wrong username or password";
+      this.showError();
+    }
+    else {
+      var app = this;
+      await AsyncStorage.setItem("admin", responseJson.admin.toString());
+      await AsyncStorage.setItem('token', responseJson.token);
+      routeLogIn(responseJson.admin.toString());
+    }
   },
 
   routeLogIn: function(admin) {
@@ -135,8 +132,6 @@ var Login = React.createClass({
       this.routeLogIn(admin);
     }
   },
-
-  _setModalVisible(visible) { this.setState({modalVisible: visible}); },
 
   render: function() {
         return (
