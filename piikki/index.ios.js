@@ -15,6 +15,7 @@ var RegisterPage = require('./app/screens/login/register');
 
 
 var piikki = React.createClass({
+
   render: function() {
     return (
        <Navigator

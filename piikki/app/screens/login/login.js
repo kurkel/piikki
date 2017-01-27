@@ -5,8 +5,9 @@ var windowSize = Dimensions.get('window');
 const dismissKeyboard = require('dismissKeyboard');
 var env = require('../env');
 var {get, post} = require('../../api');
-
+import SplashScreen from 'react-native-smart-splash-screen'
 var gel = require('../GlobalElements');
+var cond_input = require('../inputStyling');
 
 var {
   StyleSheet,
@@ -37,6 +38,7 @@ var Login = React.createClass({
   },
 
   componentDidMount: function() {
+    SplashScreen.close(SplashScreen.animationType.scale, 850, 500)
     this.checkSession();
   },
 
@@ -144,6 +146,7 @@ var Login = React.createClass({
               </View>
               <View style={styles.inputs}>
                   <View style={styles.inputContainer}>
+                    <View style={cond_input.i}>
                       <TextInput
                           autoCapitalize='none'
                           autoCorrect={false}
@@ -153,17 +156,20 @@ var Login = React.createClass({
                           onChangeText={(username) => this.setState({username})}
                           value={this.state.username}
                       />
+                    </View>
                   </View>
                   <View style={styles.inputContainer}>
+                  <View style={cond_input.i}>
                       <TextInput
                           secureTextEntry={true}
                           autoCorrect={false}
-                          style={[styles.input, styles.whiteFont]}
+                          style={[styles.input, styles.whiteFont, cond_input.i]}
                           placeholder="Password"
                           placeholderTextColor="#FFF"
                           onChangeText={(password) => this.setState({password})}
                           value={this.state.password}
                       />
+                  </View>
                   </View>
               </View>
               <View style={styles.buttons}>
@@ -243,10 +249,9 @@ var styles = StyleSheet.create({
     },
     input: {
         textAlign: "center",
-        alignItems: "flex-end",
         width: 200,
+        height: 30,
         fontSize: 14,
-        left: 10,
         borderColor: "white",
     },
     whiteFont: {

@@ -5,6 +5,7 @@ import android.util.Log;
 
 import android.content.Intent;
 import com.facebook.react.ReactApplication;
+import com.mehcode.reactnative.splashscreen.SplashScreenPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.dieam.reactnativepushnotification.ReactNativePushNotificationPackage;
 import com.facebook.react.ReactInstanceManager;
@@ -33,6 +34,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new SplashScreenPackage(),
           new WifiManager(),
           new VectorIconsPackage(),
           new ReactNativePushNotificationPackage(),

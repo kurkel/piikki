@@ -3,6 +3,7 @@ var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
 var env = require('../env');
 var gel = require('../GlobalElements');
+var cond_input = require('../inputStyling');
 
 var {
   AppRegistry,
@@ -149,36 +150,47 @@ var Stats = React.createClass({
         </ScrollView>
       <Modal animationType={"slide"} transparent={true} visible={this.state.toggled}
                   onRequestClose={() => {this.setState({'toggled': !this.state.toggled});}} >
+          <TouchableOpacity style={{height: windowSize.height, width: windowSize.width}} onPress={this.showModal}>
             <View style={styles.accordionInputRow}>
-              <View style={{flex:0.1}} />
-              <Text style={styles.modalHeader}>Change password</Text>
-              <View style={{flex:0.1}} />
-              <TextInput
-                  style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
-                  onChangeText={(text) => this.state.oldPassword = text}
-                  keyboardType={'numeric'}
-                  ref='oldPasswordInput'
-                  placeholder='Old Password'
-              />
-              <TextInput
-                  style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
-                  onChangeText={(text) => this.state.currentPassword = text}
-                  ref='newPasswordInput'
-                  placeholder='New password'
-              />
-
-              <TextInput
-                  style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
-                  onChangeText={(text) => this.state.confirmCurrentPassword = text}
-                  ref='newPasswordAgainInput'
-                  placeholder='Confirm new password'
-              />
-              <View style={{flex:0.1}} />
-              <TouchableOpacity style={styles.modalButton} onPress={this.changePassword} >
-                <Text style={styles.changePass}>Change password</Text>
+              <TouchableOpacity style={{flex:1}} onPress={() => {}}>
+              <View style={{flex:1}}>
+                <View style={{flex:0.1}} />
+                <Text style={styles.modalHeader}>Change password</Text>
+                <View style={{flex:0.1}} />
+                <View style={[cond_input.i, {flex:0.2}]}>
+                  <TextInput
+                      style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
+                      onChangeText={(text) => this.state.oldPassword = text}
+                      keyboardType={'numeric'}
+                      ref='oldPasswordInput'
+                      placeholder='Old Password'
+                  />
+                </View>
+                <View style={[cond_input.i, {flex:0.2}]}>
+                  <TextInput
+                      style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
+                      onChangeText={(text) => this.state.currentPassword = text}
+                      ref='newPasswordInput'
+                      placeholder='New password'
+                  />
+                </View>
+                <View style={[cond_input.i, {flex:0.2}]}>
+                  <TextInput
+                      style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
+                      onChangeText={(text) => this.state.confirmCurrentPassword = text}
+                      ref='newPasswordAgainInput'
+                      placeholder='Confirm new password'
+                  />
+                </View>
+                <View style={{flex:0.1}} />
+                <TouchableOpacity style={styles.modalButton} onPress={this.changePassword} >
+                  <Text style={styles.changePass}>Change password</Text>
+                </TouchableOpacity>
+                <View style={{flex:0.1}} />
+              </View>
               </TouchableOpacity>
-              <View style={{flex:0.1}} />
             </View>
+          </TouchableOpacity>
           </Modal>
       <Toast ref="toast"/>
       </View>

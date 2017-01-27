@@ -6,6 +6,7 @@ var env = require('../env');
 var gel = require('../GlobalElements');
 
 var {get, post} = require('../../api');
+var cond_input = require('../inputStyling');
 
 import Accordion from 'react-native-collapsible/Accordion';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -100,22 +101,28 @@ var Admin = React.createClass({
       <View style={[styles.accordionContent, gel.itemBackGroundColor]}>
         <Text style={styles.accordionTab}>Add or decrease tab:</Text>
         <View style={styles.accordionInputRow}>
-          <TextInput
-            style={{height:50, flex:0.7, borderColor: 'black', color:'#000', textAlign: 'center'}}
-            ref = {(input) => { this['input'+index] = input; }}
-            onChangeText={(text) => {
-              var reg = /^-?\d*\.?\d*$/
-              if(reg.test(text)) {
-                var obj = {};
-                obj[name] = text;
-                this.setState({'amounts': obj});
-              }
-            }}
-            keyboardType={'numeric'}
-            placeholder={'Amount'}
-            value={this.state.amounts[name]}
-
-          />
+          <View style={[cond_input.i, {flex:0.7}]}>
+            <TextInput
+              style={{height:20, flex:0.7, borderColor: 'black', color:'#000', textAlign: 'center'}}
+              ref = {(input) => { this['input'+index] = input; }}
+              onChangeText={(text) => {
+                var reg = /^-?\d*\.?\d*$/
+                if(reg.test(text)) {
+                  var obj = this.state.amounts;
+                  obj[name] = text;
+                  this.setState({'amounts': obj});
+                }
+              }}
+              onFocus={(a) => {
+                var amounts = this.state.amounts;
+                amounts[name] = this.state.amounts[name] || '';
+                this.setState({'amounts':amounts});
+              }}
+              keyboardType={'numeric'}
+              placeholder={'Amount'}
+              value={this.state.amounts[name]}
+            />
+          </View>
           <View style={{flex:0.1}} />
           <TouchableOpacity key={name} onPress={this.changeTab.bind(this, index)}>
             <View style={[styles.changeTabButtonInside, gel.loginButtonColor]}>

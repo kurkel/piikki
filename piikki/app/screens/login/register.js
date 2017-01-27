@@ -5,6 +5,7 @@ var windowSize = Dimensions.get('window');
 var env = require('../env');
 const dismissKeyboard = require('dismissKeyboard');
 var {get, post} = require('../../api');
+var cond_input = require('../inputStyling');
 
 var gel = require('../GlobalElements');
 
@@ -144,6 +145,7 @@ var Register = React.createClass({
           <View style={{flex:0.05}} />
           <View style={styles.inputs}>
             <View style={styles.inputContainer}>
+              <View style={cond_input.i}>
                 <TextInput 
                     style={[styles.input, styles.whiteFont]}
                     placeholder="Username"
@@ -151,8 +153,10 @@ var Register = React.createClass({
                     onChangeText={(username) => this.setState({username})}
                     value={this.state.username}
                 />
+              </View>
             </View>
             <View style={styles.inputContainer}>
+              <View style={cond_input.i}>
                 <TextInput
                     secureTextEntry={true}
                     autoCorrect={false}
@@ -162,8 +166,10 @@ var Register = React.createClass({
                     onChangeText={(password) => this.setState({password})}
                     value={this.state.password}
                 />
+              </View>
             </View>
             <View style={styles.inputContainer}>
+              <View style={cond_input.i}>
                 <TextInput
                     secureTextEntry={true}
                     style={[styles.input, styles.whiteFont]}
@@ -172,8 +178,10 @@ var Register = React.createClass({
                     onChangeText={(password2) => this.setState({password2})}
                     value={this.state.password2}
                 />
+              </View>
             </View>
             <View style={styles.inputContainer}>
+              <View style={cond_input.i}>
                 <TextInput 
                     style={[styles.input, styles.whiteFont]}
                     placeholder="Secret"
@@ -181,6 +189,7 @@ var Register = React.createClass({
                     onChangeText={(secret) => this.setState({secret})}
                     value={this.state.secret}
                 />
+              </View>
             </View>
           </View>
             <View style={{flex: 0.1, justifyContent:'center' , flexDirection: 'row'}}>
@@ -244,6 +253,7 @@ var styles = StyleSheet.create({
         flex: 0.25,
     },
     input: {
+        height: 30,
         textAlign: 'center',
         width: 200,
         fontSize: 14,

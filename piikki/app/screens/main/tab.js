@@ -6,6 +6,7 @@ var env = require('../env');
 var {get, post} = require('../../api');
 
 var gel = require('../GlobalElements');
+var cond_input = require('../inputStyling');
 
 var {
   StyleSheet,
@@ -17,7 +18,7 @@ var {
   ScrollView,
   ActivityIndicator,
   RefreshControl
-} = require('react-native');;
+} = require('react-native');
 
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -254,9 +255,7 @@ var Tab = React.createClass({
     },
 
     toggleOther: function() {
-        this.setState({toggled: !this.state.toggled}, ()=>{
-            if (this.state.toggled) this.refs.otherInput.focus();
-        });
+        this.setState({toggled: !this.state.toggled});
         
     },
 
@@ -292,29 +291,37 @@ var Tab = React.createClass({
 	                <View style={{flex:0.1, padding:20}} />
 	                <Modal animationType={"slide"} transparent={true} visible={this.state.toggled}
 	                onRequestClose={() => {this.setState({'toggled': !this.state.toggled});}} >
+	                	<TouchableOpacity style={{height: windowSize.height, width: windowSize.width}} onPress={this.toggleOther}>
 	                	<View style={styles.modalBody}>
+	                		<TouchableOpacity style={{flex:1}} onPress={() => {}}>
                             <View style={{flex:0.1}} />
                             <Text style={styles.modalHeader}>Custom amount</Text>
                             <View style={{flex:0.1}} />
-                            <TextInput
-                                style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
-                                onChangeText={(text) => this.state.otherAmount = text}
-                                keyboardType={'numeric'}
-                                ref='otherInput'
-                                placeholder='Amount'
-                            />
-                            <TextInput
-                                style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
-                                onChangeText={(text) => this.state.comment = text}
-                                ref='otherCommentInput'
-                                placeholder='Reason'
-                            />
+                            <View style={[cond_input.i, {flex:0.2}]}>
+	                            <TextInput
+	                                style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
+	                                onChangeText={(text) => this.state.otherAmount = text}
+	                                keyboardType={'numeric'}
+	                                ref='otherInput'
+	                                placeholder='Amount'
+	                            />
+	                        </View>
+                            <View style={[cond_input.i, {flex:0.2}]}>
+	                            <TextInput
+	                                style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
+	                                onChangeText={(text) => this.state.comment = text}
+	                                ref='otherCommentInput'
+	                                placeholder='Reason'
+	                            />
+	                        </View>
                             <View style={{flex:0.1}} />
                             <TouchableOpacity style={styles.modalButton} onPress={this.addOtherToCart} >
 								<Text style={styles.tabMe}>Add to Cart</Text>
 							</TouchableOpacity>
                             <View style={{flex:0.1}} />
+                            </TouchableOpacity>
                         </View>
+                       	</TouchableOpacity>
 	                </Modal>				
                 </ScrollView>
 			</View>
