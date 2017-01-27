@@ -35,7 +35,8 @@ public class MainApplication extends Application implements ReactApplication {
           new MainReactPackage(),
           new WifiManager(),
           new VectorIconsPackage(),
-          new ReactNativePushNotificationPackage()
+          new ReactNativePushNotificationPackage(),
+          new SplashScreenReactPackage()
       );
     }
   };
