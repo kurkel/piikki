@@ -4,6 +4,8 @@ var windowSize = Dimensions.get('window');
 var env = require('../env');
 var gel = require('../GlobalElements');
 var cond_input = require('../inputStyling');
+var {get, post} = require('../../api');
+import InfiniteScrollView from 'react-native-infinite-scroll-view';
 
 var {
   AppRegistry,
@@ -14,6 +16,7 @@ var {
   Image,
   Navigator,
   TouchableOpacity,
+  ListView,
   AsyncStorage,
   Modal,
   ScrollView,
@@ -25,6 +28,7 @@ import Toast, {DURATION} from 'react-native-easy-toast'
 
 var Stats = React.createClass({
   getInitialState: function() {
+    var ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     return {
       oldPassword: 'asd',
       currentPassword: '',
@@ -32,39 +36,67 @@ var Stats = React.createClass({
       rdy: false,
       toggled: false,
       refreshing: false,
+      lastTransaction: false,
+      ds: ds,
+      dataSource: ds.cloneWithRows([])
 
     }
   },
 
-  refresh: function() {
-    this.setState({'refreshing': true});
-    var app = this;
-    this.getTransactions().then(()=> {
-      app.setState({'refreshing': false});
+  refresh: async function() {
+    this.setState({'refreshing':true});
+    this.getInitialTransactions();
+    this.setState({'refreshing':false});
+  },
+
+  getOlderTransactions: async function(){
+    if(this.state.transactions && !this.state.refreshing && this.state.transactions.length >= 10) {
+      this.setState({'refreshing': true});
+      var transactions = this.state.transactions;
+      let lastID = transactions[transactions.length - 1]._id;
+      let responseJson = await get('transaction?oldest=' + lastID, (e) => {
+        console.warn(e);
+      });
+      if(responseJson.success) {
+        if (responseJson.transactions && responseJson.transactions.length < 10){
+          this.setState({'lastTransaction': true});
+        }
+        transactions = transactions.concat(responseJson.transactions);
+        this.setState({'transactions': transactions, 'dataSource':this.state.ds.cloneWithRows(transactions)});
+      }
+      this.setState({'refreshing': false});
+    }
+  },
+
+  getInitialTransactions: async function() {
+    let responseJson = await get('transaction', (e)=> {
+      console.warn(e);
     });
-  },
-
-  getTransactions: async function() {
-    this.setState({'transactions': []});
-    // this.setState({'transactions':[
-    //   {'name':'Beer', 'amount':2, 'price':1, 'time': new Date()},
-    //   {'name':'Vodka + Mixer', 'amount':1, price:'3', 'time': new Date()},
-    //   {'name':'Vodka + Mixer2', 'amount':1, price:'3', 'time': new Date()},
-    //   {'name':'Vodka + Mixer3', 'amount':1, price:'3', 'time': new Date()},
-    //   {'name':'Vodka + Mixer4', 'amount':1, price:'3', 'time': new Date()},
-    //   {'name':'Vodka + Mixer5', 'amount':1, price:'3', 'time': new Date()},
-    //   {'name':'Vodka + Mixer6', 'amount':1, price:'3', 'time': new Date()},
-    //   {'name':'Vodka + Mixer7', 'amount':1, price:'3', 'time': new Date()},
-    // ]});
+    if(responseJson.success) {
+      if (responseJson.transactions.length < 10){
+        this.setState({'lastTransaction': true});
+      } else {
+        this.setState({'lastTransaction': false});
+      }
+      this.setState({'transactions': responseJson.transactions, 'dataSource':this.state.ds.cloneWithRows(responseJson.transactions)});
+    }
     this.setState({'rdy': true});
+
   },
 
-  changePassword: function () {
+  changePassword: async function () {
     if (this.state.oldPassword === '' || this.state.currentPassword === '' || this.state.confirmCurrentPassword !== this.state.currentPassword) {
       this.refs.toast.show('Passwords empty, wrong or did not match.', DURATION.LENGTH_LONG)
     }
     else {
-      this.refs.toast.show('Password changed successfully!', DURATION.LENGTH_LONG)
+      var payload = JSON.stringify({'password':this.state.oldPassword, 'newpassword':this.state.currentPassword});
+      let responseJson = await post('changepassword', payload, (e)=>{
+        console.warn(e);
+      });
+      if (responseJson.success)
+        this.refs.toast.show('Password changed successfully!', DURATION.LENGTH_LONG)
+      else
+        this.refs.toast.show(responseJson.error, DURATION.LENGTH_LONG)
     }
     this.setState({'toggled': !this.state.toggled});
   },
@@ -79,32 +111,22 @@ var Stats = React.createClass({
   },
 
   componentDidMount: function() {
-    this.getTransactions()
+    this.getInitialTransactions()
   },
 
-  renderTransactions: function() {
-    if (this.state.transactions && this.state.transactions.length > 0) {
-      var resp = [];
-      for(let item of this.state.transactions) {
-        const d = item.time;
+  renderTransactions: function(item) {
+        const d = new Date(item.date);
         var datestring = d.getDate()  + "-" + (d.getMonth()+1) + "-" + d.getFullYear() + " " + d.getHours() + ":" + d.getMinutes();
-        resp.push(
-          <View style={styles.card} key={item.time + item.name}>
-            <View style={[styles.cardBody, gel.itemBackGroundColor]}>
-              <Text style={styles.drinkName}>{item.name}</Text>
-              <Text style={styles.drinkAmount}>{item.amount} pcs.</Text>
-              <Text style={styles.drinkPrice}>{item.price}€</Text>
-            </View>
-            <View style={styles.cardFooter}>
-              <Text style={styles.drinkTime}>{datestring}</Text>
-            </View>
+        return (<View style={styles.card} key={item.date + item.product}>
+          <View style={[styles.cardBody, gel.itemBackGroundColor]}>
+            <Text style={styles.drinkName}>{item.product}</Text>
+            <Text style={styles.drinkAmount}>{item.amount} pcs.</Text>
+            <Text style={styles.drinkPrice}>{item.pricePer}€</Text>
           </View>
-        )
-      }
-      return resp;
-    } else {
-      return <Text style={styles.noneTransactions}>{"<None yet>"}</Text>
-    }
+          <View style={styles.cardFooter}>
+            <Text style={styles.drinkTime}>{datestring}</Text>
+          </View>
+        </View>)
   },
 
   showModal: function() {
@@ -122,9 +144,20 @@ var Stats = React.createClass({
     }
   },
 
+  _renderRefreshControl() {
+    // Reload all data
+    return (
+      <RefreshControl
+        refreshing={this.state.refreshing}
+        onRefresh={this.refresh}
+      />
+    );
+  },
+
   render: function() {
     return(
       <View style={[{flex: 1}, gel.baseBackgroundColor]}>
+      <Text style={styles.transactionHeader}>{this.state.username}</Text>
         <View style={styles.buttons}>
           <View style={styles.button}>
             <TouchableOpacity onPress={this.logout}>
@@ -143,11 +176,17 @@ var Stats = React.createClass({
           </View>
         </View>
         <Text style={styles.transactionHeader}>Latest transactions</Text>
-        <ScrollView refreshControl={
-                        <RefreshControl refreshing={this.state.refreshing} onRefresh={this.refresh} />
-                      }  style={{flex: 2}} contentContainerStyle={gel.baseBackgroundColor}>
-          {this.renderOrSpinner(this.state.rdy, this.renderTransactions)}
-        </ScrollView>
+        <ListView
+            renderScrollComponent={props => <InfiniteScrollView {...props} />}
+            onLoadMoreAsync={this.getOlderTransactions}
+            dataSource={this.state.dataSource}
+            renderRow={this.renderTransactions}
+            canLoadMore={!this.state.lastTransaction}
+            refreshControl={this._renderRefreshControl()}
+      >
+                      
+
+                </ListView>
       <Modal animationType={"slide"} transparent={true} visible={this.state.toggled}
                   onRequestClose={() => {this.setState({'toggled': !this.state.toggled});}} >
           <TouchableOpacity style={{height: windowSize.height, width: windowSize.width}} onPress={this.showModal}>
@@ -161,9 +200,10 @@ var Stats = React.createClass({
                   <TextInput
                       style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
                       onChangeText={(text) => this.state.oldPassword = text}
-                      keyboardType={'numeric'}
                       ref='oldPasswordInput'
                       placeholder='Old Password'
+                      secureTextEntry={true}
+                      autoCorrect={false}
                   />
                 </View>
                 <View style={[cond_input.i, {flex:0.2}]}>
@@ -172,6 +212,8 @@ var Stats = React.createClass({
                       onChangeText={(text) => this.state.currentPassword = text}
                       ref='newPasswordInput'
                       placeholder='New password'
+                      secureTextEntry={true}
+                      autoCorrect={false}
                   />
                 </View>
                 <View style={[cond_input.i, {flex:0.2}]}>
@@ -180,6 +222,8 @@ var Stats = React.createClass({
                       onChangeText={(text) => this.state.confirmCurrentPassword = text}
                       ref='newPasswordAgainInput'
                       placeholder='Confirm new password'
+                      secureTextEntry={true}
+                      autoCorrect={false}
                   />
                 </View>
                 <View style={{flex:0.1}} />
