@@ -1,3 +1,4 @@
+![Two guys dead](banner.png?raw=true "Results")
 # piikki
 Fun times
 
