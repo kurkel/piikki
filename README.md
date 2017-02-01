@@ -28,3 +28,11 @@ sudo apt-get install oracle-java8-set-default
 2. start device
 3. In repo folder ```react-native start```
 4. In repo folder ```react-native run-android```
+
+
+### Install on OSX
+1. Install Xcode
+2. done
+
+### Usage on OSX
+1. In repo folder ```react-native run-ios```
