@@ -237,21 +237,22 @@ var styles = StyleSheet.create({
     inputs: {
         marginTop: 10,
         marginBottom: 10,
-        flex: 0.1
+        flex: 0.2
     },
     inputContainer: {
-        flex:0.3,
+        flex:0.4,
         flexDirection: "row",
         justifyContent: 'center',
         alignItems: 'center',
+        height: 60,
         padding: 1,
         borderColor: 'transparent'
     },
     input: {
         textAlign: "center",
         width: 200,
-        height: 30,
-        fontSize: 14,
+        height: 60,
+        fontSize: 18,
         borderColor: "white",
     },
     whiteFont: {

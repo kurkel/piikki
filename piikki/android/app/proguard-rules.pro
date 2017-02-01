@@ -40,7 +40,8 @@
   void set*(***);
   *** get*();
 }
-
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.
 -keep class * extends com.facebook.react.bridge.JavaScriptModule { *; }
 -keep class * extends com.facebook.react.bridge.NativeModule { *; }
 -keepclassmembers,includedescriptorclasses class * { native <methods>; }

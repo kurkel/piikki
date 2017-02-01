@@ -5,7 +5,7 @@ import android.util.Log;
 
 import android.content.Intent;
 import com.facebook.react.ReactApplication;
-import com.mehcode.reactnative.splashscreen.SplashScreenPackage;
+import com.devstepbcn.wifi.AndroidWifiPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.dieam.reactnativepushnotification.ReactNativePushNotificationPackage;
 import com.facebook.react.ReactInstanceManager;
@@ -13,7 +13,8 @@ import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
 import com.facebook.soloader.SoLoader;
-import com.skierkowski.WifiManager.*;
+import com.reactnativecomponent.splashscreen.RCTSplashScreenPackage;
+import com.pilloxa.backgroundjob.BackgroundJobPackage;
 
 import java.util.Arrays;
 
@@ -34,11 +35,11 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
-            new SplashScreenPackage(),
-          new WifiManager(),
+            new AndroidWifiPackage(),
+	  new RCTSplashScreenPackage(),
           new VectorIconsPackage(),
           new ReactNativePushNotificationPackage(),
-          new SplashScreenReactPackage()
+	  new BackgroundJobPackage()
       );
     }
   };
@@ -52,8 +53,6 @@ public class MainApplication extends Application implements ReactApplication {
   public void onCreate() {
     super.onCreate();
     SoLoader.init(this, /* native exopackage */ false);
-    Intent NotificationIntent = new Intent(this, NotificationTask.class);
-    	this.startService(NotificationIntent);
   }
 
 }

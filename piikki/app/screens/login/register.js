@@ -253,7 +253,7 @@ var styles = StyleSheet.create({
         flex: 0.25,
     },
     input: {
-        height: 30,
+        height: 60,
         textAlign: 'center',
         width: 200,
         fontSize: 14,

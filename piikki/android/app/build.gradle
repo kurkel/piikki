@@ -80,15 +80,25 @@ def enableSeparateBuildPerCPUArchitecture = false
 /**
  * Run Proguard to shrink the Java bytecode in release builds.
  */
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true
 
 android {
     compileSdkVersion 23
     buildToolsVersion "23.0.3"
+    useLibrary 'org.apache.http.legacy'
+
+    signingConfigs { 
+	release { 
+		storeFile file(PIIKKI_RELEASE_STORE_FILE)
+		storePassword PIIKKI_RELEASE_STORE_PASSWORD
+		keyAlias PIIKKI_RELEASE_KEY_ALIAS
+		keyPassword PIIKKI_RELEASE_KEY_PASSWORD 
+	} 
+    }
 
     defaultConfig {
         applicationId "com.piikki"
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
@@ -108,6 +118,7 @@ android {
         release {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+	    signingConfig signingConfigs.release
         }
     }
     // applicationVariants are e.g. debug, release
@@ -126,13 +137,13 @@ android {
 }
 
 dependencies {
-    compile project(':rn-splash-screen')
+    compile project(':react-native-android-wifi')
+    compile project(':react-native-smart-splashscreen')
     compile project(':react-native-vector-icons')
     compile project(':react-native-push-notification')
     compile fileTree(dir: "libs", include: ["*.jar"])
     compile "com.android.support:appcompat-v7:23.0.1"
-    compile project(':WifiManager')
-    compile project(':react-native-splash-screen')
+    compile project(':react-native-background-job')
     compile "com.facebook.react:react-native:+"  // From node_modules
 }
 

@@ -15,9 +15,25 @@ var AdminMainPage = require('./app/screens/main/adminbase');
 
 var RegisterPage = require('./app/screens/login/register');
 
-var NotificationWorker = require('./app/NotificationWorker');
+var {activeHandleNotification, handleNotification} = require('./app/NotificationWorker');
 
-NotificationWorker();
+import BackgroundJob from 'react-native-background-job';
+
+const backgroundJob = {
+ jobKey: "NotificationTask",
+ job: () => handleNotification(),
+};
+
+const backgroundJobSchedule = {
+ jobKey: "NotificationTask",
+ period: 9000000,
+ warn: false,
+ timeout: 10000
+};
+
+BackgroundJob.register(backgroundJob);
+BackgroundJob.schedule(backgroundJobSchedule);
+activeHandleNotification();
 var piikki = React.createClass({
   render: function() {
     return (
