@@ -32,7 +32,10 @@ sudo apt-get install oracle-java8-set-default
 
 ### Install on OSX
 1. Install Xcode
-2. done
+2. ```npm install react-native-cli -g```
+3. In repofolder ```npm install```
+
 
 ### Usage on OSX
-1. In repo folder ```react-native run-ios```
+1. In repo folder ```react-native start```
+2. In repo folder ```react-native run-ios```
