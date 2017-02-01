@@ -118,9 +118,9 @@ var Tab = React.createClass({
             var cart = this.state.cart
             var new_item = {}
             new_item["name"] = "Misc";
-            new_item["price"] = this.state.otherAmount;
+            new_item["price"] = 1;
             new_item["comment"] = this.state.comment;
-            new_item["amount"] = 1;
+            new_item["amount"] = this.state.otherAmount;
             cart.push(new_item);
             this.setState({total: this.calcTotal(cart)});
             this.setState({cart: cart});
@@ -300,10 +300,16 @@ var Tab = React.createClass({
                             <View style={[cond_input.i, {flex:0.2}]}>
 	                            <TextInput
 	                                style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
-	                                onChangeText={(text) => this.state.otherAmount = text}
+	                                onChangeText={(text) => {
+						                var reg = /(^\d+\.?\d*$)?/
+						                if(reg.test(text)) {
+						                  this.setState({'otherAmount': text});
+						                }
+						            }}
 	                                keyboardType={'numeric'}
 	                                ref='otherInput'
 	                                placeholder='Amount'
+	                                value={this.state.otherAmount}
 	                            />
 	                        </View>
                             <View style={[cond_input.i, {flex:0.2}]}>
