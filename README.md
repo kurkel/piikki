@@ -1,9 +1,7 @@
 # piikki
-kiva ja pieni piikki native-reactilla
+Fun times
 
-
-## Client
-### Install on Ubuntu for Android
+## Install on Ubuntu for Android
 
 1. Install node [https://nodejs.org/en/download/package-manager/](https://nodejs.org/en/download/package-manager/)
 2. Install java
@@ -28,7 +26,7 @@ sudo apt-get install oracle-java8-set-default
 4. In repo folder ```react-native run-android```
 
 
-### Install on OSX
+## Install on OSX
 1. Install Xcode
 2. ```npm install react-native-cli -g```
 3. In repofolder ```npm install```
