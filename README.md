@@ -18,7 +18,7 @@ sudo apt-get install oracle-java8-set-default
 	Install 23.0.3 build tools, all under android 6
 4. ```npm install react-native-cli -g```
 5. In repofolder ```npm install```
-6. ```git pull origin master``` (pull some modified node_modules)
+6. ```git reset --hard``` (to un-overwrite some modified node_modules)
 
 ### Usage on Android
 
@@ -32,7 +32,7 @@ sudo apt-get install oracle-java8-set-default
 1. Install Xcode
 2. ```npm install react-native-cli -g```
 3. In repofolder ```npm install```
-4. ```git pull origin master``` (pull some modified node_modules)
+4. ```git reset --hard``` (to un-overwrite some modified node_modules)
 
 ### Usage on OSX
 1. In repo folder ```react-native start```
