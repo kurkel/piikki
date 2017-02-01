@@ -13,14 +13,12 @@ sudo apt-get update
 sudo apt-get install oracle-java8-installer
 sudo apt-get install oracle-java8-set-default
 ```
-2. Install Android studio [https://developer.android.com/studio/install.html](https://developer.android.com/studio/install.html)
-	(Custom install with AVD)
+2. Install Android studio [https://developer.android.com/studio/install.html](https://developer.android.com/studio/install.html) (Custom install with AVD)
 3. Download depencies for build and emulator using android ~/Android/Sdk/tools/ & run ./android sdk
 	Install 23.0.3 build tools, all under android 6
-
 4. ```npm install react-native-cli -g```
 5. In repofolder ```npm install```
-
+6. ```git pull origin master``` (pull some modified node_modules)
 
 ### Usage on Android
 
@@ -34,7 +32,7 @@ sudo apt-get install oracle-java8-set-default
 1. Install Xcode
 2. ```npm install react-native-cli -g```
 3. In repofolder ```npm install```
-
+4. ```git pull origin master``` (pull some modified node_modules)
 
 ### Usage on OSX
 1. In repo folder ```react-native start```
