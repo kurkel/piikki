@@ -46,19 +46,25 @@ function checkWifi() {
       handleNotiLogic(wifi);
     }else{
       wifi.setEnabled(true);
-      setTimeout(()=>{handleNotiLogic(wifi, () => {wifi.setEnabled(false)});}, 20000);
+      setTimeout(()=>{handleNotiLogic(wifi, () => {wifi.setEnabled(false)});}, 10000);
     }
   });
 }
 
 
 async function handleNotification(TaskData) {
-  checkWifi();
+  let n = await ReactNative.AsyncStorage.getItem('notifications');
+  if (n !== 'false') {
+    checkWifi();
+  }
 }
 
 async function activeHandleNotification(TaskData) {
-  checkWifi();
-  setTimeout(()=>{activeHandleNotification(TaskData)}, 30000);
+  let n = await ReactNative.AsyncStorage.getItem('notifications');
+  if (n !== 'false') {
+    checkWifi();
+  }
+  setTimeout(()=>{activeHandleNotification(TaskData)}, 120000);
 }
 
 module.exports = {handleNotification, activeHandleNotification};

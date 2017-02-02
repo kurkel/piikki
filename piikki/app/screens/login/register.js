@@ -240,7 +240,11 @@ var styles = StyleSheet.create({
         backgroundColor: '#4BAF4F',
         alignItems: 'center',
         justifyContent: 'center',
-        flex: 0.5
+        flex: 0.5,
+        elevation: 5,
+        shadowColor: '#000000',
+        shadowOffset: {width: 5, height: 5},
+        shadowRadius: 2,
     },
     inputs: {
         marginBottom: 10,

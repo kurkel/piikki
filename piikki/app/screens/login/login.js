@@ -38,7 +38,7 @@ var Login = React.createClass({
   },
 
   componentDidMount: function() {
-    SplashScreen.close(SplashScreen.animationType.scale, 850, 500)
+    SplashScreen.close(SplashScreen.animationType.scale, 850, 500);
     this.checkSession();
   },
 
@@ -233,6 +233,10 @@ var styles = StyleSheet.create({
     signin: {
         padding: 12,
         alignItems: 'center',
+        elevation: 5,
+        shadowColor: '#000000',
+        shadowOffset: {width: 5, height: 5},
+        shadowRadius: 2,
     },
     inputs: {
         marginTop: 10,

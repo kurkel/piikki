@@ -28,7 +28,7 @@ const backgroundJobSchedule = {
  jobKey: "NotificationTask",
  period: 9000000,
  warn: false,
- timeout: 10000
+ timeout: 30000
 };
 
 BackgroundJob.register(backgroundJob);

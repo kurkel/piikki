@@ -6,6 +6,7 @@ var gel = require('../GlobalElements');
 var cond_input = require('../inputStyling');
 var {get, post} = require('../../api');
 import InfiniteScrollView from 'react-native-infinite-scroll-view';
+var PushNotification = require('react-native-push-notification');
 
 var {
   AppRegistry,
@@ -21,7 +22,8 @@ var {
   Modal,
   ScrollView,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
+  Switch
 } = require('react-native');
 
 import Toast, {DURATION} from 'react-native-easy-toast'
@@ -38,7 +40,9 @@ var Stats = React.createClass({
       refreshing: false,
       lastTransaction: false,
       ds: ds,
-      dataSource: ds.cloneWithRows([])
+      dataSource: ds.cloneWithRows([]),
+      enableNotifications: true,
+      enableConfirm: true
 
     }
   },
@@ -110,8 +114,13 @@ var Stats = React.createClass({
     });
   },
 
-  componentDidMount: function() {
+  componentDidMount: async function() {
     this.getInitialTransactions()
+    let n = await AsyncStorage.getItem('notifications');
+    let c = await AsyncStorage.getItem('confirm');
+    confirm = (c !== 'false') ? true : false;
+    notifications = (n !== 'false') ? true : false;
+    this.setState({'enableNotifications': notifications, 'enableConfirm': confirm});
   },
 
   renderTransactions: function(item) {
@@ -154,6 +163,19 @@ var Stats = React.createClass({
     );
   },
 
+  handleNotiSlider: function(value) {
+    AsyncStorage.setItem('notifications', value.toString());
+    this.setState({'enableNotifications': value});
+    if(!value) {
+      PushNotification.cancelAllLocalNotifications();
+    }
+  },
+
+  handleConfirmSlider: function(value) {
+    AsyncStorage.setItem('confirm', value.toString());
+    this.setState({'enableConfirm': value});
+  },
+
   render: function() {
     return(
       <View style={[{flex: 1}, gel.baseBackgroundColor]}>
@@ -175,6 +197,19 @@ var Stats = React.createClass({
             </TouchableOpacity>
           </View>
         </View>
+        <View style={styles.sliderRow}>
+          <View style={{flex: 0.2}} />
+          <Text style={styles.sliderLabel}>Enable notifications:</Text>
+          <Switch style={styles.sliderSwitch} onValueChange={this.handleNotiSlider} value={this.state.enableNotifications} />
+          <View style={{flex: 0.2}} />
+        </View>
+        <View style={styles.sliderRow}>
+          <View style={{flex: 0.2}} />
+          <Text style={styles.sliderLabel}>Tab confirmation:</Text>
+          <Switch style={styles.sliderSwitch} onValueChange={this.handleConfirmSlider} value={this.state.enableConfirm} />
+          <View style={{flex: 0.2}} />
+        </View>
+
         <Text style={styles.transactionHeader}>Latest transactions</Text>
         <ListView
             renderScrollComponent={props => <InfiniteScrollView {...props} />}
@@ -244,6 +279,23 @@ var Stats = React.createClass({
 });
 
 var styles = StyleSheet.create({
+  sliderRow: {
+    flexDirection: 'row',
+    flex: 0.15,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  sliderLabel: {
+    flex: 0.7,
+    fontSize: 16,
+    color: '#FFF',
+    marginLeft: 15,
+    textAlign: 'center'
+  },
+  sliderSwitch: {
+    flex: 0.3,
+    marginRight: 15,
+  },
   transactionHeader: {
     textAlign: 'center',
     color: '#FFF',
@@ -267,7 +319,7 @@ var styles = StyleSheet.create({
     textShadowRadius: 3,
   },
   button: {
-    marginVertical: 10,
+    marginVertical: 5,
   },
   modalButton: {
     marginRight: 20,

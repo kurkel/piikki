@@ -17,7 +17,8 @@ var {
   Modal,
   ScrollView,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
+  AsyncStorage
 } = require('react-native');
 
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -36,6 +37,7 @@ var Tab = React.createClass({
             toggled: false,
             comment: '',
             refreshing: false,
+            confirmToggled: false
 	 	}
 	 },
 
@@ -218,11 +220,48 @@ var Tab = React.createClass({
 
 	},
 
+	renderConfirm: function () {
+		var resp = [];
+		for(let item of this.state.cart) {
+			resp.push(
+				<View key={item.name} style={{flexDirection: 'row', flex:1, height: 38}}>
+					<View style={{flex:0.03}}/>
+					<View style={[gel.row, {flex:1, justifyContent: 'center', alignItems: 'center'}]}>
+						<Text style={styles.rowName}>{item.name}</Text>
+						<View style={{flex:0.05}} />
+						<Text style={[styles.rowAmount, {flex: 0.15}]}>{item.amount}</Text>
+						<View style={{flex:0.05}}/>
+						<Text style={styles.rowAmount}>{item.price*item.amount}€</Text>
+					</View>
+					<View key={"pad"} style={{flex:0.03}}/>
+				</View>
+
+			);
+		}
+		if (this.state.cart.length > 0){
+			let sum = this.state.cart.reduce((a, item) => {
+				return a + item.price*item.amount
+			}, 0);
+			resp.push(
+				<View style={[styles.cartRow, styles.sumRow]}>
+					<View style={{flex:0.03}}/>
+					<View style={[gel.row, {flex:1, justifyContent: 'center', alignItems: 'center'}]}>
+						<Text style={[styles.rowName, {fontWeight: 'bold'}]}>Total</Text>
+						<View style={{flex:0.25}} />
+						<Text style={[styles.rowAmount, {fontWeight: 'bold'}]}>{sum}€</Text>
+					</View>
+					<View key={"pad"} style={{flex:0.03}}/>
+				</View>
+			)
+		}
+		return resp;
+	},
+
 	renderCart: function() {
 		var resp = [];
 		for(let item of this.state.cart) {
 			resp.push(
-				<View key={item.name} style={{flexDirection: 'row', flex:1, height: 30}}>
+				<View key={item.name} style={{flexDirection: 'row', flex:1, height: 38}}>
 					<View style={{flex:0.03}}/>
 					<View style={[gel.row, {flex:1, justifyContent: 'center', alignItems: 'center'}]}>
 						<Text style={styles.rowName}>{item.name}</Text>
@@ -231,22 +270,38 @@ var Tab = React.createClass({
 						<View style={{flex:0.05}}/>
 						<View style={styles.deleteButton}>
 							<TouchableOpacity key={'decreaseAmount' + item.name} onPress={this.deleteCart.bind(this, item.name)}>
-								<Icon style={{alignItems: 'center', justifyContent: 'center'}} name="minus" size={20} color="#000000"/>
+								<Icon style={{alignItems: 'center', justifyContent: 'center'}} name="minus" size={30} color="#000000"/>
 							</TouchableOpacity>
 						</View>
 						<Text style={[styles.rowAmount, {flex: 0.15}]}>{item.amount}</Text>
 						<View style={styles.deleteButton}>
 							<TouchableOpacity key={'addAmount' + item.name} onPress={this.addToCart.bind(this, item.name)}>
-								<Icon style={{alignItems: 'center', justifyContent: 'center'}} name="plus" size={20} color="#000000"/>
+								<Icon style={{alignItems: 'center', justifyContent: 'center'}} name="plus" size={30} color="#000000"/>
 							</TouchableOpacity>
 						</View>
 					</View>
-					<View style={{flex:0.03}}/>
+					<View key={"pad"} style={{flex:0.03}}/>
 				</View>
 
 			);
 		}
+		if(this.state.cart.length > 0) {
+			resp.push(<View style={{height: 20}} />)
+		}
 		return resp;
+	},
+	toggleConfirm: function () {
+		if (this.state.cart.length > 0) {
+			this.setState({confirmToggled: !this.state.confirmToggled});
+		}
+	},
+	handleConfirm: async function() {
+		let c = await AsyncStorage.getItem('confirm');
+		if (c !== 'false') {
+			this.toggleConfirm();
+		} else {
+			this.commitCart();
+		}
 	},
     message: function() {
         if (this.state.message !== '') {
@@ -256,7 +311,6 @@ var Tab = React.createClass({
 
     toggleOther: function() {
         this.setState({toggled: !this.state.toggled});
-        
     },
 
 	render: function() {
@@ -275,19 +329,14 @@ var Tab = React.createClass({
 						<View style={styles.commitCart}>
 							<Text style={styles.currentTab}>Total Tab: {this.state.tab}€</Text>
 							<View style={{flex: 0.3}} />
-							<TouchableOpacity style={styles.commitButton} onPress={this.commitCart} >
+							<TouchableOpacity style={styles.commitButton} onPress={this.handleConfirm} >
 								<Text style={styles.tabMe}>Tab me ({this.state.total}€)</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
-					<View style={{flexDirection: 'row', flex:0.1}}>
-						<View style={{flex: 0.1}} />
-					</View>
-					<View style={{flex:0.1}}>
-					</View>	
+					<View style={{flex:0.2}} />
 						{this.renderPrices()}
-					<View style={{flex:0.1}}>
-					</View>
+					<View style={{flex:0.1}} />
 	                <View style={{flex:0.1, padding:20}} />
 	                <Modal animationType={"slide"} transparent={true} visible={this.state.toggled}
 	                onRequestClose={() => {this.setState({'toggled': !this.state.toggled});}} >
@@ -328,7 +377,36 @@ var Tab = React.createClass({
                             </TouchableOpacity>
                         </View>
                        	</TouchableOpacity>
-	                </Modal>				
+	                </Modal>
+
+	                <Modal animationType={"fade"} transparent={true} visible={this.state.confirmToggled}
+	                onRequestClose={() => {this.setState({'confirmToggled': !this.state.confirmToggled});}} >
+	                	<TouchableOpacity style={{height: windowSize.height/8, width: windowSize.width}} onPress={this.toggleConfirm}>
+	                	</TouchableOpacity>
+	                	<View style={styles.confirmModalBody}>
+	                		<TouchableOpacity style={{flex:0.3}} onPress={() => {}}>
+	                            <View style={{flex:0.1}} />
+	                            <Text style={styles.modalHeader}>Confirm?</Text>
+	                            <View style={{flex:0.1}} />
+                            </TouchableOpacity>
+                            <ScrollView style={{flex: 0.9}}>
+                            	{this.renderConfirm()}
+                            </ScrollView>
+                            <TouchableOpacity style={{flex:0.5}} onPress={() => {}}>
+	                            <View style={{flex:0.05}} />
+		                            <TouchableOpacity style={styles.modalButton} onPress={()=> {this.toggleConfirm();this.commitCart();}} >
+										<Text style={styles.tabMe}>Confirm</Text>
+									</TouchableOpacity>
+								<View style={{flex:0.05}} />
+									<TouchableOpacity style={styles.modalButton} onPress={this.toggleConfirm} >
+										<Text style={styles.tabMe}>Cancel</Text>
+									</TouchableOpacity>
+	                            <View style={{flex:0.05}} />
+                            </TouchableOpacity>
+                        </View>
+                       	<TouchableOpacity style={{height: windowSize.height/8, width: windowSize.width}} onPress={this.toggleConfirm}>
+	                	</TouchableOpacity>
+	                </Modal>			
                 </ScrollView>
 			</View>
 		)
@@ -350,6 +428,16 @@ var styles = StyleSheet.create({
 		'textAlign': 'center',
 		fontSize: 18,
 
+	},
+	cartRow: {
+		flexDirection: 'row',
+		flex:1,
+		height: 38
+	},
+	sumRow: {
+		borderColor: 'transparent',
+		borderTopColor: '#000',
+		borderWidth: 1
 	},
 	container: {
 		flexDirection: 'column',
@@ -388,8 +476,20 @@ var styles = StyleSheet.create({
 	    backgroundColor: '#FFFFFF',
 	    borderRadius: 5,
 	    height: windowSize.height/2,
-	    padding: 5
-  },
+	    padding: 5,
+	    elevation: 10
+  	},
+  	 confirmModalBody: {
+	    flexDirection: 'column',
+	    margin: 10,
+	    marginTop: 0,
+	    marginBottom: 0,
+	    backgroundColor: '#FFFFFF',
+	    borderRadius: 5,
+	    height: windowSize.height - windowSize.height/4,
+	    padding: 5,
+	    elevation: 10
+  	},
     message: {
         flex: 0.2,
         margin: 5,
@@ -414,10 +514,10 @@ var styles = StyleSheet.create({
 		justifyContent: 'center',
 		alignItems: 'center',
 		borderRadius: 3,
-		elevation: 5,
 		shadowColor: '#000000',
 		shadowOffset: {width: 5, height: 5},
 		shadowRadius: 2,
+		elevation: 5,
 
 	},
 	buttonrow: {
@@ -448,7 +548,7 @@ var styles = StyleSheet.create({
 		color: '#111111',
 	},
 	deleteButton: {
-		flex: 0.05,
+		flex: 0.1,
 		alignItems: 'center',
 		justifyContent: 'center'
 	},
