@@ -12,6 +12,7 @@
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTRootView.h>
 #import "RCTSplashScreen.h"
+#import "RCTPushNotificationManager.h"
 
 
 @implementation AppDelegate
