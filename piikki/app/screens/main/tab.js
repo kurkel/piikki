@@ -8,6 +8,8 @@ var ReactNative = require('react-native');
 var gel = require('../GlobalElements');
 var cond_input = require('../inputStyling');
 import Toast, {DURATION} from 'react-native-easy-toast'
+var Events = require('react-native-simple-events');
+
 var {
   StyleSheet,
   View,
@@ -60,6 +62,8 @@ var Tab = React.createClass({
 	 },
 	 componentDidMount: function() {
 	 	this.getPrices();
+    	Events.on('TabPage', 'myID', this.refresh);
+
 	 },
 	 calcTotal: function(cart) {
     	return cart.reduce((a, b) => {

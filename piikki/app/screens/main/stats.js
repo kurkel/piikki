@@ -4,6 +4,7 @@ var windowSize = Dimensions.get('window');
 var env = require('../env');
 var gel = require('../GlobalElements');
 var {get, post} = require('../../api');
+var Events = require('react-native-simple-events');
 
 var {
   StyleSheet,
@@ -62,6 +63,7 @@ var Stats = React.createClass({
 
   componentDidMount: function() {
     this.fetchStats();
+    Events.on('StatsPage', 'myID', this.fetchStats);
   },
 
   fetchStats: async function() {

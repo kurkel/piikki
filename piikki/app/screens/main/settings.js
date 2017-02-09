@@ -8,6 +8,7 @@ var {get, post} = require('../../api');
 import InfiniteScrollView from 'react-native-infinite-scroll-view';
 var PushNotification = require('react-native-push-notification');
 var ReactNative = require('react-native');
+var Events = require('react-native-simple-events');
 
 var {
   AppRegistry,
@@ -124,8 +125,14 @@ var Stats = React.createClass({
     confirm = (c !== 'false') ? true : false;
     notifications = (n !== 'false') ? true : false;
     this.setState({'enableNotifications': notifications, 'enableConfirm': confirm, 'username':u});
+    Events.on('SettingsPage', 'myID', this.refresh);
   },
 
+  renderComment: function(c) {
+    if (c) {
+      return <Text style={styles.commentText}>{c}</Text>;
+    }
+  },
   renderTransactions: function(item) {
         const d = new Date(item.date);
         var datestring = d.getDate()  + "-" + (d.getMonth()+1) + "-" + d.getFullYear() + " " + d.getHours() + ":" + d.getMinutes();
@@ -136,6 +143,7 @@ var Stats = React.createClass({
             <Text style={styles.drinkPrice}>{item.pricePer}€</Text>
           </View>
           <View style={styles.cardFooter}>
+            {this.renderComment(item.comment)}
             <Text style={styles.drinkTime}>{datestring}</Text>
           </View>
         </View>)
@@ -335,6 +343,11 @@ var styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold'
   },
+  commentText: {
+    flex:0.7,
+    marginLeft: 3,
+    marginBottom: 3,
+  },
   buttons: {
     flex: 0.3,
     alignItems: 'center',
@@ -364,7 +377,7 @@ var styles = StyleSheet.create({
   drinkTime: {
     margin: 3,
     marginRight: 10,
-    flex: 1,
+    flex: 0.3,
     textAlign: 'right',
 
   },

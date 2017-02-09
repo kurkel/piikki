@@ -7,6 +7,7 @@ var gel = require('../GlobalElements');
 
 var {get, post} = require('../../api');
 var cond_input = require('../inputStyling');
+var Events = require('react-native-simple-events');
 
 import Accordion from 'react-native-collapsible/Accordion';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -54,6 +55,7 @@ var Admin = React.createClass({
 
   componentDidMount: function() {
     this.refresh();
+    Events.on('StatsPage', 'myID', this.refresh);
   },
   getLimits: async function() {
     let limitJson = await get('limits', (e) => {
@@ -122,6 +124,10 @@ var Admin = React.createClass({
             dataSource={this.state.users}
             renderRow={this._renderHeader}
             style={{backgroundColor: 'transparent', flex:1}}
+            refreshControl={<RefreshControl
+        refreshing={this.state.refreshing}
+        onRefresh={this.refresh}
+      />}
             />
       );
   },
@@ -245,7 +251,7 @@ var styles = StyleSheet.create({
     textShadowRadius: 3,
   },
   rootView: {
-    height: windowSize.height
+    flex:1
   },
   header: {
     justifyContent: 'center',
