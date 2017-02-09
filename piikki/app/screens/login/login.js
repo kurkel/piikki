@@ -19,6 +19,7 @@ var {
   AsyncStorage,
   TouchableWithoutFeedback,
   ActivityIndicator,
+  KeyboardAvoidingView,
   ScrollView
 } = require('react-native');
 
@@ -68,6 +69,7 @@ var Login = React.createClass({
       var app = this;
       await AsyncStorage.setItem("admin", responseJson.admin.toString());
       await AsyncStorage.setItem('token', responseJson.token);
+      await AsyncStorage.setItem('username', this.state.username);
       this.routeLogIn(responseJson.admin.toString());
     }
   },
@@ -137,7 +139,9 @@ var Login = React.createClass({
 
   render: function() {
         return (
-        <TouchableWithoutFeedback onPress={()=> dismissKeyboard()}>
+        <View style={{flex:1}}>
+        <ScrollView contentContainerStyle={{flex: 1}} style={{flex: 1}}>
+        <TouchableWithoutFeedback onPress={()=> dismissKeyboard()} style={{flex:1}}>
           <View style={styles.container}>
               <Image style={styles.bg} source={require('./tausta.png')} />
               <View style={{flex: 0.05}} />
@@ -196,6 +200,8 @@ var Login = React.createClass({
               
           </View>
         </TouchableWithoutFeedback>
+        </ScrollView>
+        </View>
     );
   }
 });
@@ -214,16 +220,17 @@ var styles = StyleSheet.create({
         height: windowSize.height
     },
     buttons: {
-      flex: 0.05,
+      height: 100,
       flexDirection: 'row',
     },
     button: {
-      flex:0.5
+      flex:0.5,
+      height: 40,
     },
     header: {
         justifyContent: 'center',
         alignItems: 'center',
-        flex: 0.15,
+        height: 200,
         backgroundColor: 'transparent'
     },
     mark: {
@@ -232,6 +239,7 @@ var styles = StyleSheet.create({
     },
     signin: {
         padding: 12,
+        borderRadius: 3,
         alignItems: 'center',
         elevation: 5,
         shadowColor: '#000000',
@@ -241,7 +249,7 @@ var styles = StyleSheet.create({
     inputs: {
         marginTop: 10,
         marginBottom: 10,
-        flex: 0.2
+        height: 150
     },
     inputContainer: {
         flex:0.4,

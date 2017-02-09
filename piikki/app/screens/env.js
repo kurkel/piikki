@@ -1,5 +1,5 @@
 module.exports = {
-	host:"http://eevertti.xyz:8081/api/",
+	host:"http://eevertti.xyz:8080/api/",
 	dev: true,
 	SSID: 'Maaliverkko',
 }

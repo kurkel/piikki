@@ -19,23 +19,35 @@ var {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
-  RefreshControl
+  RefreshControl,
+  ListView,
+  Modal
 } = require('react-native');
 
 
 var Admin = React.createClass({
   getInitialState: function() {
+    var ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     return {
       usersRdy: false,
-      users: {},
+      users: ds.cloneWithRows([]),
+      ds: ds,
       userKeys: [],
       refreshing: false,
       amounts: {},
+      toggled: false,
+      selectedUser: -1,
+      error: "",
+      amount: "",
+      softlimit: 100,
+      hardlimit: 100,
+      message: ""
     };
   },
 
   refresh: async function() {
     this.setState({'refreshing': true});
+    await this.getLimits();
     await this.getUsers();
     this.setState({'refreshing': false});
   },
@@ -43,7 +55,13 @@ var Admin = React.createClass({
   componentDidMount: function() {
     this.refresh();
   },
-
+  getLimits: async function() {
+    let limitJson = await get('limits', (e) => {
+      this.setState({message: "Could not fetch limits :("});
+      console.error(e)
+    })
+    this.setState({'softLimit': limitJson.softlimit, 'hardLimit':limitJson.hardlimit});
+  },
   getUsers: async function() {
     var responseJson = await get('admin/getusers', (e)=> {
       this.setState({error:"Could not fetch users"});
@@ -58,99 +76,53 @@ var Admin = React.createClass({
       var user = {};
       user = responseJson[k];
       user.id = k;
+      user.style=this.conditionalTab(user.amount)
       data.push(user);
     }
-    this.setState({users: data});
+    this.setState({users: this.state.ds.cloneWithRows(data)});
     this.setState({usersRdy: true});
   },
 
-  changeTab: async function(id) {
+  changeTab: async function() {
     this.state.message="";
     this.state.error = "";
-    var name = "user"+id+"Value";
-    var payload = JSON.stringify({'username':this.state.users[id].username, 'drinks':{'payback': this.state.amounts[name]}});
+    var payload = JSON.stringify({'username':this.state.selectedUsername, 'drinks':{'payback': {'amount':this.state.amount}}});
     var responseJson = await post('admin/tab', payload, (e)=>{
-      this.setState({error:"Could not update" + this.state.users[id].username + "'s tab"});
+      this.setState({error:"Could not update" + this.state.selectedUsername + "'s tab"});
       console.error(error);
     });
     if(responseJson.success) {
-      this.setState({message: "Successfully updated " + this.state.users[id].username + "'s tab"});
-      this.state.amounts[name] = "";
+      this.setState({message: "Successfully updated " + this.state.selectedUsername + "'s tab"});
       this.refresh();
     } else {
-      this.setState({message: "Failed to update " + this.state.users[id].username + "'s tab"});
+      this.setState({message: "Failed to update " + this.state.selectedUsername + "'s tab"});
     }
+    this.closeModal();
   },
-
+  openModal: function(obj) {
+    this.setState({'selectedUser': obj.idx, 'selectedUsername': obj.sec.username, 'toggled':!this.state.toggled});
+  },
+  closeModal: function() {
+    this.setState({'selectedUser': -1, 'selectedUsername': "",'amount':'', 'toggled':false});
+  },
   _renderHeader: function(section, index) {
     return (
-      <View style={styles.accordionHeader}>
+      <TouchableOpacity onPress={this.openModal.bind(this, {'idx':index, 'sec':section} )} style={styles.accordionHeader}>
         <Text style={[styles.accordionHeaderText, styles.accordionHeaderName]}>{section.username}</Text>
-        <Text style={[styles.accordionHeaderText, styles.accordionHeaderAmount]}>{section.amount}€</Text>
+        <Text style={[styles.accordionHeaderText, styles.accordionHeaderAmount]}><Text style={section.style}>{section.amount}</Text>€</Text>
         <Icon ref={'chevron'+index} style={[styles.accordionHeaderAmount, {alignItems: 'center', justifyContent: 'center'}]}
         name={'chevron-right'} size={20} color='#000' />
-      </View>
+      </TouchableOpacity>
     );
-  },
-
-  _renderRow: function(section, index)   {
-    
-  var name = "user"+index+"Value";
-
-    return (
-      <View style={[styles.accordionContent, gel.itemBackGroundColor]}>
-        <Text style={styles.accordionTab}>Add or decrease tab:</Text>
-        <View style={styles.accordionInputRow}>
-          <View style={[cond_input.i, {flex:0.7}]}>
-            <TextInput
-              style={{height:20, flex:0.7, borderColor: 'black', color:'#000', textAlign: 'center'}}
-              ref = {(input) => { this['input'+index] = input; }}
-              onChangeText={(text) => {
-                var reg = /^-?\d*\.?\d*$/
-                if(reg.test(text)) {
-                  var obj = this.state.amounts;
-                  obj[name] = text;
-                  this.setState({'amounts': obj});
-                }
-              }}
-              onFocus={(a) => {
-                var amounts = this.state.amounts;
-                amounts[name] = this.state.amounts[name] || '';
-                this.setState({'amounts':amounts});
-              }}
-              keyboardType={'numeric'}
-              placeholder={'Amount'}
-              value={this.state.amounts[name]}
-            />
-          </View>
-          <View style={{flex:0.1}} />
-          <TouchableOpacity key={name} onPress={this.changeTab.bind(this, index)}>
-            <View style={[styles.changeTabButtonInside, gel.loginButtonColor]}>
-              <Text style={styles.changeTabButtonText}>Tab!</Text>
-            </View>
-          </TouchableOpacity> 
-        </View>
-      </View>
-    );
-  },
-
-  _focusKeyboard: function(index) {
-    if(index !== false) {
-      this['input'+index].focus();
-    }
   },
 
   renderUsers: function() {
     return (
-      <View style={{flex:0.8}}>
-        <Accordion
-          sections={this.state.users}
-          renderContent={this._renderRow}
-          renderHeader={this._renderHeader}
-          style={{backgroundColor: 'transparent'}}
-          onChange={this._focusKeyboard}
-          />
-      </View>
+          <ListView
+            dataSource={this.state.users}
+            renderRow={this._renderHeader}
+            style={{backgroundColor: 'transparent', flex:1}}
+            />
       );
   },
 
@@ -173,25 +145,78 @@ var Admin = React.createClass({
       return <Text style={[styles.stateMessage, styles.error]}>{this.state.message}</Text>;
     }
   },
-
+  conditionalTab: function(amount) {
+      if(amount >= this.state.hardLimit) {
+        return {'color':'#F73826'}
+      }
+      else if (amount>= this.state.softLimit) {       
+        return {'color':'#F7AF26'}
+      }
+      else {
+        return {'color':'#92F726'}
+      }
+    },
   render: function() {
       return(
-      <ScrollView contentContainerStyle={{flex:1}} refreshControl={
-                        <RefreshControl refreshing={this.state.refreshing} onRefresh={this.refresh} />
-                      } 
-        style={styles.rootView}>
+        <View style={styles.rootView}>
         <View style={styles.header}>
           <Text style={styles.headerHelp}>Positive values are withdrawals and negative values are deposits</Text>
-          <View style={{flex:0.05}}/>
-            {this.message()}
-          </View>
-        {this.renderOrSpinner(this.state.usersRdy, this.renderUsers)}
-      </ScrollView>
+          {this.message()}
+        </View>
+            {this.renderOrSpinner(this.state.usersRdy, this.renderUsers)}
+            <Modal animationType={"slide"} transparent={true} visible={this.state.toggled}
+                  onRequestClose={() => {this.setState({'toggled': !this.state.toggled});}} >
+          <TouchableOpacity style={{height: windowSize.height, width: windowSize.width}} onPress={()=>{this.setState({'toggled': !this.state.toggled})}}>
+            <View style={styles.modalRow}>
+              <TouchableOpacity style={{flex:1}} onPress={() => {}}>
+              <View style={{flex:1}}>
+                <View style={{flex:0.1}} />
+                <Text style={styles.modalHeader}>Change tab for {this.state.selectedUsername}</Text>
+                <View style={{flex:0.1}} />
+                <View style={[cond_input.i, {flex:0.2}]}>
+                  <TextInput
+                    style={{height:20, flex:0.7, borderColor: 'black', color:'#000', textAlign: 'center'}}
+                    ref = 'tabAmounts'
+                    onChangeText={(text) => {
+                      var reg = /^-?\d*\.?\d*$/
+                      if(reg.test(text)) {
+                        this.setState({'amount': text});
+                      }
+                    }}
+                    keyboardType={'numeric'}
+                    placeholder={'Amount'}
+                    value={this.state.amount}
+                  />
+                </View>
+                <View style={{flex:0.1}} />
+                <TouchableOpacity style={styles.modalButton} onPress={this.changeTab} >
+                  <Text style={styles.changePass}>Tab {this.state.selectedUsername}</Text>
+                </TouchableOpacity>
+                <View style={{flex:0.1}} />
+              </View>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+          </Modal>
+      </View>
       );
   }
 });
 
 var styles = StyleSheet.create({
+  modalRow: {
+    flexDirection: 'column',
+      margin: 10,
+      marginTop: windowSize.height/4,
+      backgroundColor: '#EEEEEE',
+      borderRadius: 5,
+      height: windowSize.height/2,
+      padding: 5
+    },
+  modalHeader: {
+    'textAlign': 'center',
+    fontSize: 18,
+  },
   accordionInputRow: {
     flexDirection: 'row',
   },
@@ -199,6 +224,16 @@ var styles = StyleSheet.create({
     borderRadius: 3,
     justifyContent: 'center',
     padding: 10,
+  },
+  modalButton: {
+    marginRight: 20,
+    marginLeft: 20,
+    borderRadius: 3,
+    padding: 10,
+    backgroundColor: '#388E3C',
+    justifyContent: 'center',
+    alignItems: 'center',
+
   },
   changeTabButtonText: {
     textAlign: 'center',
@@ -210,22 +245,21 @@ var styles = StyleSheet.create({
     textShadowRadius: 3,
   },
   rootView: {
-    flex:1,
+    height: windowSize.height
   },
   header: {
-    padding:20,
     justifyContent: 'center',
     flex: 0.3,
   },
   headerHelp: {
-    flex: 0.45,
+    flex: 0.1,
     textAlign: 'center',
     fontWeight:'bold',
     fontSize: 20,
     color: '#121212',
   },
   stateMessage: {
-    flex:0.4,
+    flex:0.1,
     textAlign: 'center',
     fontWeight:'bold',
     fontSize: 20,
@@ -245,6 +279,7 @@ var styles = StyleSheet.create({
     marginRight: 10,
     height: 40,
     borderWidth: 1,
+    backgroundColor: 'transparent',
     borderBottomColor: "#000000",
     borderColor: "transparent",
     flexDirection: 'row',

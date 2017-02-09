@@ -4,10 +4,10 @@ var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
 var env = require('../env');
 var {get, post} = require('../../api');
-
+var ReactNative = require('react-native');
 var gel = require('../GlobalElements');
 var cond_input = require('../inputStyling');
-
+import Toast, {DURATION} from 'react-native-easy-toast'
 var {
   StyleSheet,
   View,
@@ -37,10 +37,22 @@ var Tab = React.createClass({
             toggled: false,
             comment: '',
             refreshing: false,
-            confirmToggled: false
+            confirmToggled: false,
+            softLimit: 100,
+            hardLimit: 100,
+            condStyle: StyleSheet.create({tab:{'color':'#000000'}})
 	 	}
 	 },
-
+	 inputFocused (refName) {
+	    setTimeout(() => {
+	      let scrollResponder = this.refs.scrollView.getScrollResponder();
+	      scrollResponder.scrollResponderScrollNativeHandleToKeyboard(
+	        ReactNative.findNodeHandle(this.refs[refName]),
+	        110, //additionalOffset
+	        true
+	      );
+	    }, 50);
+	  },
 	 refresh: async function() {
 	 	this.setState({'refreshing': true});
 	    await this.getPrices();
@@ -63,7 +75,7 @@ var Tab = React.createClass({
             return;
         }
 		this.state.cart.map((item) => {
-			cart[item.name] = item.amount;
+			cart[item.name] = item.comment ? {'amount': item.amount, 'comment':item.comment} : {'amount':item.amount};
 		})
 		let payload = JSON.stringify(cart);
 		let responseJson = await post('tab', payload, (e) => {
@@ -96,39 +108,78 @@ var Tab = React.createClass({
 		var cart = this.state.cart;
 		var total = this.state.total;
 		var new_item = {"name": item};
-		var items = cart.filter((item) => {return item.name === new_item.name});
-		if (items.length > 0) {
+		var amount = this.state.prices[item]
+		var items = cart.filter((item) => {return item.name === new_item.name && !new_item.extra});
+		if(this.closedTab(amount)) {
+			this.refs.toast.show('Max limit ('+this.state.hardLimit + '€) reached. Cannot tab.', DURATION.LENGTH_LONG);
+			return
+		}
+		if(this.extraTabs(amount)) {
+			var items = cart.filter((item) => {return item.name === new_item.name && new_item.extra});
+			if (items.length > 0) {
+				cart = cart.map((item) => {
+					if (item.name === new_item.name) {
+						item.amount += 1
+					}
+					return item;
+				});
+			}
+			else {
+				new_item.name = new_item.name;
+				new_item["price"] = this.state.prices[item] * 1.5;
+				new_item['extra'] = true;
+				new_item["amount"] = 1;
+				cart.push(new_item);
+			}
+		}
+		else if (items.length > 0) {
 			cart = cart.map((item) => {
-				if (item.name === new_item.name) {
+				if (item.name === new_item.name && !item.extra) {
 					item.amount += 1
 				}
 				return item
-
 			});
 		} else {
 			new_item["price"] = this.state.prices[item];
 			new_item["amount"] = 1;
+			new_item['extra'] = false
 			cart.push(new_item);
 		}
-		total += this.state.prices[item];
 		this.setState({total: this.calcTotal(cart)});
 		this.setState({cart: cart});
         this.setState({message: ""});
 	},
+	closedTab: function(amount) {
+		if (this.extraTabs(amount)) {
+			return this.state.tab + this.state.total + (parseInt(amount) * 1.5) > this.state.hardLimit
+		} else {
+			return this.state.tab + this.state.total + parseInt(amount) > this.state.hardLimit
+		}
+	},
+	extraTabs: function(amount) {
+		if(this.state.tab + this.state.total + parseInt(amount) > this.state.softLimit) {
+			return true;
+		} else {
+			return false;
+		}
+	},
     addOtherToCart: function() {
-        if(this.state.otherAmount > 0) {
+        if(this.state.otherAmount > 0 && !this.closedTab(this.state.otherAmount)) {
             var cart = this.state.cart
             var new_item = {}
             new_item["name"] = "Misc";
             new_item["price"] = 1;
             new_item["comment"] = this.state.comment;
-            new_item["amount"] = this.state.otherAmount;
+            new_item["amount"] = this.extraTabs(this.state.otherAmount) ? this.state.otherAmount * 1.5 : this.state.otherAmount;
+            new_item["extra"] = this.extraTabs(this.state.otherAmount);
             cart.push(new_item);
             this.setState({total: this.calcTotal(cart)});
             this.setState({cart: cart});
             this.setState({message: ""});
-            this.setState({toggled: true});
-            this.toggleOther();
+        	this.toggleOther();
+        } else {
+        	this.refs.toast.show('Max limit ('+this.state.hardLimit + '€) reached. Cannot add.', DURATION.LENGTH_LONG)
+        	this.toggleOther();
         }
         
     },
@@ -150,15 +201,22 @@ var Tab = React.createClass({
 	getPrices: async function() {
 		let responseJson = await get('prices', (e) => {
 			this.setState({message: "Could not fetch prices :("});
-	        console.error(e);
+	        console.warn(e);
 		});
-		if (responseJson.success) {
-			this.setState({prices: responseJson.prices})
-  			this.setState({tab: responseJson.tab})
-  			this.setState({pricesAvailable: true})
+		let limitJson = await get('limits', (e) => {
+			this.setState({message: "Could not fetch limits :("});
+			console.error(e)
+		})
+		if (responseJson.success && limitJson) {
+			this.setState({prices: responseJson.prices});
+  			this.setState({tab: responseJson.tab});
+  			this.setState({softLimit: limitJson.softlimit, hardLimit:limitJson.hardlimit});
+  			this.setState({pricesAvailable: true});
+  			this.conditionalTab();
 		} else {
 			this.setState({message: "Could not fetch prices :("});
 		}
+		
 	},
 
 	renderButtons: function(i) {
@@ -256,24 +314,37 @@ var Tab = React.createClass({
 		}
 		return resp;
 	},
-
+	parsePrice: function(item) {
+		return (item.name==="Misc") ? item.amount : item.price;
+	},
+	parseAmount: function(item) {
+		return (item.name!=="Misc") ? item.amount : item.price;
+	},
+	priceCondColor: function(e) {
+		if (e)
+			return {'color': '#F7AF26'};
+		else
+			return {};
+	},
 	renderCart: function() {
 		var resp = [];
+		var count = 0;
 		for(let item of this.state.cart) {
+			count++;
 			resp.push(
-				<View key={item.name} style={{flexDirection: 'row', flex:1, height: 38}}>
+				<View key={item.name + count} style={{flexDirection: 'row', flex:1, height: 38}}>
 					<View style={{flex:0.03}}/>
 					<View style={[gel.row, {flex:1, justifyContent: 'center', alignItems: 'center'}]}>
 						<Text style={styles.rowName}>{item.name}</Text>
 						<View style={{flex:0.05}} />
-						<Text style={styles.rowAmount}>{item.price}€</Text>
+						<Text style={[styles.rowAmount, this.priceCondColor(item.extra)]}>{this.parsePrice(item)}€</Text>
 						<View style={{flex:0.05}}/>
 						<View style={styles.deleteButton}>
 							<TouchableOpacity key={'decreaseAmount' + item.name} onPress={this.deleteCart.bind(this, item.name)}>
 								<Icon style={{alignItems: 'center', justifyContent: 'center'}} name="minus" size={30} color="#000000"/>
 							</TouchableOpacity>
 						</View>
-						<Text style={[styles.rowAmount, {flex: 0.15}]}>{item.amount}</Text>
+						<Text style={[styles.rowAmount, {flex: 0.15}]}>{this.parseAmount(item)}</Text>
 						<View style={styles.deleteButton}>
 							<TouchableOpacity key={'addAmount' + item.name} onPress={this.addToCart.bind(this, item.name)}>
 								<Icon style={{alignItems: 'center', justifyContent: 'center'}} name="plus" size={30} color="#000000"/>
@@ -286,7 +357,16 @@ var Tab = React.createClass({
 			);
 		}
 		if(this.state.cart.length > 0) {
-			resp.push(<View style={{height: 20}} />)
+			resp.push(
+				<View key={"BotPad"} style={{height: 30, flexDirection:'row'}}>
+					<TouchableOpacity style={{flex: 0.3}} onPress={()=> {this.setState({'cart': [], 'total': 0.0});}}>
+						<View style={styles.clearCartButton}>
+							<Text style={styles.clearCartText}>Clear cart</Text>
+						</View>
+					</TouchableOpacity>
+					<View style={{flex: 0.7}} /> 
+				</View>
+			);
 		}
 		return resp;
 	},
@@ -313,6 +393,21 @@ var Tab = React.createClass({
         this.setState({toggled: !this.state.toggled});
     },
 
+    conditionalTab: function() {
+    	if(this.state.tab >= this.state.hardLimit) {
+    		var s = StyleSheet.create({tab:{'color':'#F73826'}})
+    		this.setState({condStyle:s});
+    	}
+    	else if (this.state.tab>= this.state.softLimit) {   		
+    		var s = StyleSheet.create({tab:{'color':'#F7AF26'}})
+    		this.setState({condStyle:s});
+    	}
+    	else {
+    		var s = StyleSheet.create({tab:{'color':'#000000'}})
+    		this.setState({condStyle:s});
+    	}
+    },
+
 	render: function() {
 
 		return(
@@ -327,7 +422,7 @@ var Tab = React.createClass({
 							{this.renderCart()}
 						</View>
 						<View style={styles.commitCart}>
-							<Text style={styles.currentTab}>Total Tab: {this.state.tab}€</Text>
+							<Text style={styles.currentTab}>Total Tab: <Text style={this.state.condStyle.tab}>{this.state.tab}€</Text></Text>
 							<View style={{flex: 0.3}} />
 							<TouchableOpacity style={styles.commitButton} onPress={this.handleConfirm} >
 								<Text style={styles.tabMe}>Tab me ({this.state.total}€)</Text>
@@ -340,43 +435,47 @@ var Tab = React.createClass({
 	                <View style={{flex:0.1, padding:20}} />
 	                <Modal animationType={"slide"} transparent={true} visible={this.state.toggled}
 	                onRequestClose={() => {this.setState({'toggled': !this.state.toggled});}} >
-	                	<TouchableOpacity style={{height: windowSize.height, width: windowSize.width}} onPress={this.toggleOther}>
-	                	<View style={styles.modalBody}>
-	                		<TouchableOpacity style={{flex:1}} onPress={() => {}}>
-                            <View style={{flex:0.1}} />
-                            <Text style={styles.modalHeader}>Custom amount</Text>
-                            <View style={{flex:0.1}} />
-                            <View style={[cond_input.i, {flex:0.2}]}>
-	                            <TextInput
-	                                style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
-	                                onChangeText={(text) => {
-						                var reg = /(^\d+\.?\d*$)?/
-						                if(reg.test(text)) {
-						                  this.setState({'otherAmount': text});
-						                }
-						            }}
-	                                keyboardType={'numeric'}
-	                                ref='otherInput'
-	                                placeholder='Amount'
-	                                value={this.state.otherAmount}
-	                            />
+	                	<ScrollView contentContainerStyle={{height: windowSize.height}} style={{flex: 1}} ref='scrollView'>
+		                	<TouchableOpacity style={{height: windowSize.height, width: windowSize.width}} onPress={this.toggleOther}>
+		                	<View style={styles.modalBody}>
+		                		<TouchableOpacity style={{flex:1}} onPress={() => {}}>
+	                            <View style={{flex:0.1}} />
+	                            <Text style={styles.modalHeader}>Custom amount</Text>
+	                            <View style={{flex:0.1}} />
+	                            <View style={[cond_input.i, {flex:0.2}]}>
+		                            <TextInput
+		                                style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
+		                                onChangeText={(text) => {
+							                var reg = /^\d*\.?\d*$/
+							                if(reg.test(text)) {
+							                  this.setState({'otherAmount': text});
+							                }
+							            }}
+		                                keyboardType={'numeric'}
+		                                ref='otherInput'
+		                                placeholder='Amount'
+		                                onFocus={this.inputFocused.bind(this, 'otherInput')}
+		                                value={this.state.otherAmount}
+		                            />
+		                        </View>
+	                            <View style={[cond_input.i, {flex:0.2}]}>
+		                            <TextInput
+		                                style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
+		                                onChangeText={(text) => this.state.comment = text}
+		                                ref='otherCommentInput'
+		                                placeholder='Reason'
+		                                onFocus={this.inputFocused.bind(this, 'otherCommentInput')}
+		                            />
+		                        </View>
+	                            <View style={{flex:0.1}} />
+	                            <TouchableOpacity style={styles.modalButton} onPress={this.addOtherToCart} >
+									<Text style={styles.tabMe}>Add to Cart</Text>
+								</TouchableOpacity>
+	                            <View style={{flex:0.1}} />
+	                            </TouchableOpacity>
 	                        </View>
-                            <View style={[cond_input.i, {flex:0.2}]}>
-	                            <TextInput
-	                                style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
-	                                onChangeText={(text) => this.state.comment = text}
-	                                ref='otherCommentInput'
-	                                placeholder='Reason'
-	                            />
-	                        </View>
-                            <View style={{flex:0.1}} />
-                            <TouchableOpacity style={styles.modalButton} onPress={this.addOtherToCart} >
-								<Text style={styles.tabMe}>Add to Cart</Text>
-							</TouchableOpacity>
-                            <View style={{flex:0.1}} />
-                            </TouchableOpacity>
-                        </View>
-                       	</TouchableOpacity>
+	                       	</TouchableOpacity>
+	                    </ScrollView>
 	                </Modal>
 
 	                <Modal animationType={"fade"} transparent={true} visible={this.state.confirmToggled}
@@ -408,6 +507,7 @@ var Tab = React.createClass({
 	                	</TouchableOpacity>
 	                </Modal>			
                 </ScrollView>
+                <Toast ref="toast"/>
 			</View>
 		)
 	}
@@ -415,6 +515,22 @@ var Tab = React.createClass({
 })
 
 var styles = StyleSheet.create({
+	clearCartText: {
+		textAlign: 'center',
+		fontSize: 16,
+		color: '#FFF'
+	},
+	clearCartButton: {
+		alignItems: 'center',
+		justifyContent: 'center',
+		borderRadius: 3,
+		elevation: 5,
+		backgroundColor: '#388E3C',
+		flex: 0.4,
+		padding: 4,
+		marginLeft: 5,
+		marginBottom: 2
+	},
 	tabMe: {
 		textAlign: 'center',
 		justifyContent: 'center',

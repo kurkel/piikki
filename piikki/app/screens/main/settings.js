@@ -7,6 +7,7 @@ var cond_input = require('../inputStyling');
 var {get, post} = require('../../api');
 import InfiniteScrollView from 'react-native-infinite-scroll-view';
 var PushNotification = require('react-native-push-notification');
+var ReactNative = require('react-native');
 
 var {
   AppRegistry,
@@ -32,6 +33,7 @@ var Stats = React.createClass({
   getInitialState: function() {
     var ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     return {
+      username: '',
       oldPassword: 'asd',
       currentPassword: '',
       confirmCurrentPassword: '',
@@ -118,9 +120,10 @@ var Stats = React.createClass({
     this.getInitialTransactions()
     let n = await AsyncStorage.getItem('notifications');
     let c = await AsyncStorage.getItem('confirm');
+    let u = await AsyncStorage.getItem('username');
     confirm = (c !== 'false') ? true : false;
     notifications = (n !== 'false') ? true : false;
-    this.setState({'enableNotifications': notifications, 'enableConfirm': confirm});
+    this.setState({'enableNotifications': notifications, 'enableConfirm': confirm, 'username':u});
   },
 
   renderTransactions: function(item) {
@@ -175,11 +178,20 @@ var Stats = React.createClass({
     AsyncStorage.setItem('confirm', value.toString());
     this.setState({'enableConfirm': value});
   },
-
+  inputFocused (refName) {
+      setTimeout(() => {
+        let scrollResponder = this.refs.scrollView.getScrollResponder();
+        scrollResponder.scrollResponderScrollNativeHandleToKeyboard(
+          ReactNative.findNodeHandle(this.refs[refName]),
+          110, //additionalOffset
+          true
+        );
+      }, 50);
+  },
   render: function() {
     return(
-      <View style={[{flex: 1}, gel.baseBackgroundColor]}>
-      <Text style={styles.transactionHeader}>{this.state.username}</Text>
+      <View style={[{height:windowSize.height}, gel.baseBackgroundColor]}>
+      <Text style={styles.userHeader}>Logged in as <Text style={styles.username}>{this.state.username}</Text></Text>
         <View style={styles.buttons}>
           <View style={styles.button}>
             <TouchableOpacity onPress={this.logout}>
@@ -197,6 +209,7 @@ var Stats = React.createClass({
             </TouchableOpacity>
           </View>
         </View>
+        <View style={{flex: 0.1}} />
         <View style={styles.sliderRow}>
           <View style={{flex: 0.2}} />
           <Text style={styles.sliderLabel}>Enable notifications:</Text>
@@ -224,6 +237,7 @@ var Stats = React.createClass({
                 </ListView>
       <Modal animationType={"slide"} transparent={true} visible={this.state.toggled}
                   onRequestClose={() => {this.setState({'toggled': !this.state.toggled});}} >
+          <ScrollView contentContainerStyle={{height: windowSize.height}} style={{flex: 1}} ref='scrollView'>
           <TouchableOpacity style={{height: windowSize.height, width: windowSize.width}} onPress={this.showModal}>
             <View style={styles.accordionInputRow}>
               <TouchableOpacity style={{flex:1}} onPress={() => {}}>
@@ -237,6 +251,7 @@ var Stats = React.createClass({
                       onChangeText={(text) => this.state.oldPassword = text}
                       ref='oldPasswordInput'
                       placeholder='Old Password'
+                      onFocus={this.inputFocused.bind(this, 'oldPasswordInput')}
                       secureTextEntry={true}
                       autoCorrect={false}
                   />
@@ -246,6 +261,7 @@ var Stats = React.createClass({
                       style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
                       onChangeText={(text) => this.state.currentPassword = text}
                       ref='newPasswordInput'
+                      onFocus={this.inputFocused.bind(this, 'newPasswordInput')}
                       placeholder='New password'
                       secureTextEntry={true}
                       autoCorrect={false}
@@ -256,6 +272,7 @@ var Stats = React.createClass({
                       style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
                       onChangeText={(text) => this.state.confirmCurrentPassword = text}
                       ref='newPasswordAgainInput'
+                      onFocus={this.inputFocused.bind(this, 'newPasswordAgainInput')}
                       placeholder='Confirm new password'
                       secureTextEntry={true}
                       autoCorrect={false}
@@ -270,6 +287,7 @@ var Stats = React.createClass({
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
+          </ScrollView>
           </Modal>
       <Toast ref="toast"/>
       </View>
@@ -304,6 +322,18 @@ var styles = StyleSheet.create({
     fontWeight: 'bold',
     textShadowOffset: {width: 1, height: 1},
     textShadowRadius: 2,
+  },
+  userHeader: {
+    textAlign: 'center',
+    color: '#FFF',
+    fontSize: 18,
+    marginTop: 10,
+    textShadowOffset: {width: 1, height: 1},
+    textShadowRadius: 2,
+  },
+  username: {
+    fontSize: 22,
+    fontWeight: 'bold'
   },
   buttons: {
     flex: 0.3,

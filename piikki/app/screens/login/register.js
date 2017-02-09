@@ -1,5 +1,6 @@
 'use strict';
 var React = require('react');
+var ReactNative = require('react-native');
 var Dimensions = require('Dimensions');
 var windowSize = Dimensions.get('window');
 var env = require('../env');
@@ -8,16 +9,20 @@ var {get, post} = require('../../api');
 var cond_input = require('../inputStyling');
 
 var gel = require('../GlobalElements');
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
+
 
 var {
   StyleSheet,
   View,
   Text,
+  ScrollView,
   TextInput,
   Image,
   TouchableHighlight,
   AsyncStorage,
   BackAndroid,
+  KeyboardAvoidingView,
   TouchableWithoutFeedback,
   ActivityIndicator
 } = require('react-native');
@@ -40,6 +45,17 @@ var Register = React.createClass({
       return true; 
     });
   },
+  inputFocused (refName) {
+    setTimeout(() => {
+      let scrollResponder = this.refs.scrollView.getScrollResponder();
+      scrollResponder.scrollResponderScrollNativeHandleToKeyboard(
+        ReactNative.findNodeHandle(this.refs[refName]),
+        110, //additionalOffset
+        true
+      );
+    }, 50);
+  },
+
   async reg() {
     dismissKeyboard();
     this.showSpinner()
@@ -77,6 +93,7 @@ var Register = React.createClass({
     }
     else {
       await AsyncStorage.setItem('token', responseJson.token);
+      await AsyncStorage.setItem('username', this.state.username);
       this.loggedin();
     }
   },
@@ -135,8 +152,9 @@ var Register = React.createClass({
 
   render: function() {
         return (
-        <TouchableWithoutFeedback onPress={()=> dismissKeyboard()}>
-        <View style={styles.container}>
+        <ScrollView contentContainerStyle={{height: windowSize.height}} style={{flex: 1}} ref='scrollView'>
+        {/*<TouchableWithoutFeedback onPress={()=> dismissKeyboard()}>*/}
+        {/*<View style={styles.container}>*/}
           <Image style={styles.bg} source={require('./tausta.png')} />
           <View style={{flex:0.05}} />
           <View style={styles.header}>
@@ -171,28 +189,32 @@ var Register = React.createClass({
             <View style={styles.inputContainer}>
               <View style={cond_input.i}>
                 <TextInput
+                    ref='re-password'
                     secureTextEntry={true}
                     style={[styles.input, styles.whiteFont]}
                     placeholder="Re-enter password"
                     placeholderTextColor="#FFF"
                     onChangeText={(password2) => this.setState({password2})}
                     value={this.state.password2}
+                    onFocus={this.inputFocused.bind(this, 're-password')}
                 />
               </View>
             </View>
             <View style={styles.inputContainer}>
               <View style={cond_input.i}>
                 <TextInput 
+                    ref='secret'
                     style={[styles.input, styles.whiteFont]}
                     placeholder="Secret"
                     placeholderTextColor="#FFF"
                     onChangeText={(secret) => this.setState({secret})}
                     value={this.state.secret}
+                    onFocus={this.inputFocused.bind(this, 'secret')}
                 />
               </View>
             </View>
-          </View>
-            <View style={{flex: 0.1, justifyContent:'center' , flexDirection: 'row'}}>
+          </View> 
+            <View style={{ height:50, justifyContent:'center' , flexDirection: 'row'}}>
               <View style={{flex:0.1}} />
               <TouchableHighlight style={{flex: 0.1}} onPress={this.reg}>
                 <View style={[styles.signin, gel.loginButtonColor]}>
@@ -200,10 +222,12 @@ var Register = React.createClass({
                 </View>
               </TouchableHighlight>
               <View style={{flex:0.1}} />
-            </View>
-            <View style={{flex:0.4}} />
-        </View>
-        </TouchableWithoutFeedback>
+            </View> 
+            <View style={{flex:0.1}} />
+        {/*</View>*/}
+        {/*</TouchableWithoutFeedback>*/}
+       </ScrollView>
+        
     );
   }
 });
@@ -229,7 +253,7 @@ var styles = StyleSheet.create({
     header: {
         justifyContent: 'center',
         alignItems: 'center',
-        flex: 0.35,
+        height: 150,
         backgroundColor: 'transparent'
     },
     mark: {
@@ -238,9 +262,11 @@ var styles = StyleSheet.create({
     },
     signin: {
         backgroundColor: '#4BAF4F',
+        borderRadius: 3,
         alignItems: 'center',
         justifyContent: 'center',
         flex: 0.5,
+        height: 50,
         elevation: 5,
         shadowColor: '#000000',
         shadowOffset: {width: 5, height: 5},
@@ -248,7 +274,7 @@ var styles = StyleSheet.create({
     },
     inputs: {
         marginBottom: 10,
-        flex: 0.4
+        height: 320
     },
     inputContainer: {
         flexDirection: "row",
