@@ -163,7 +163,7 @@ var Register = React.createClass({
           <View style={{flex:0.05}} />
           <View style={styles.inputs}>
             <View style={styles.inputContainer}>
-              <View style={cond_input.i}>
+              <View style={cond_input.s.i}>
                 <TextInput 
                     style={[styles.input, styles.whiteFont]}
                     placeholder="Username"
@@ -174,7 +174,7 @@ var Register = React.createClass({
               </View>
             </View>
             <View style={styles.inputContainer}>
-              <View style={cond_input.i}>
+              <View style={cond_input.s.i}>
                 <TextInput
                     secureTextEntry={true}
                     autoCorrect={false}
@@ -187,7 +187,7 @@ var Register = React.createClass({
               </View>
             </View>
             <View style={styles.inputContainer}>
-              <View style={cond_input.i}>
+              <View style={cond_input.s.i}>
                 <TextInput
                     ref='re-password'
                     secureTextEntry={true}
@@ -201,7 +201,7 @@ var Register = React.createClass({
               </View>
             </View>
             <View style={styles.inputContainer}>
-              <View style={cond_input.i}>
+              <View style={cond_input.s.i}>
                 <TextInput 
                     ref='secret'
                     style={[styles.input, styles.whiteFont]}

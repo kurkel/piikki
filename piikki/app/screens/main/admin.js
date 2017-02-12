@@ -179,7 +179,7 @@ var Admin = React.createClass({
                 <View style={{flex:0.1}} />
                 <Text style={styles.modalHeader}>Change tab for {this.state.selectedUsername}</Text>
                 <View style={{flex:0.1}} />
-                <View style={[cond_input.i, {flex:0.2}]}>
+                <View style={[cond_input.s.i, {flex:0.2}]}>
                   <TextInput
                     style={{height:20, flex:0.7, borderColor: 'black', color:'#000', textAlign: 'center'}}
                     ref = 'tabAmounts'
@@ -189,7 +189,7 @@ var Admin = React.createClass({
                         this.setState({'amount': text});
                       }
                     }}
-                    keyboardType={'numeric'}
+                    keyboardType={cond_input.t}
                     placeholder={'Amount'}
                     value={this.state.amount}
                   />

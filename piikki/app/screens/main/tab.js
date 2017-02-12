@@ -447,7 +447,7 @@ var Tab = React.createClass({
 	                            <View style={{flex:0.1}} />
 	                            <Text style={styles.modalHeader}>Custom amount</Text>
 	                            <View style={{flex:0.1}} />
-	                            <View style={[cond_input.i, {flex:0.2}]}>
+	                            <View style={[cond_input.s.i, {flex:0.2}]}>
 		                            <TextInput
 		                                style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
 		                                onChangeText={(text) => {
@@ -456,14 +456,14 @@ var Tab = React.createClass({
 							                  this.setState({'otherAmount': text});
 							                }
 							            }}
-		                                keyboardType={'numeric'}
+		                                keyboardType={cond_input.t}
 		                                ref='otherInput'
 		                                placeholder='Amount'
 		                                onFocus={this.inputFocused.bind(this, 'otherInput')}
 		                                value={this.state.otherAmount}
 		                            />
 		                        </View>
-	                            <View style={[cond_input.i, {flex:0.2}]}>
+	                            <View style={[cond_input.s.i, {flex:0.2}]}>
 		                            <TextInput
 		                                style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
 		                                onChangeText={(text) => this.state.comment = text}

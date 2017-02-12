@@ -253,7 +253,7 @@ var Stats = React.createClass({
                 <View style={{flex:0.1}} />
                 <Text style={styles.modalHeader}>Change password</Text>
                 <View style={{flex:0.1}} />
-                <View style={[cond_input.i, {flex:0.2}]}>
+                <View style={[cond_input.s.i, {flex:0.2}]}>
                   <TextInput
                       style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
                       onChangeText={(text) => this.state.oldPassword = text}
@@ -264,7 +264,7 @@ var Stats = React.createClass({
                       autoCorrect={false}
                   />
                 </View>
-                <View style={[cond_input.i, {flex:0.2}]}>
+                <View style={[cond_input.s.i, {flex:0.2}]}>
                   <TextInput
                       style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
                       onChangeText={(text) => this.state.currentPassword = text}
@@ -275,7 +275,7 @@ var Stats = React.createClass({
                       autoCorrect={false}
                   />
                 </View>
-                <View style={[cond_input.i, {flex:0.2}]}>
+                <View style={[cond_input.s.i, {flex:0.2}]}>
                   <TextInput
                       style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
                       onChangeText={(text) => this.state.confirmCurrentPassword = text}

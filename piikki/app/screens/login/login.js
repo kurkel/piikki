@@ -150,7 +150,7 @@ var Login = React.createClass({
               </View>
               <View style={styles.inputs}>
                   <View style={styles.inputContainer}>
-                    <View style={cond_input.i}>
+                    <View style={cond_input.s.i}>
                       <TextInput
                           autoCapitalize='none'
                           autoCorrect={false}
@@ -163,11 +163,11 @@ var Login = React.createClass({
                     </View>
                   </View>
                   <View style={styles.inputContainer}>
-                  <View style={cond_input.i}>
+                  <View style={cond_input.s.i}>
                       <TextInput
                           secureTextEntry={true}
                           autoCorrect={false}
-                          style={[styles.input, styles.whiteFont, cond_input.i]}
+                          style={[styles.input, styles.whiteFont]}
                           placeholder="Password"
                           placeholderTextColor="#FFF"
                           onChangeText={(password) => this.setState({password})}
