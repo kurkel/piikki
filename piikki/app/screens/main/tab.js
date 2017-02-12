@@ -67,7 +67,10 @@ var Tab = React.createClass({
 	 },
 	 calcTotal: function(cart) {
     	return cart.reduce((a, b) => {
-    		a += b.amount * b.price;
+    		if (b.name === 'Misc')
+    			a += b.extra ? parseInt(b.price) * parseInt(b.amount) * 1.5 : parseInt(b.price) * parseInt(b.amount);
+    		else
+    			a += parseInt(b.amount) * parseInt(b.price);
     		return a;
     	}, 0);
     },
@@ -78,75 +81,75 @@ var Tab = React.createClass({
             this.setState({message: "Cart is empty!"});
             return;
         }
+        var c = 0;
 		this.state.cart.map((item) => {
-			cart[item.name] = item.comment ? {'amount': item.amount, 'comment':item.comment} : {'amount':item.amount};
+			var name = item.name;
+			console.warn(item.amount);
+			if (name === "Misc") {
+				name = "Misc" + c;
+				c++;
+			}
+			cart[name] = item.comment ? {'amount': item.amount, 'comment':item.comment} : {'amount':item.amount};
 		})
+		var new_cart = this.state.cart; 
 		let payload = JSON.stringify(cart);
 		let responseJson = await post('tab', payload, (e) => {
 			this.setState({message: "Error in tabbing!"})
 	        console.error(e);
 		});
 	  	if(responseJson.success) {
-	        var temp_cart = this.state.cart;
+	        var temp_cart = Object.keys(cart);
+	        console.warn(temp_cart);
 	      	for (let k of Object.keys(responseJson.message)) {
 	            if (responseJson.message[k]) {  
 	                for (var v in temp_cart) {
-	                    if (temp_cart[v].name === k)
-	                        temp_cart.splice(v, 1);
+	                    if (temp_cart[v] === k)
+	                    	console.warn(v);
+	                        new_cart.splice(v, 1);
 	                }
 	            }
 	      	}
-            this.setState({cart:temp_cart});
-            this.setState({total:this.calcTotal(temp_cart)});
+            this.setState({cart:new_cart});
+            this.setState({total:this.calcTotal(new_cart)});
             this.setState({message: "Enjoy responsibly!"})
             if (temp_cart.length === 0)
             	this.getPrices();
-      	}
-      	else {
-      		this.setState({message: "Error in tabbing!"});
-      		console.error(responseJson);
-      	}
+	      	}
+	      	else {
+	      		this.setState({message: "Error in tabbing!"});
+	      		console.error(responseJson);
+	      	}
 	},
 
-	addToCart: function(item) {
+	addToCart: function(name, amnt, extra) {
 		var cart = this.state.cart;
 		var total = this.state.total;
-		var new_item = {"name": item};
-		var amount = this.state.prices[item]
-		var items = cart.filter((item) => {return item.name === new_item.name && !new_item.extra});
+		var amount = name === "Misc" ? amnt : parseInt(this.state.prices[name]);
+		var new_item = {"name": name, price: amount, amount: 1, extra: this.extraTabs(amount)};
+
 		if(this.closedTab(amount)) {
 			this.refs.toast.show('Max limit ('+this.state.hardLimit + '€) reached. Cannot tab.', DURATION.LENGTH_LONG);
 			return
 		}
-		if(this.extraTabs(amount)) {
-			var items = cart.filter((item) => {return item.name === new_item.name && new_item.extra});
-			if (items.length > 0) {
-				cart = cart.map((item) => {
-					if (item.name === new_item.name) {
-						item.amount += 1
-					}
-					return item;
-				});
-			}
-			else {
-				new_item.name = new_item.name;
-				new_item["price"] = this.state.prices[item] * 1.5;
-				new_item['extra'] = true;
-				new_item["amount"] = 1;
-				cart.push(new_item);
-			}
-		}
-		else if (items.length > 0) {
+
+		var items = cart.filter((item) => {return item.name === new_item.name && item.extra === new_item.extra});
+		if (items.length > 0) {
 			cart = cart.map((item) => {
-				if (item.name === new_item.name && !item.extra) {
-					item.amount += 1
+				if (item.name === new_item.name && item.extra === new_item.extra) {
+					if (item.name !== "Misc")
+						item.amount = parseInt(item.amount) + 1;
+					else if (item.amount === amnt)
+						item.price = parseInt(item.price) + 1;
 				}
-				return item
+				return item;
 			});
 		} else {
-			new_item["price"] = this.state.prices[item];
-			new_item["amount"] = 1;
-			new_item['extra'] = false
+			new_item["price"] = new_item.extra ? new_item.price * 1.5 : new_item.price;
+			if (new_item.name === "Misc") {
+				var p = new_item.price
+				new_item.price = new_item.amount;
+				new_item.amount = p;
+			}
 			cart.push(new_item);
 		}
 		this.setState({total: this.calcTotal(cart)});
@@ -154,18 +157,16 @@ var Tab = React.createClass({
         this.setState({message: ""});
 	},
 	closedTab: function(amount) {
+		amount = parseInt(amount)
 		if (this.extraTabs(amount)) {
-			return this.state.tab + this.state.total + (parseInt(amount) * 1.5) > this.state.hardLimit
+			return this.state.tab + this.state.total + amount * 1.5 > this.state.hardLimit;
 		} else {
-			return this.state.tab + this.state.total + parseInt(amount) > this.state.hardLimit
+			return this.state.tab + this.state.total + amount > this.state.hardLimit;
 		}
 	},
 	extraTabs: function(amount) {
-		if(this.state.tab + this.state.total + parseInt(amount) > this.state.softLimit) {
-			return true;
-		} else {
-			return false;
-		}
+		amount=parseInt(amount)
+		return this.state.tab + this.state.total + amount > this.state.softLimit;
 	},
     addOtherToCart: function() {
         if(this.state.otherAmount > 0 && !this.closedTab(this.state.otherAmount)) {
@@ -174,12 +175,10 @@ var Tab = React.createClass({
             new_item["name"] = "Misc";
             new_item["price"] = 1;
             new_item["comment"] = this.state.comment;
-            new_item["amount"] = this.extraTabs(this.state.otherAmount) ? this.state.otherAmount * 1.5 : this.state.otherAmount;
+            new_item["amount"] = this.state.otherAmount;
             new_item["extra"] = this.extraTabs(this.state.otherAmount);
             cart.push(new_item);
-            this.setState({total: this.calcTotal(cart)});
-            this.setState({cart: cart});
-            this.setState({message: ""});
+            this.setState({total: this.calcTotal(cart), cart:cart, message:"", comment:""});
         	this.toggleOther();
         } else {
         	this.refs.toast.show('Max limit ('+this.state.hardLimit + '€) reached. Cannot add.', DURATION.LENGTH_LONG)
@@ -187,16 +186,19 @@ var Tab = React.createClass({
         }
         
     },
-	deleteCart: function(name) {
+	deleteCart: function(name, amnt) {
 		var cart = this.state.cart;
 		var total = this.state.total;
 		cart = cart.map((item) => {
 			if (name === item.name) {
-				item.amount -= 1
+				if (name !== "Misc")
+					item.amount -= 1
+				else if (item.amount === amnt)
+					item.price -= 1
 			}
 			return item;
 		});
-		cart = cart.filter((item) => {return item.amount > 0});
+		cart = cart.filter((item) => {return item.amount > 0 && item.price > 0});
 		this.setState({total: this.calcTotal(cart)});
 		this.setState({cart: cart});
         this.setState({message: ""});
@@ -284,16 +286,18 @@ var Tab = React.createClass({
 
 	renderConfirm: function () {
 		var resp = [];
+		var count = 0;
 		for(let item of this.state.cart) {
+			count++;
 			resp.push(
-				<View key={item.name} style={{flexDirection: 'row', flex:1, height: 38}}>
+				<View key={item.name + count} style={{flexDirection: 'row', flex:1, height: 38}}>
 					<View style={{flex:0.03}}/>
 					<View style={[gel.row, {flex:1, justifyContent: 'center', alignItems: 'center'}]}>
 						<Text style={styles.rowName}>{item.name}</Text>
 						<View style={{flex:0.05}} />
-						<Text style={[styles.rowAmount, {flex: 0.15}]}>{item.amount}</Text>
+						<Text style={[styles.rowAmount, {flex: 0.15}]}>{this.parseAmount(item)}</Text>
 						<View style={{flex:0.05}}/>
-						<Text style={styles.rowAmount}>{item.price*item.amount}€</Text>
+						<Text style={styles.rowAmount}>{this.parsePrice(item)*this.parseAmount(item)}€</Text>
 					</View>
 					<View key={"pad"} style={{flex:0.03}}/>
 				</View>
@@ -301,16 +305,13 @@ var Tab = React.createClass({
 			);
 		}
 		if (this.state.cart.length > 0){
-			let sum = this.state.cart.reduce((a, item) => {
-				return a + item.price*item.amount
-			}, 0);
 			resp.push(
 				<View style={[styles.cartRow, styles.sumRow]}>
 					<View style={{flex:0.03}}/>
 					<View style={[gel.row, {flex:1, justifyContent: 'center', alignItems: 'center'}]}>
 						<Text style={[styles.rowName, {fontWeight: 'bold'}]}>Total</Text>
 						<View style={{flex:0.25}} />
-						<Text style={[styles.rowAmount, {fontWeight: 'bold'}]}>{sum}€</Text>
+						<Text style={[styles.rowAmount, {fontWeight: 'bold'}]}>{this.state.total}€</Text>
 					</View>
 					<View key={"pad"} style={{flex:0.03}}/>
 				</View>
@@ -319,7 +320,7 @@ var Tab = React.createClass({
 		return resp;
 	},
 	parsePrice: function(item) {
-		return (item.name==="Misc") ? item.amount : item.price;
+		return (item.name==="Misc") ? (item.extra ? item.amount * 1.5 : item.amount) : item.price;
 	},
 	parseAmount: function(item) {
 		return (item.name!=="Misc") ? item.amount : item.price;
@@ -344,13 +345,13 @@ var Tab = React.createClass({
 						<Text style={[styles.rowAmount, this.priceCondColor(item.extra)]}>{this.parsePrice(item)}€</Text>
 						<View style={{flex:0.05}}/>
 						<View style={styles.deleteButton}>
-							<TouchableOpacity key={'decreaseAmount' + item.name} onPress={this.deleteCart.bind(this, item.name)}>
+							<TouchableOpacity key={'decreaseAmount' + item.name} onPress={this.deleteCart.bind(this, item.name, item.amount)}>
 								<Icon style={{alignItems: 'center', justifyContent: 'center'}} name="minus" size={30} color="#000000"/>
 							</TouchableOpacity>
 						</View>
 						<Text style={[styles.rowAmount, {flex: 0.15}]}>{this.parseAmount(item)}</Text>
 						<View style={styles.deleteButton}>
-							<TouchableOpacity key={'addAmount' + item.name} onPress={this.addToCart.bind(this, item.name)}>
+							<TouchableOpacity key={'addAmount' + item.name} onPress={this.addToCart.bind(this, item.name, item.amount, item.extra)}>
 								<Icon style={{alignItems: 'center', justifyContent: 'center'}} name="plus" size={30} color="#000000"/>
 							</TouchableOpacity>
 						</View>
