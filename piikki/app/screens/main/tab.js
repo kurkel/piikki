@@ -112,8 +112,8 @@ var Tab = React.createClass({
             this.setState({cart:new_cart});
             this.setState({total:this.calcTotal(new_cart)});
             this.setState({message: "Enjoy responsibly!"})
-            if (temp_cart.length === 0)
-            	this.getPrices();
+            if (new_cart.length === 0)
+            	this.refresh();
 	      	}
 	      	else {
 	      		this.setState({message: "Error in tabbing!"});

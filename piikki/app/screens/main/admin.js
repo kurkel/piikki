@@ -55,7 +55,7 @@ var Admin = React.createClass({
 
   componentDidMount: function() {
     this.refresh();
-    Events.on('StatsPage', 'myID', this.refresh);
+    Events.on('AdminPage', 'myID', this.refresh);
   },
   getLimits: async function() {
     let limitJson = await get('limits', (e) => {
