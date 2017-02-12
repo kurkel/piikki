@@ -84,7 +84,6 @@ var Tab = React.createClass({
         var c = 0;
 		this.state.cart.map((item) => {
 			var name = item.name;
-			console.warn(item.amount);
 			if (name === "Misc") {
 				name = "Misc" + c;
 				c++;
@@ -99,12 +98,10 @@ var Tab = React.createClass({
 		});
 	  	if(responseJson.success) {
 	        var temp_cart = Object.keys(cart);
-	        console.warn(temp_cart);
 	      	for (let k of Object.keys(responseJson.message)) {
 	            if (responseJson.message[k]) {  
 	                for (var v in temp_cart) {
 	                    if (temp_cart[v] === k)
-	                    	console.warn(v);
 	                        new_cart.splice(v, 1);
 	                }
 	            }
