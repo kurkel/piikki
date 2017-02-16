@@ -42,6 +42,7 @@ var Tab = React.createClass({
             confirmToggled: false,
             softLimit: 100,
             hardLimit: 100,
+            multiplier: env.multiplier,
             condStyle: StyleSheet.create({tab:{'color':'#000000'}})
 	 	}
 	 },
@@ -68,9 +69,9 @@ var Tab = React.createClass({
 	 calcTotal: function(cart) {
     	return cart.reduce((a, b) => {
     		if (b.name === 'Misc')
-    			a += b.extra ? parseInt(b.price) * parseInt(b.amount) * 1.5 : parseInt(b.price) * parseInt(b.amount);
+    			a += b.extra ? parseFloat(b.price) * parseFloat(b.amount) * this.state.multiplier : parseFloat(b.price) * parseFloat(b.amount);
     		else
-    			a += parseInt(b.amount) * parseInt(b.price);
+    			a += parseFloat(b.amount) * parseFloat(b.price);
     		return a;
     	}, 0);
     },
@@ -121,7 +122,7 @@ var Tab = React.createClass({
 	addToCart: function(name, amnt, extra) {
 		var cart = this.state.cart;
 		var total = this.state.total;
-		var amount = name === "Misc" ? amnt : parseInt(this.state.prices[name]);
+		var amount = name === "Misc" ? amnt : parseFloat(this.state.prices[name]);
 		var new_item = {"name": name, price: amount, amount: 1, extra: this.extraTabs(amount)};
 
 		if(this.closedTab(amount)) {
@@ -134,14 +135,14 @@ var Tab = React.createClass({
 			cart = cart.map((item) => {
 				if (item.name === new_item.name && item.extra === new_item.extra) {
 					if (item.name !== "Misc")
-						item.amount = parseInt(item.amount) + 1;
+						item.amount = parseFloat(item.amount) + 1;
 					else if (item.amount === amnt)
-						item.price = parseInt(item.price) + 1;
+						item.price = parseFloat(item.price) + 1;
 				}
 				return item;
 			});
 		} else {
-			new_item["price"] = new_item.extra ? new_item.price * 1.5 : new_item.price;
+			new_item["price"] = new_item.extra ? new_item.price * this.state.multiplier : new_item.price;
 			if (new_item.name === "Misc") {
 				var p = new_item.price
 				new_item.price = new_item.amount;
@@ -154,15 +155,15 @@ var Tab = React.createClass({
         this.setState({message: ""});
 	},
 	closedTab: function(amount) {
-		amount = parseInt(amount)
+		amount = parseFloat(amount)
 		if (this.extraTabs(amount)) {
-			return this.state.tab + this.state.total + amount * 1.5 > this.state.hardLimit;
+			return this.state.tab + this.state.total + amount * this.state.multiplier > this.state.hardLimit;
 		} else {
 			return this.state.tab + this.state.total + amount > this.state.hardLimit;
 		}
 	},
 	extraTabs: function(amount) {
-		amount=parseInt(amount)
+		amount=parseFloat(amount)
 		return this.state.tab + this.state.total + amount > this.state.softLimit;
 	},
     addOtherToCart: function() {
@@ -317,7 +318,7 @@ var Tab = React.createClass({
 		return resp;
 	},
 	parsePrice: function(item) {
-		return (item.name==="Misc") ? (item.extra ? item.amount * 1.5 : item.amount) : item.price;
+		return (item.name==="Misc") ? (item.extra ? item.amount * this.state.multiplier : item.amount) : item.price;
 	},
 	parseAmount: function(item) {
 		return (item.name!=="Misc") ? item.amount : item.price;
