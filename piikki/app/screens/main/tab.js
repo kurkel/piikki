@@ -84,7 +84,7 @@ var Tab = React.createClass({
 	          /* Android Only Properties */
 	          id:'1337',
 	          ticker: "Account balance low!", // (optional)
-	          autoCancel: false, // (optional) default: true
+	          autoCancel: true, // (optional) default: true
 	          largeIcon: "ic_launcher", // (optional) default: "ic_launcher"
 	          smallIcon: "ic_notif", // (optional) default: "ic_notification" with fallback for "ic_launcher"
 	          vibrate: false, // (optional) default: true
@@ -127,9 +127,11 @@ var Tab = React.createClass({
 	  	if(responseJson.success) {
 	      	for (let k of Object.keys(responseJson.message)) {
 	             new_cart = new_cart.filter((item) => {
-	            	return item.name !== k;
+	             	var r = new RegExp(item.name, "g");
+	            	return !r.test(k) && responseJson[k].success;
 	            });
 	      	}
+	      	console.warn(Object.keys(responseJson.message));
 	      	if (this.state.tab > this.state.softLimit && this.state.tab - this.state.total <= this.state.softLimit)
         		this.handleNotification(this.state.tab - this.state.total);
             this.setState({cart:new_cart});
