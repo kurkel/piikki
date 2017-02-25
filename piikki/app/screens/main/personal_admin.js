@@ -73,7 +73,7 @@ var Admin = React.createClass({
 
   componentDidMount: function() {
     this.refresh();
-    Events.on('AdminPage', 'myID', this.refresh);
+    Events.on('PersonalAdmin', 'myID', this.refresh);
   },
   getLimits: async function() {
     let limitJson = await get('limits', (e) => {
@@ -85,7 +85,7 @@ var Admin = React.createClass({
 
   changeTab: async function() {
     var payload = JSON.stringify({'payback': {'amount': this.state.amount}});
-    let responseJson = await post('tab', payload, (e)=> {
+    let responseJson = await post('deposit', payload, (e)=> {
       console.warn(e);
     });
     if(responseJson.success) {

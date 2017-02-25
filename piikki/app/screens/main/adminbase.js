@@ -27,7 +27,7 @@ const marg = Platform.OS === 'ios' ? 20 : 0;
 var AdminMainPage = React.createClass({
 
   refreshTab: function(i) {
-    var tabs = ["TabPage", "StatsPage", "SettingsPage", "AdminPage"];
+    var tabs = ["TabPage", "StatsPage", "SettingsPage", "PersonalAdmin", "AdminPage"];
     Events.trigger(tabs[i.i], {o:'opened'});
   },
 
