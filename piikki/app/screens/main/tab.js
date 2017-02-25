@@ -9,6 +9,7 @@ var gel = require('../GlobalElements');
 var cond_input = require('../inputStyling');
 import Toast, {DURATION} from 'react-native-easy-toast'
 var Events = require('react-native-simple-events');
+var PushNotification = require('react-native-push-notification');
 
 var {
   StyleSheet,
@@ -75,6 +76,28 @@ var Tab = React.createClass({
     		return a;
     	}, 0);
     },
+
+    async handleNotification(amount) {
+    	var n = await AsyncStorage.getItem('notifications');
+    	if (n === 'true' || n === null) {
+	    	PushNotification.localNotification({
+	          /* Android Only Properties */
+	          id:'1337',
+	          ticker: "Account balance low!", // (optional)
+	          autoCancel: false, // (optional) default: true
+	          largeIcon: "ic_launcher", // (optional) default: "ic_launcher"
+	          smallIcon: "ic_notif", // (optional) default: "ic_notification" with fallback for "ic_launcher"
+	          vibrate: false, // (optional) default: true
+	          tag: 'beer', // (optional) add tag to message
+	          ongoing: false, // (optional) set whether this is an "ongoing" notification
+
+	          /* iOS and Android properties */
+	          title: "Where's my money bitch?", // (optional, for iOS this is only used in apple watch, the title will be the app name on other iOS devices)
+	          message: "Account balance getting dangerously low: " + amount + "€", // (required)
+	          playSound: false, // (optional) default: true
+	        });
+        }
+    },
 	commitCart: async function() {
         this.setState({message: ""});
 		var cart = {};
@@ -83,40 +106,50 @@ var Tab = React.createClass({
             return;
         }
         var c = 0;
+        var total = 0;
 		this.state.cart.map((item) => {
 			var name = item.name;
 			if (name === "Misc") {
 				name = "Misc" + c;
 				c++;
 			}
-			cart[name] = item.comment ? {'amount': item.amount, 'comment':item.comment} : {'amount':item.amount};
+			total += item.amount * item.price;
+			cart[name] = item.comment ? {'amount': cart[name] ? cart[name].amount + item.amount : item.amount, 'comment':item.comment} : {'amount':cart[name] ? cart[name].amount + item.amount : item.amount};
 		})
 		var new_cart = this.state.cart; 
 		let payload = JSON.stringify(cart);
 		let responseJson = await post('tab', payload, (e) => {
-			this.setState({message: "Error in tabbing!"})
+			this.setState({message: "Error in tabbing!"});
+			this.refresh();
+	      	this.refs.toast.show('Major error, try again or contact devs.', DURATION.LENGTH_LONG);
 	        console.error(e);
 		});
 	  	if(responseJson.success) {
-	        var temp_cart = Object.keys(cart);
 	      	for (let k of Object.keys(responseJson.message)) {
-	            if (responseJson.message[k]) {  
-	                for (var v in temp_cart) {
-	                    if (temp_cart[v] === k)
-	                        new_cart.splice(v, 1);
-	                }
-	            }
+	             new_cart = new_cart.filter((item) => {
+	            	return item.name !== k;
+	            });
 	      	}
+	      	if (this.state.tab > this.state.softLimit && this.state.tab - this.state.total < this.state.softLimit)
+        		this.handleNotification(this.state.tab - this.state.total);
             this.setState({cart:new_cart});
             this.setState({total:this.calcTotal(new_cart)});
             this.setState({message: "Enjoy responsibly!"})
-            if (new_cart.length === 0)
+            if (new_cart.length === 0) {
             	this.refresh();
 	      	}
 	      	else {
-	      		this.setState({message: "Error in tabbing!"});
+	      		this.setState({message: "Error"});
+	      		this.refresh();
+	      		this.refs.toast.show('Error in tabbing, check cart for items.', DURATION.LENGTH_LONG);
 	      		console.error(responseJson);
 	      	}
+	    }
+	    else {
+	    	this.setState({message: "Error"});
+	      	this.refresh();
+	      	this.refs.toast.show('Major error, contact devs.', DURATION.LENGTH_LONG);
+	    }
 	},
 
 	addToCart: function(name, amnt, extra) {
@@ -157,14 +190,14 @@ var Tab = React.createClass({
 	closedTab: function(amount) {
 		amount = parseFloat(amount)
 		if (this.extraTabs(amount)) {
-			return this.state.tab + this.state.total + amount * this.state.multiplier > this.state.hardLimit;
+			return this.state.tab - this.state.total - amount * this.state.multiplier < this.state.hardLimit;
 		} else {
-			return this.state.tab + this.state.total + amount > this.state.hardLimit;
+			return this.state.tab - this.state.total - amount < this.state.hardLimit;
 		}
 	},
 	extraTabs: function(amount) {
 		amount=parseFloat(amount)
-		return this.state.tab + this.state.total + amount > this.state.softLimit;
+		return this.state.tab - this.state.total - amount < this.state.softLimit;
 	},
     addOtherToCart: function() {
         if(this.state.otherAmount > 0 && !this.closedTab(this.state.otherAmount)) {
@@ -397,11 +430,11 @@ var Tab = React.createClass({
     },
 
     conditionalTab: function() {
-    	if(this.state.tab >= this.state.hardLimit) {
+    	if(this.state.tab <= this.state.hardLimit) {
     		var s = StyleSheet.create({tab:{'color':'#F73826'}})
     		this.setState({condStyle:s});
     	}
-    	else if (this.state.tab>= this.state.softLimit) {   		
+    	else if (this.state.tab<= this.state.softLimit) {   		
     		var s = StyleSheet.create({tab:{'color':'#F7AF26'}})
     		this.setState({condStyle:s});
     	}

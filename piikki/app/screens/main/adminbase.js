@@ -21,6 +21,7 @@ var TabPage = require('./tab');
 var StatsPage = require('./stats');
 var SettingsPage = require('./settings')
 var AdminPage = require('./admin');
+var PersonalAdminPage = require('./personal_admin');
 const marg = Platform.OS === 'ios' ? 20 : 0;
 
 var AdminMainPage = React.createClass({
@@ -36,7 +37,8 @@ var AdminMainPage = React.createClass({
         <TabPage tabLabel='glass' />
         <StatsPage tabLabel='bar-chart-o' />
         <SettingsPage tabLabel='user' navigator={this.props.navigator} />
-        <AdminPage tabLabel='bank' />
+        <PersonalAdminPage tabLabel='bank' />
+        <AdminPage tabLabel='gavel' />
       </ScrollableTabView>;
   }
 });

@@ -28,28 +28,46 @@ var {
 
 var Admin = React.createClass({
   getInitialState: function() {
-    var ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     return {
-      usersRdy: false,
-      users: ds.cloneWithRows([]),
-      ds: ds,
-      userKeys: [],
       refreshing: false,
-      amounts: {},
       toggled: false,
-      selectedUser: -1,
       error: "",
-      amount: "",
+      tab:0,
+      amount: "0",
       softlimit: 100,
       hardlimit: 100,
       message: ""
     };
   },
+  inputFocused (refName) {
+      setTimeout(() => {
+        let scrollResponder = this.refs.scrollView.getScrollResponder();
+        scrollResponder.scrollResponderScrollNativeHandleToKeyboard(
+          ReactNative.findNodeHandle(this.refs[refName]),
+          110, //additionalOffset
+          true
+        );
+      }, 50);
+  },
+
+  getCurrentTab: async function() {
+    let responseJson = await get('tab', (e) => {
+      console.error(error);
+    });
+    if(responseJson.success) {
+      this.setState({tab: responseJson.tab});
+      this.setState({currentTabRdy: true});
+      this.conditionalTab();
+    } 
+    else {  // Handle error
+      console.error("Could not fetch tab");
+    }
+  },
 
   refresh: async function() {
     this.setState({'refreshing': true});
     await this.getLimits();
-    await this.getUsers();
+    await this.getCurrentTab();
     this.setState({'refreshing': false});
   },
 
@@ -64,85 +82,21 @@ var Admin = React.createClass({
     })
     this.setState({'softLimit': limitJson.softlimit, 'hardLimit':limitJson.hardlimit});
   },
-  getUsers: async function() {
-    var responseJson = await get('admin/getusers', (e)=> {
-      this.setState({error:"Could not fetch users"});
-      console.error(e);
-    });
-    var data = [];
-    for (var k in Object.keys(responseJson)) {
-      var name = "user" + k + "Value";
-      var obj = {};
-      obj[name] = "";
-      this.setState(obj);
-      var user = {};
-      user = responseJson[k];
-      user.id = k;
-      user.style=this.conditionalTab(user.amount)
-      data.push(user);
-    }
-    this.setState({users: this.state.ds.cloneWithRows(data)});
-    this.setState({usersRdy: true});
-  },
 
   changeTab: async function() {
-    this.state.message="";
-    this.state.error = "";
-    var payload = JSON.stringify({'username':this.state.selectedUsername, 'drinks':{'payback': {'amount':this.state.amount}}});
-    var responseJson = await post('admin/tab', payload, (e)=>{
-      this.setState({error:"Could not update" + this.state.selectedUsername + "'s tab"});
-      console.error(error);
+    var payload = JSON.stringify({'payback': {'amount': this.state.amount}});
+    let responseJson = await post('tab', payload, (e)=> {
+      console.warn(e);
     });
     if(responseJson.success) {
-      this.setState({message: "Successfully updated " + this.state.selectedUsername + "'s tab"});
-      this.refresh();
-    } else {
-      this.setState({message: "Failed to update " + this.state.selectedUsername + "'s tab"});
+      await this.refresh();
     }
-    this.closeModal();
-  },
-  openModal: function(obj) {
-    this.setState({'selectedUser': obj.idx, 'selectedUsername': obj.sec.username, 'toggled':!this.state.toggled});
-  },
-  closeModal: function() {
-    this.setState({'selectedUser': -1, 'selectedUsername': "",'amount':'', 'toggled':false});
-  },
-  _renderHeader: function(section, index) {
-    return (
-      <TouchableOpacity onPress={this.openModal.bind(this, {'idx':index, 'sec':section} )} style={styles.accordionHeader}>
-        <Text style={[styles.accordionHeaderText, styles.accordionHeaderName]}>{section.username}</Text>
-        <Text style={[styles.accordionHeaderText, styles.accordionHeaderAmount]}><Text style={section.style}>{section.amount}</Text>€</Text>
-        <Icon ref={'chevron'+index} style={[styles.accordionHeaderAmount, {alignItems: 'center', justifyContent: 'center'}]}
-        name={'chevron-right'} size={20} color='#000' />
-      </TouchableOpacity>
-    );
+    this.setState({'toggled': false});
   },
 
-  renderUsers: function() {
-    return (
-          <ListView
-            dataSource={this.state.users}
-            renderRow={this._renderHeader}
-            style={{backgroundColor: 'transparent', flex:1}}
-            refreshControl={<RefreshControl
-        refreshing={this.state.refreshing}
-        onRefresh={this.refresh}
-      />}
-            />
-      );
+  open: function() {
+    this.setState({'toggled':true});
   },
-
-  renderOrSpinner: function(rdy, func){
-    if (rdy) {
-     return func();
-    }
-    else {
-      return(<View style={{justifyContent: 'center', alignItems:'center', flex: 0.8}}>
-        <ActivityIndicator style={{marginTop: 20, height: 100, width: 100}}/>
-        </View>);
-    }
-  },
-
   message: function() {
     if (this.state.message !== "") {
       return <Text style={[styles.stateMessage, styles.message]}>{this.state.message}</Text>;
@@ -151,11 +105,12 @@ var Admin = React.createClass({
       return <Text style={[styles.stateMessage, styles.error]}>{this.state.message}</Text>;
     }
   },
-  conditionalTab: function(amount) {
+  conditionalTab: function() {
+      var amount = this.state.tab
       if(amount <= this.state.hardLimit) {
         return {'color':'#F73826'}
       }
-      else if (amount <= this.state.softLimit) {       
+      else if (amount<= this.state.softLimit) {       
         return {'color':'#F7AF26'}
       }
       else {
@@ -164,27 +119,36 @@ var Admin = React.createClass({
     },
   render: function() {
       return(
-        <View style={styles.rootView}>
-        <View style={styles.header}>
-          <Text style={styles.headerHelp}>Positive values are withdrawals and negative values are deposits</Text>
-          {this.message()}
-        </View>
-            {this.renderOrSpinner(this.state.usersRdy, this.renderUsers)}
-            <Modal animationType={"slide"} transparent={true} visible={this.state.toggled}
+        <View style={[styles.rootView, gel.baseBackgroundColor]}>
+          <View style={{flex:0.3}} />
+          <View style={styles.header}>
+            <Text style={styles.headerHelp}>Deposit money to tab:</Text>
+            <Text style={styles.headerHelp}>Current tab: <Text style={this.conditionalTab()}>{this.state.tab}€</Text></Text>
+            {this.message()}
+          </View>
+          <View style={styles.button}>
+            <TouchableOpacity onPress={this.open}>
+              <View style={[styles.signin, gel.itemBackGroundColor]}>
+                <Text style={styles.whiteFont}>Deposit</Text> 
+              </View>
+            </TouchableOpacity>
+          </View>
+          <View style={{flex:0.3}} />
+          <Modal animationType={"slide"} transparent={true} visible={this.state.toggled}
                   onRequestClose={() => {this.setState({'toggled': !this.state.toggled});}} >
           <TouchableOpacity style={{height: windowSize.height, width: windowSize.width}} onPress={()=>{this.setState({'toggled': !this.state.toggled})}}>
             <View style={styles.modalRow}>
               <TouchableOpacity style={{flex:1}} onPress={() => {}}>
               <View style={{flex:1}}>
                 <View style={{flex:0.1}} />
-                <Text style={styles.modalHeader}>Change tab for {this.state.selectedUsername}</Text>
+                <Text style={styles.modalHeader}>Deposit</Text>
                 <View style={{flex:0.1}} />
                 <View style={[cond_input.s.i, {flex:0.2}]}>
                   <TextInput
                     style={{height:20, flex:0.7, borderColor: 'black', color:'#000', textAlign: 'center'}}
                     ref = 'tabAmounts'
                     onChangeText={(text) => {
-                      var reg = /^-?\d*\.?\d*$/
+                      var reg = /^\d*\.?\d*$/
                       if(reg.test(text)) {
                         this.setState({'amount': text});
                       }
@@ -196,7 +160,7 @@ var Admin = React.createClass({
                 </View>
                 <View style={{flex:0.1}} />
                 <TouchableOpacity style={styles.modalButton} onPress={this.changeTab} >
-                  <Text style={styles.changePass}>Tab {this.state.selectedUsername}</Text>
+                  <Text style={styles.changePass}>Deposit {this.state.amount}€</Text>
                 </TouchableOpacity>
                 <View style={{flex:0.1}} />
               </View>
@@ -219,6 +183,15 @@ var styles = StyleSheet.create({
       height: windowSize.height/2,
       padding: 5
     },
+  signin: {
+    padding: 12,
+    alignItems: 'center',
+    borderRadius: 3,
+  },
+  button: {
+    marginLeft: 10,
+    marginRight: 10,
+  },
   modalHeader: {
     'textAlign': 'center',
     fontSize: 18,
@@ -230,6 +203,15 @@ var styles = StyleSheet.create({
     borderRadius: 3,
     justifyContent: 'center',
     padding: 10,
+  },
+  whiteFont: {
+      color: '#FFF',
+      textShadowColor: '#000',
+      textShadowOffset: {
+        width: 1,
+        height: 1,
+      },
+      textShadowRadius: 3
   },
   modalButton: {
     marginRight: 20,
