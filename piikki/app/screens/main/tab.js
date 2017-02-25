@@ -64,22 +64,6 @@ var Tab = React.createClass({
 	 },
 	 componentDidMount: function() {
 	 	this.getPrices();
-	 	PushNotification.localNotification({
-	          /* Android Only Properties */
-	          id:'1337',
-	          ticker: "Account balance low!", // (optional)
-	          autoCancel: false, // (optional) default: true
-	          largeIcon: "ic_launcher", // (optional) default: "ic_launcher"
-	          smallIcon: "ic_notif", // (optional) default: "ic_notification" with fallback for "ic_launcher"
-	          vibrate: false, // (optional) default: true
-	          tag: 'beer', // (optional) add tag to message
-	          ongoing: false, // (optional) set whether this is an "ongoing" notification
-
-	          /* iOS and Android properties */
-	          title: "Where's my money bitch?", // (optional, for iOS this is only used in apple watch, the title will be the app name on other iOS devices)
-	          message: "Account balance getting dangerously low: ", // (required)
-	          playSound: false, // (optional) default: true
-	        });
     	Events.on('TabPage', 'myID', this.refresh);
 
 	 },
