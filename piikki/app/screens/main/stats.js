@@ -31,7 +31,7 @@ var Stats = React.createClass({
   },
 
   getCurrentTab: async function() {
-    let responseJson = await get('tab', (e) => {
+    let responseJson = await get('tab', this.props.navigator, (e) => {
       console.error(error);
     });
     if(responseJson.success) {
@@ -44,7 +44,7 @@ var Stats = React.createClass({
   },
 
   getTopList: async function () {
-    let responseJson = await get('toplist', (e) => {
+    let responseJson = await get('toplist', this.props.navigator, (e) => {
       console.error(error);
     });
     if(responseJson.success) {

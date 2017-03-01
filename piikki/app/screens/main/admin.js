@@ -58,14 +58,14 @@ var Admin = React.createClass({
     Events.on('AdminPage', 'myID', this.refresh);
   },
   getLimits: async function() {
-    let limitJson = await get('limits', (e) => {
+    let limitJson = await get('limits', this.props.navigator, (e) => {
       this.setState({message: "Could not fetch limits :("});
       console.error(e)
     })
     this.setState({'softLimit': limitJson.softlimit, 'hardLimit':limitJson.hardlimit});
   },
   getUsers: async function() {
-    var responseJson = await get('admin/getusers', (e)=> {
+    var responseJson = await get('admin/getusers', this.props.navigator, (e)=> {
       this.setState({error:"Could not fetch users"});
       console.error(e);
     });
@@ -89,7 +89,7 @@ var Admin = React.createClass({
     this.state.message="";
     this.state.error = "";
     var payload = JSON.stringify({'username':this.state.selectedUsername, 'drinks':{'payback': {'amount':this.state.amount}}});
-    var responseJson = await post('admin/tab', payload, (e)=>{
+    var responseJson = await post('admin/tab', this.props.navigator, payload, (e)=>{
       this.setState({error:"Could not update" + this.state.selectedUsername + "'s tab"});
       console.error(error);
     });

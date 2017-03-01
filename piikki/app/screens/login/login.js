@@ -54,7 +54,7 @@ var Login = React.createClass({
     }
 
     var payload = JSON.stringify({ username: this.state.username, password: this.state.password });
-    var responseJson = await post('login', payload, (e) => {
+    var responseJson = await post('login', null, payload, (e) => {
       console.error(e);
       this.state.error = "Something went wrong";
       this.showError();

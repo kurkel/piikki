@@ -26,7 +26,7 @@ var {
 } = require('react-native');
 
 
-var Admin = React.createClass({
+var PersonalAdmin = React.createClass({
   getInitialState: function() {
     return {
       refreshing: false,
@@ -36,7 +36,7 @@ var Admin = React.createClass({
       amount: "0",
       softlimit: 100,
       hardlimit: 100,
-      message: ""
+      message: "",
     };
   },
   inputFocused (refName) {
@@ -51,7 +51,7 @@ var Admin = React.createClass({
   },
 
   getCurrentTab: async function() {
-    let responseJson = await get('tab', (e) => {
+    let responseJson = await get('tab', this.props.navigator, (e) => {
       console.error(error);
     });
     if(responseJson.success) {
@@ -76,7 +76,7 @@ var Admin = React.createClass({
     Events.on('PersonalAdmin', 'myID', this.refresh);
   },
   getLimits: async function() {
-    let limitJson = await get('limits', (e) => {
+    let limitJson = await get('limits', this.props.navigator, (e) => {
       this.setState({message: "Could not fetch limits :("});
       console.error(e)
     })
@@ -85,11 +85,15 @@ var Admin = React.createClass({
 
   changeTab: async function() {
     var payload = JSON.stringify({'payback': {'amount': this.state.amount}});
-    let responseJson = await post('deposit', payload, (e)=> {
+    this.setState({'refreshing': true})
+    let responseJson = await post('deposit', this.props.navigator, payload, (e)=> {
       console.warn(e);
     });
     if(responseJson.success) {
+      this.setState({'amount': "0", 'message':"Deposit successful"})
       await this.refresh();
+    } else {
+      this.setState({'amount': "0", 'message':"Something went wrong, ask devs"})
     }
     this.setState({'toggled': false});
   },
@@ -104,6 +108,11 @@ var Admin = React.createClass({
     else if (this.state.error !== "") {
       return <Text style={[styles.stateMessage, styles.error]}>{this.state.message}</Text>;
     }
+    else if (this.state.refreshing) {
+      return (<View style={{justifyContent: 'center', alignItems:'center', flex: 0.8}}>
+        <ActivityIndicator size="large" style={{marginTop: 20, height: 200, width: 200}}/>
+        </View>);
+    }
   },
   conditionalTab: function() {
       var amount = this.state.tab
@@ -117,14 +126,16 @@ var Admin = React.createClass({
         return {'color':'#92F726'}
       }
     },
+
+
   render: function() {
       return(
         <View style={[styles.rootView, gel.baseBackgroundColor]}>
           <View style={{flex:0.3}} />
+          {this.message()}
           <View style={styles.header}>
             <Text style={styles.headerHelp}>Deposit money to tab:</Text>
             <Text style={styles.headerHelp}>Current tab: <Text style={this.conditionalTab()}>{this.state.tab}€</Text></Text>
-            {this.message()}
           </View>
           <View style={styles.button}>
             <TouchableOpacity onPress={this.open}>
@@ -256,7 +267,7 @@ var styles = StyleSheet.create({
     textShadowRadius: 5,
   },
   message: {
-    color: 'green',
+    color: 'white',
   },
   error: {
     color: 'red',
@@ -311,4 +322,4 @@ var styles = StyleSheet.create({
 })
 
 
-module.exports = Admin;
+module.exports = PersonalAdmin;

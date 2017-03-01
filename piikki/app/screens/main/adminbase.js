@@ -34,11 +34,11 @@ var AdminMainPage = React.createClass({
 
   render: function() {
     return <ScrollableTabView onChangeTab={this.refreshTab} locked={true} renderTabBar={() => <CustomTabBar />} style={{marginTop: marg}}>
-        <TabPage tabLabel='glass' />
-        <StatsPage tabLabel='bar-chart-o' />
+        <TabPage tabLabel='glass' navigator={this.props.navigator}/>
+        <StatsPage tabLabel='bar-chart-o' navigator={this.props.navigator}/>
         <SettingsPage tabLabel='user' navigator={this.props.navigator} />
-        <PersonalAdminPage tabLabel='bank' />
-        <AdminPage tabLabel='gavel' />
+        <PersonalAdminPage tabLabel='bank' navigator={this.props.navigator}/>
+        <AdminPage tabLabel='gavel' navigator={this.props.navigator}/>
       </ScrollableTabView>;
   }
 });

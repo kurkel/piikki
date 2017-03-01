@@ -61,7 +61,7 @@ var Stats = React.createClass({
       this.setState({'refreshing': true});
       var transactions = this.state.transactions;
       let lastID = transactions[transactions.length - 1]._id;
-      let responseJson = await get('transaction?oldest=' + lastID, (e) => {
+      let responseJson = await get('transaction?oldest=' + lastID, this.props.navigator, (e) => {
         console.warn(e);
       });
       if(responseJson.success) {
@@ -76,7 +76,7 @@ var Stats = React.createClass({
   },
 
   getInitialTransactions: async function() {
-    let responseJson = await get('transaction', (e)=> {
+    let responseJson = await get('transaction', this.props.navigator, (e)=> {
       console.warn(e);
     });
     if(responseJson.success) {
@@ -97,7 +97,7 @@ var Stats = React.createClass({
     }
     else {
       var payload = JSON.stringify({'password':this.state.oldPassword, 'newpassword':this.state.currentPassword});
-      let responseJson = await post('changepassword', payload, (e)=>{
+      let responseJson = await post('changepassword', this.props.navigator, payload, (e)=>{
         console.warn(e);
       });
       if (responseJson.success)

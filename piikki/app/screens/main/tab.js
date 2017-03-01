@@ -118,7 +118,7 @@ var Tab = React.createClass({
 		})
 		var new_cart = this.state.cart; 
 		let payload = JSON.stringify(cart);
-		let responseJson = await post('tab', payload, (e) => {
+		let responseJson = await post('tab', this.props.navigator, payload, (e) => {
 			this.setState({message: "Error in tabbing!"});
 			this.refresh();
 	      	this.refs.toast.show('Major error, try again or contact devs.', DURATION.LENGTH_LONG);
@@ -237,11 +237,11 @@ var Tab = React.createClass({
 	},
 
 	getPrices: async function() {
-		let responseJson = await get('prices', (e) => {
+		let responseJson = await get('prices', this.props.navigator, (e) => {
 			this.setState({message: "Could not fetch prices :("});
 	        console.warn(e);
 		});
-		let limitJson = await get('limits', (e) => {
+		let limitJson = await get('limits', this.props.navigator, (e) => {
 			this.setState({message: "Could not fetch limits :("});
 			console.error(e)
 		})
@@ -262,17 +262,27 @@ var Tab = React.createClass({
 		var keys = Object.keys(this.state.prices);
 		var prices = this.state.prices;
 		for(var j = 0; j<2; j++) {
-			var price = prices[keys[i*2+j]]
+			var price = prices[keys[i*2+j]];
 			resp.push(<View style={{flex:0.08}} key={keys[i*2+j] + " flex"}>
-				</View>);
-			resp.push(
+					</View>);
+			if (price) {
+				resp.push(
 
-				<TouchableOpacity key={keys[i*2+j]} onPress={this.addToCart.bind(this,keys[i*2+j])}>
-					<View style={[gel.itemBackGroundColor, styles.button]}>
-						<Text style={styles.amount}>{keys[i*2+j]}</Text>
-					</View>
-				</TouchableOpacity>
-			);
+					<TouchableOpacity key={keys[i*2+j]} onPress={this.addToCart.bind(this,keys[i*2+j])}>
+						<View style={[gel.itemBackGroundColor, styles.button]}>
+							<Text style={styles.amount}>{keys[i*2+j]}</Text>
+						</View>
+					</TouchableOpacity>
+				);
+			} else {
+				resp.push(
+                    <TouchableOpacity key={"otherBtn"} onPress={this.toggleOther}>
+						<View style={[gel.itemBackGroundColor, styles.button]}>
+                        	<Text style={styles.amount}>Any</Text>
+                        </View>
+                    </TouchableOpacity>
+	            )
+			}
 		}	
 		return resp;
 	},
@@ -298,18 +308,19 @@ var Tab = React.createClass({
 					</View>
 				);
 			}
-
-            resp.push(
-                <View key="moi" style={styles.collapsibleButtonrow}>
-                    <View style={{flex:0.08}} />
-                    <TouchableOpacity onPress={this.toggleOther}>
-						<View style={[gel.itemBackGroundColor, styles.button]}>
-                        	<Text style={styles.amount}>Any</Text>
-                        </View>
-                    </TouchableOpacity>
-                    <View style={{flex:0.08}} />
-                </View>
-            )
+			if (total % 2 === 0) {
+	            resp.push(
+	                <View key="moi" style={styles.collapsibleButtonrow}>
+	                    <View style={{flex:0.08}} />
+	                    <TouchableOpacity onPress={this.toggleOther}>
+							<View style={[gel.itemBackGroundColor, styles.button]}>
+	                        	<Text style={styles.amount}>Any</Text>
+	                        </View>
+	                    </TouchableOpacity>
+	                    <View style={{flex:0.08}} />
+	                </View>
+	            )
+	        }
 
 			return resp;
 		}
@@ -670,6 +681,7 @@ var styles = StyleSheet.create({
 		shadowColor: '#000000',
 		shadowOffset: {width: 5, height: 5},
 		shadowRadius: 2,
+		padding: 5,
 		elevation: 5,
 
 	},

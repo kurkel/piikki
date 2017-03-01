@@ -68,7 +68,7 @@ var Register = React.createClass({
     }
 
     let payload = JSON.stringify({ username: this.state.username, password: this.state.password, secret: this.state.secret, admin: false});
-    let responseJson = await post('register', payload, (e) => {
+    let responseJson = await post('register', null, payload, (e) => {
       console.error(error);
       this.showError(error);
     }); 
@@ -83,7 +83,7 @@ var Register = React.createClass({
 
   async login() {
     var payload = JSON.stringify({ username: this.state.username, password: this.state.password });
-    var responseJson = await post('login', payload, (e) => {
+    var responseJson = await post('login', null, payload, (e) => {
       console.error(e);
       this.state.error = "Something went wrong";
       this.showError();

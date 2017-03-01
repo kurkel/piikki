@@ -32,11 +32,11 @@ var MainPage = React.createClass({
 
   render: function() {
     return <ScrollableTabView locked={true} renderTabBar={() => <CustomTabBar />} style={{marginTop: marg}}>
-        <TabPage tabLabel='glass'>
+        <TabPage tabLabel='glass' navigator={this.props.navigator}>
         </TabPage>
-        <StatsPage tabLabel='bar-chart-o' />
+        <StatsPage tabLabel='bar-chart-o' navigator={this.props.navigator} />
         <SettingsPage tabLabel='user' navigator={this.props.navigator} />
-        <AdminPage tabLabel='bank' />
+        <AdminPage tabLabel='bank' navigator={this.props.navigator} />
       </ScrollableTabView>;
   }
 });
