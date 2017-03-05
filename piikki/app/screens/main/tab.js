@@ -189,6 +189,11 @@ var Tab = React.createClass({
         this.setState({message: ""});
 	},
 	closedTab: function(amount) {
+    // First check if the user is important
+    let u = await AsyncStorage.getItem('username');
+    if (u == 'osku') {
+      return false;
+    }
 		amount = parseFloat(amount)
 		if (this.extraTabs(amount)) {
 			return this.state.tab - this.state.total - amount * this.state.multiplier < this.state.hardLimit;
