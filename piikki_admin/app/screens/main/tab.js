@@ -44,7 +44,9 @@ var Tab = React.createClass({
             softLimit: 100,
             hardLimit: 100,
             multiplier: env.multiplier,
-            condStyle: StyleSheet.create({tab:{'color':'#000000'}})
+            condStyle: StyleSheet.create({tab:{'color':'#000000'}}),
+            userToggled: false,
+            selecterUser: undefined
         }
      },
      inputFocused (refName) {
@@ -180,7 +182,7 @@ var Tab = React.createClass({
             return
         }
 
-        var items = cart.filter((item) => {return item.name === new_item.name && item.extra === new_item.extra});
+        var items = cart.filter((item) => {return item.name === new_item.name && item.extra === new_item.extra && item.user === this.state.user.name});
         if (items.length > 0) {
             cart = cart.map((item) => {
                 if (item.name === new_item.name && item.extra === new_item.extra) {
@@ -197,6 +199,7 @@ var Tab = React.createClass({
                 var p = new_item.price
                 new_item.price = new_item.amount;
                 new_item.amount = p;
+                new_item.user = this.state.user.name
             }
             cart.push(new_item);
         }
@@ -223,6 +226,7 @@ var Tab = React.createClass({
             new_item["name"] = "Misc";
             new_item["price"] = 1;
             new_item["comment"] = this.state.comment;
+            new_item["user"] = this.state.user;
             new_item["amount"] = this.state.otherAmount;
             new_item["extra"] = this.extraTabs(this.state.otherAmount);
             cart.push(new_item);
@@ -304,6 +308,8 @@ var Tab = React.createClass({
     },
 
     openSelectionForUser: function(user) {
+        this.setState({selecterUser: user, userToggled: true});
+
     },
 
     renderUserButtons: function(user1, user2, user3) {
@@ -467,6 +473,8 @@ var Tab = React.createClass({
                     <View style={[gel.row, {flex:1, justifyContent: 'center', alignItems: 'center'}]}>
                         <Text style={styles.rowName}>{item.name}</Text>
                         <View style={{flex:0.05}} />
+                        <Text style={styles.rowName}>{item.user}</Text>
+                        <View style={{flex:0.05}} />
                         <Text style={[styles.rowAmount, this.priceCondColor(item.extra)]}>{this.parsePrice(item)}€</Text>
                         <View style={{flex:0.05}}/>
                         <View style={styles.deleteButton}>
@@ -562,6 +570,17 @@ var Tab = React.createClass({
                     <View style={{flex:0.2}} />
                         {this.renderUsers()}
                     <View style={{flex:0.1}} />
+                    <Modal animationType={"slide"} transparent={true} visible={this.state.toggled}
+                    onRequestClose={() => {this.setState({'toggled': !this.state.userToggled});}}>
+                        {this.renderPrices()}
+                        <View style={{flexDirection: 'row'}}>
+                            <View style={{flex:0.1}} />
+                            <TouchableOpacity style={styles.commitButton} onPress={()=>{this.setState({userToggled: false})}}>
+                                <Text style={styles.tabMe}>Done</Text>
+                            </TouchableOpacity>
+                            <View style={{flex:0.1}} />
+                        </View>
+                    </Modal>
                     <View style={{flex:0.1, padding:20}} />
                     <Modal animationType={"slide"} transparent={true} visible={this.state.toggled}
                     onRequestClose={() => {this.setState({'toggled': !this.state.toggled});}} >

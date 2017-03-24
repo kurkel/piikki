@@ -26,12 +26,12 @@ const marg = Platform.OS === 'ios' ? 20 : 0;
 var MainPage = React.createClass({
 
   refreshTab: function(i) {
-    var tabs = ["TabPage", "StatsPage", "PersonalAdmin", "SettingsPage"];
+    var tabs = ["TabPage", "StatsPage", "SettingsPage", "PersonalAdmin"];
     Events.trigger(tabs[i.i], {o:'opened'});
   },
 
   render: function() {
-    return <ScrollableTabView locked={true} renderTabBar={() => <CustomTabBar />} style={{marginTop: marg}}>
+    return <ScrollableTabView onChangeTab={this.refreshTab} locked={true} renderTabBar={() => <CustomTabBar />} style={{marginTop: marg}}>
         <TabPage tabLabel='glass' navigator={this.props.navigator}>
         </TabPage>
         <StatsPage tabLabel='bar-chart-o' navigator={this.props.navigator} />
