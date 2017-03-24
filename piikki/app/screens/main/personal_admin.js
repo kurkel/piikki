@@ -135,7 +135,7 @@ var PersonalAdmin = React.createClass({
           {this.message()}
           <View style={styles.header}>
             <Text style={styles.headerHelp}>Deposit money to tab:</Text>
-            <Text style={styles.headerHelp}>Current tab: <Text style={this.conditionalTab()}>{this.state.tab}€</Text></Text>
+            <Text style={styles.headerHelp}>Current tab: <Text style={this.conditionalTab()}>{Number((this.state.tab).toFixed(2))}€</Text></Text>
           </View>
           <View style={styles.button}>
             <TouchableOpacity onPress={this.open}>

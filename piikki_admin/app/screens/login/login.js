@@ -79,15 +79,13 @@ var Login = React.createClass({
   },
 
   routeLogIn: function(admin) {
-    let route = (admin === "true") ? {
+    let route ={
         id: 'AdminMainPage',
         name: 'AdminMain',
-      } : 
-      {
-        id: 'MainPage',
-        name: 'Main',
-      };
-    this.props.navigator.push(route);
+      }
+    if(admin === 'true') {
+      this.props.navigator.push(route);
+    }
   },
 
   showSpinner: function() {
@@ -129,7 +127,7 @@ var Login = React.createClass({
   checkSession: async function() {
     var token = await AsyncStorage.getItem('token');
     var admin = await AsyncStorage.getItem('admin');
-    if(token) {
+    if(token && admin==='true') {
       this.routeLogIn(admin);
     }
   },

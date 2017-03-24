@@ -8,11 +8,7 @@ var {
 
 var LoginPage = require('./app/screens/login/login');
 
-var MainPage = require('./app/screens/main/base');
-
 var AdminMainPage = require('./app/screens/main/adminbase');
-
-var RegisterPage = require('./app/screens/login/register');
 
 var piikki = React.createClass({
   render: function() {
@@ -30,24 +26,12 @@ var piikki = React.createClass({
 		          navigator={navigator} />
 		      );
 		    }
-		    if (routeId === 'MainPage') {
-		      return (
-		        <MainPage
-		          navigator={navigator} onBack={() => { if (route.index > 0) { navigator.pop(); } }} />
-		      );
-		    }
 		    if (routeId === 'AdminMainPage') {
 		      return (
 		        <AdminMainPage
 		          navigator={navigator} onBack={() => { if (route.index > 0) { navigator.pop(); } }} />
 		      );
 		    }
-		    if (routeId === 'RegisterPage') {
-		      return (
-		        <RegisterPage
-		          navigator={navigator} onBack={() => { if (route.index > 0) { navigator.pop(); } }} />
-		      );
-		    }	
 		}}
         />
     );

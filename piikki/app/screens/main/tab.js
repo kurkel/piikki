@@ -470,10 +470,10 @@ var Tab = React.createClass({
 							{this.renderCart()}
 						</View>
 						<View style={styles.commitCart}>
-							<Text style={styles.currentTab}>Total Tab: <Text style={this.state.condStyle.tab}>{this.state.tab}€</Text></Text>
+							<Text style={styles.currentTab}>Total Tab: <Text style={this.state.condStyle.tab}>{Number((this.state.tab).toFixed(2))}€</Text></Text>
 							<View style={{flex: 0.3}} />
 							<TouchableOpacity style={styles.commitButton} onPress={this.handleConfirm} >
-								<Text style={styles.tabMe}>Tab me ({this.state.total}€)</Text>
+								<Text style={styles.tabMe}>Tab me ({Number((this.state.total).toFixed(2))}€)</Text>
 							</TouchableOpacity>
 						</View>
 					</View>

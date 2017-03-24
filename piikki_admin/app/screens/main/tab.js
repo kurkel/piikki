@@ -33,7 +33,7 @@ var Tab = React.createClass({
             token: '',
             prices: {},
             tab: 0,
-            total: 0.0,
+            total: {},
             cart: [],
             message: '',
             otherAmount: "",
@@ -46,7 +46,7 @@ var Tab = React.createClass({
             multiplier: env.multiplier,
             condStyle: StyleSheet.create({tab:{'color':'#000000'}}),
             userToggled: false,
-            selecterUser: undefined
+            selectedUser: {name:"", tab:0}
         }
      },
      inputFocused (refName) {
@@ -71,13 +71,28 @@ var Tab = React.createClass({
 
      },
      calcTotal: function(cart) {
-        return cart.reduce((a, b) => {
-            if (b.name === 'Misc')
-                a += b.extra ? parseFloat(b.price) * parseFloat(b.amount) * this.state.multiplier : parseFloat(b.price) * parseFloat(b.amount);
-            else
-                a += parseFloat(b.amount) * parseFloat(b.price);
-            return a;
-        }, 0);
+        function ArrNoDupe(a) {
+            var temp = {};
+            for (var i = 0; i < a.length; i++)
+                temp[a[i]] = true;
+            var r = [];
+            for (var k in temp)
+                r.push(k);
+            return r;
+        }
+        var total = {};
+        var cartUsers = cart.map((i)=>i.user);
+        cartUsers = ArrNoDupe(cartUsers);
+        for(let u of cartUsers) {
+            total[u] = cart.filter((i)=>{return i.user===u}).reduce((a,b) => {
+                if (b.name === 'Misc')
+                    a += b.extra ? parseFloat(b.price) * parseFloat(b.amount) * this.state.multiplier : parseFloat(b.price) * parseFloat(b.amount);
+                else
+                    a += parseFloat(b.amount) * parseFloat(b.price);
+                return a;
+            }, 0);
+        }
+        this.setState({total: total});
     },
 
     getUsers: async function() {
@@ -88,8 +103,8 @@ var Tab = React.createClass({
         var data = {};
         for (var k in Object.keys(responseJson)) {
             var d = Object.keys(responseJson)
-            let o = {name:responseJson[k].username, tab:responseJson[k].tab}
-            data[k]=o;
+            let o = {name:responseJson[k].username, tab:responseJson[k].amount}
+            data[responseJson[k].username]=o;
         }
         this.setState({users: data});
         this.setState({usersRdy: true});
@@ -152,7 +167,7 @@ var Tab = React.createClass({
             if (this.state.tab > this.state.softLimit && this.state.tab - this.state.total <= this.state.softLimit)
                 this.handleNotification(this.state.tab - this.state.total);
             this.setState({cart:new_cart});
-            this.setState({total:this.calcTotal(new_cart)});
+            this.calcTotal(new_cart);
             this.setState({message: "Enjoy responsibly!"})
             if (new_cart.length === 0) {
                 this.refresh();
@@ -171,18 +186,17 @@ var Tab = React.createClass({
         }
     },
 
-    addToCart: function(name, amnt, extra) {
+    addToCart: function(name, amnt, extra, user) {
         var cart = this.state.cart;
-        var total = this.state.total;
         var amount = name === "Misc" ? amnt : parseFloat(this.state.prices[name]);
-        var new_item = {"name": name, price: amount, amount: 1, extra: this.extraTabs(amount)};
-
-        if(this.closedTab(amount)) {
+        var u = user || this.state.selectedUser.name;
+        var new_item = {"name": name, price: amount, amount: 1, extra: this.extraTabs(amount, u), user: u};
+        if(this.closedTab(amount, u)) {
             this.refs.toast.show('Max limit ('+this.state.hardLimit + '€) reached. Cannot tab.', DURATION.LENGTH_LONG);
             return
         }
 
-        var items = cart.filter((item) => {return item.name === new_item.name && item.extra === new_item.extra && item.user === this.state.user.name});
+        var items = cart.filter((item) => {return item.name === new_item.name && item.extra === new_item.extra && item.user === user});
         if (items.length > 0) {
             cart = cart.map((item) => {
                 if (item.name === new_item.name && item.extra === new_item.extra) {
@@ -199,38 +213,41 @@ var Tab = React.createClass({
                 var p = new_item.price
                 new_item.price = new_item.amount;
                 new_item.amount = p;
-                new_item.user = this.state.user.name
+                new_item.user = this.state.selectedUser.name
             }
             cart.push(new_item);
         }
-        this.setState({total: this.calcTotal(cart)});
+        this.calcTotal(cart);
         this.setState({cart: cart});
         this.setState({message: ""});
     },
-    closedTab: function(amount) {
-        amount = parseFloat(amount)
-        if (this.extraTabs(amount)) {
-            return this.state.tab - this.state.total - amount * this.state.multiplier < this.state.hardLimit;
+    closedTab: function(amount, user) {
+        amount = parseFloat(amount);
+        var total = this.state.total[user] || 0;
+        if (this.extraTabs(amount, user)) {
+            return parseFloat(this.state.users[user].tab) - total - amount * this.state.multiplier < this.state.hardLimit;
         } else {
-            return this.state.tab - this.state.total - amount < this.state.hardLimit;
+            return parseFloat(this.state.users[user].tab) - total - amount < this.state.hardLimit;
         }
     },
-    extraTabs: function(amount) {
-        amount=parseFloat(amount)
-        return this.state.tab - this.state.total - amount < this.state.softLimit;
+    extraTabs: function(amount, user) {
+        amount=parseFloat(amount);
+        var total = this.state.total[user] || 0;
+        return parseFloat(this.state.users[user].tab) - total - amount < this.state.softLimit;
     },
     addOtherToCart: function() {
-        if(this.state.otherAmount > 0 && !this.closedTab(this.state.otherAmount)) {
+        if(this.state.otherAmount > 0 && !this.closedTab(this.state.otherAmount, this.state.selectedUser.name)) {
             var cart = this.state.cart
             var new_item = {}
             new_item["name"] = "Misc";
             new_item["price"] = 1;
             new_item["comment"] = this.state.comment;
-            new_item["user"] = this.state.user;
+            new_item["user"] = this.state.selectedUser.name;
             new_item["amount"] = this.state.otherAmount;
-            new_item["extra"] = this.extraTabs(this.state.otherAmount);
+            new_item["extra"] = this.extraTabs(this.state.otherAmount, this.state.selectedUser.name);
             cart.push(new_item);
-            this.setState({total: this.calcTotal(cart), cart:cart, message:"", comment:""});
+            this.calcTotal(cart);
+            this.setState({cart:cart, message:"", comment:""});
             this.toggleOther();
         } else {
             this.refs.toast.show('Max limit ('+this.state.hardLimit + '€) reached. Cannot add.', DURATION.LENGTH_LONG)
@@ -238,11 +255,10 @@ var Tab = React.createClass({
         }
         
     },
-    deleteCart: function(name, amnt) {
+    deleteCart: function(name, amnt, user) {
         var cart = this.state.cart;
-        var total = this.state.total;
         cart = cart.map((item) => {
-            if (name === item.name) {
+            if (name === item.name && item.user === user) {
                 if (name !== "Misc")
                     item.amount -= 1
                 else if (item.amount === amnt)
@@ -251,7 +267,7 @@ var Tab = React.createClass({
             return item;
         });
         cart = cart.filter((item) => {return item.amount > 0 && item.price > 0});
-        this.setState({total: this.calcTotal(cart)});
+        this.calcTotal(cart);
         this.setState({cart: cart});
         this.setState({message: ""});
     },
@@ -288,7 +304,7 @@ var Tab = React.createClass({
             if (price) {
                 resp.push(
 
-                    <TouchableOpacity key={keys[i*2+j]} onPress={this.addToCart.bind(this,keys[i*2+j])}>
+                    <TouchableOpacity key={keys[i*2+j]} style={{flex:0.3}} onPress={this.addToCart.bind(this,keys[i*2+j])}>
                         <View style={[gel.itemBackGroundColor, styles.button]}>
                             <Text style={styles.amount}>{keys[i*2+j]}</Text>
                         </View>
@@ -296,7 +312,7 @@ var Tab = React.createClass({
                 );
             } else {
                 resp.push(
-                    <TouchableOpacity key={"otherBtn"} onPress={this.toggleOther}>
+                    <TouchableOpacity key={"otherBtn"} style={{flex:0.3}} onPress={this.toggleOther}>
                         <View style={[gel.itemBackGroundColor, styles.button]}>
                             <Text style={styles.amount}>Any</Text>
                         </View>
@@ -308,7 +324,7 @@ var Tab = React.createClass({
     },
 
     openSelectionForUser: function(user) {
-        this.setState({selecterUser: user, userToggled: true});
+        this.setState({selectedUser: user, userToggled: true});
 
     },
 
@@ -317,9 +333,9 @@ var Tab = React.createClass({
         resp.push(<View style={{flex:0.08}} key={user1.name + "Flex"}>
                 </View>);
         resp.push(
-            <TouchableOpacity key={user1.name+'button'} onPress={this.openSelectionForUser.bind(this,user1)}>
+            <TouchableOpacity key={user1.name+'button'} style={{flex:0.3}} onPress={this.openSelectionForUser.bind(this,user1)}>
                 <View style={[gel.itemBackGroundColor, styles.button]}>
-                    <Text style={styles.amount}>{user1.name}</Text>
+                    <Text style={styles.amount}>{user1.name} <Text style={this.conditionalTab(user1.tab)}>({user1.tab}€)</Text></Text>
                 </View>
             </TouchableOpacity>
         );
@@ -327,9 +343,9 @@ var Tab = React.createClass({
             resp.push(<View style={{flex:0.08}} key={user2.name + "Flex"}>
                 </View>);
             resp.push(
-                <TouchableOpacity key={user2.name+'button'} onPress={this.openSelectionForUser.bind(this,user2)}>
+                <TouchableOpacity key={user2.name+'button'} style={{flex:0.3}} onPress={this.openSelectionForUser.bind(this,user2)}>
                     <View style={[gel.itemBackGroundColor, styles.button]}>
-                        <Text style={styles.amount}>{user2.name}</Text>
+                        <Text style={styles.amount}>{user2.name} <Text style={this.conditionalTab(user2.tab)}>({user2.tab}€)</Text></Text>
                     </View>
                 </TouchableOpacity>
             )
@@ -338,9 +354,9 @@ var Tab = React.createClass({
             resp.push(<View style={{flex:0.08}} key={user3.name + "Flex"}>
                 </View>);
             resp.push(
-                <TouchableOpacity key={user3.name+'button'} onPress={this.openSelectionForUser.bind(this,user3)}>
+                <TouchableOpacity key={user3.name+'button'} style={{flex:0.3}} onPress={this.openSelectionForUser.bind(this,user3)}>
                     <View style={[gel.itemBackGroundColor, styles.button]}>
-                        <Text style={styles.amount}>{user3.name}</Text>
+                        <Text style={styles.amount}>{user3.name} <Text style={this.conditionalTab(user3.tab)}>({user3.tab}€)</Text></Text>
                     </View>
                 </TouchableOpacity>
             )
@@ -424,6 +440,8 @@ var Tab = React.createClass({
                 <View key={item.name + count} style={{flexDirection: 'row', flex:1, height: 38}}>
                     <View style={{flex:0.03}}/>
                     <View style={[gel.row, {flex:1, justifyContent: 'center', alignItems: 'center'}]}>
+                        <Text style={styles.rowName}>{item.user}</Text>
+                        <View style={{flex:0.05}} />
                         <Text style={styles.rowName}>{item.name}</Text>
                         <View style={{flex:0.05}} />
                         <Text style={[styles.rowAmount, {flex: 0.15}]}>{this.parseAmount(item)}</Text>
@@ -434,19 +452,6 @@ var Tab = React.createClass({
                 </View>
 
             );
-        }
-        if (this.state.cart.length > 0){
-            resp.push(
-                <View style={[styles.cartRow, styles.sumRow]}>
-                    <View style={{flex:0.03}}/>
-                    <View style={[gel.row, {flex:1, justifyContent: 'center', alignItems: 'center'}]}>
-                        <Text style={[styles.rowName, {fontWeight: 'bold'}]}>Total</Text>
-                        <View style={{flex:0.25}} />
-                        <Text style={[styles.rowAmount, {fontWeight: 'bold'}]}>{this.state.total}€</Text>
-                    </View>
-                    <View key={"pad"} style={{flex:0.03}}/>
-                </View>
-            )
         }
         return resp;
     },
@@ -471,20 +476,20 @@ var Tab = React.createClass({
                 <View key={item.name + count} style={{flexDirection: 'row', flex:1, height: 38}}>
                     <View style={{flex:0.03}}/>
                     <View style={[gel.row, {flex:1, justifyContent: 'center', alignItems: 'center'}]}>
-                        <Text style={styles.rowName}>{item.name}</Text>
+                        <Text style={[styles.rowName, {fontWeight: 'bold'}]}>{item.user}</Text>
                         <View style={{flex:0.05}} />
-                        <Text style={styles.rowName}>{item.user}</Text>
+                        <Text style={styles.rowName}>{item.name}</Text>
                         <View style={{flex:0.05}} />
                         <Text style={[styles.rowAmount, this.priceCondColor(item.extra)]}>{this.parsePrice(item)}€</Text>
                         <View style={{flex:0.05}}/>
                         <View style={styles.deleteButton}>
-                            <TouchableOpacity key={'decreaseAmount' + item.name} onPress={this.deleteCart.bind(this, item.name, item.amount)}>
+                            <TouchableOpacity key={'decreaseAmount' + item.name} onPress={this.deleteCart.bind(this, item.name, item.amount, item.user)}>
                                 <Icon style={{alignItems: 'center', justifyContent: 'center'}} name="minus" size={30} color="#000000"/>
                             </TouchableOpacity>
                         </View>
                         <Text style={[styles.rowAmount, {flex: 0.15}]}>{this.parseAmount(item)}</Text>
                         <View style={styles.deleteButton}>
-                            <TouchableOpacity key={'addAmount' + item.name} onPress={this.addToCart.bind(this, item.name, item.amount, item.extra)}>
+                            <TouchableOpacity key={'addAmount' + item.name} onPress={this.addToCart.bind(this, item.name, item.amount, item.extra, item.user)}>
                                 <Icon style={{alignItems: 'center', justifyContent: 'center'}} name="plus" size={30} color="#000000"/>
                             </TouchableOpacity>
                         </View>
@@ -531,18 +536,15 @@ var Tab = React.createClass({
         this.setState({toggled: !this.state.toggled});
     },
 
-    conditionalTab: function() {
-        if(this.state.tab <= this.state.hardLimit) {
-            var s = StyleSheet.create({tab:{'color':'#F73826'}})
-            this.setState({condStyle:s});
+    conditionalTab: function(tab) {
+        if(tab <= this.state.hardLimit) {
+            return {'color':'#F73826'};
         }
-        else if (this.state.tab<= this.state.softLimit) {           
-            var s = StyleSheet.create({tab:{'color':'#F7AF26'}})
-            this.setState({condStyle:s});
+        else if (tab<= this.state.softLimit) {           
+            return {'color':'#F7AF26'}
         }
         else {
-            var s = StyleSheet.create({tab:{'color':'#000000'}})
-            this.setState({condStyle:s});
+            return {'color':'#000000'}
         }
     },
 
@@ -560,26 +562,41 @@ var Tab = React.createClass({
                             {this.renderCart()}
                         </View>
                         <View style={styles.commitCart}>
-                            <Text style={styles.currentTab}>Total Tab: <Text style={this.state.condStyle.tab}>{this.state.tab}€</Text></Text>
                             <View style={{flex: 0.3}} />
                             <TouchableOpacity style={styles.commitButton} onPress={this.handleConfirm} >
-                                <Text style={styles.tabMe}>Tab me ({this.state.total}€)</Text>
+                                <Text style={styles.tabMe}>Tab them!</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
                     <View style={{flex:0.2}} />
                         {this.renderUsers()}
                     <View style={{flex:0.1}} />
-                    <Modal animationType={"slide"} transparent={true} visible={this.state.toggled}
-                    onRequestClose={() => {this.setState({'toggled': !this.state.userToggled});}}>
-                        {this.renderPrices()}
-                        <View style={{flexDirection: 'row'}}>
-                            <View style={{flex:0.1}} />
-                            <TouchableOpacity style={styles.commitButton} onPress={()=>{this.setState({userToggled: false})}}>
-                                <Text style={styles.tabMe}>Done</Text>
-                            </TouchableOpacity>
-                            <View style={{flex:0.1}} />
-                        </View>
+                    <Modal animationType={"slide"} style={[{flex:1}, gel.baseBackgroundColor]} transparent={false} visible={this.state.userToggled}
+                    onRequestClose={() => {this.setState({'userToggled': !this.state.userToggled});}}>
+                        <ScrollView style={[{flex:1}, gel.baseBackgroundColor]}>
+                            <View style={{alignItems: 'center', flex:0.1}}>
+                                <Text style={styles.message}>Tabbing for: {this.state.selectedUser.name}</Text>
+                            </View>
+                            <View style={{flexDirection: 'row'}}>
+                                <View style={{flex:0.1}} />
+                                <TouchableOpacity style={[styles.commitButton, {height:100, width:200}]} onPress={()=>{this.setState({userToggled: false})}}>
+                                    <Text style={styles.tabMe}>Done</Text>
+                                </TouchableOpacity>
+                                <View style={{flex:0.1}} />
+                            </View>
+                            {this.renderPrices()}
+                            <View style={{height:20}}/>
+                            <View style={{flexDirection: 'row'}}>
+                                <View style={{flex:0.1}} />
+                                <TouchableOpacity style={[styles.commitButton, {height:100, width:200}]} onPress={()=>{this.setState({userToggled: false})}}>
+                                    <Text style={styles.tabMe}>Done</Text>
+                                </TouchableOpacity>
+                                <View style={{flex:0.1}} />
+                            </View>
+                            <View style={{height:20}} />
+                        </ScrollView>
+                        <Toast ref="toast"/>
+
                     </Modal>
                     <View style={{flex:0.1, padding:20}} />
                     <Modal animationType={"slide"} transparent={true} visible={this.state.toggled}
@@ -775,7 +792,7 @@ var styles = StyleSheet.create({
     },  
     button: {
         height:100,
-        width: 160,
+        flex:0.3,
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 3,
@@ -788,6 +805,7 @@ var styles = StyleSheet.create({
     },
     buttonrow: {
         marginTop: 5,
+        flex:1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',

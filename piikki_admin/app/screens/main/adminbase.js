@@ -21,13 +21,13 @@ var TabPage = require('./tab');
 var StatsPage = require('./stats');
 var SettingsPage = require('./settings')
 var AdminPage = require('./admin');
-var PersonalAdminPage = require('./personal_admin');
+
 const marg = Platform.OS === 'ios' ? 20 : 0;
 
 var AdminMainPage = React.createClass({
 
   refreshTab: function(i) {
-    var tabs = ["TabPage", "StatsPage", "SettingsPage", "PersonalAdmin", "AdminPage"];
+    var tabs = ["TabPage", "StatsPage", "SettingsPage", "AdminPage"];
     Events.trigger(tabs[i.i], {o:'opened'});
   },
 
@@ -37,7 +37,6 @@ var AdminMainPage = React.createClass({
         <TabPage tabLabel='glass' navigator={this.props.navigator}/>
         <StatsPage tabLabel='bar-chart-o' navigator={this.props.navigator}/>
         <SettingsPage tabLabel='user' navigator={this.props.navigator} />
-        <PersonalAdminPage tabLabel='bank' navigator={this.props.navigator}/>
         <AdminPage tabLabel='gavel' navigator={this.props.navigator}/>
       </ScrollableTabView>;
   }
