@@ -10,7 +10,7 @@ var LoginPage = require('./app/screens/login/login');
 
 var AdminMainPage = require('./app/screens/main/adminbase');
 
-var piikki = React.createClass({
+var piikki_admin = React.createClass({
   render: function() {
     return (
        <Navigator
@@ -39,4 +39,4 @@ var piikki = React.createClass({
 });
 
 
-AppRegistry.registerComponent('piikki_admin', () => piikki);
+AppRegistry.registerComponent('piikki_admin', () => piikki_admin);

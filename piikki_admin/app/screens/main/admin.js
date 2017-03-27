@@ -88,7 +88,7 @@ var Admin = React.createClass({
   changeTab: async function() {
     this.state.message="";
     this.state.error = "";
-    var payload = JSON.stringify({'username':this.state.selectedUsername, 'drinks':{'payback': {'amount':this.state.amount}}});
+    var payload = JSON.stringify([{'username':this.state.selectedUsername, 'drinks':{'payback': {'amount':this.state.amount}}}]);
     var responseJson = await post('admin/tab', this.props.navigator, payload, (e)=>{
       this.setState({error:"Could not update" + this.state.selectedUsername + "'s tab"});
       console.error(error);
@@ -111,7 +111,7 @@ var Admin = React.createClass({
     return (
       <TouchableOpacity onPress={this.openModal.bind(this, {'idx':index, 'sec':section} )} style={styles.accordionHeader}>
         <Text style={[styles.accordionHeaderText, styles.accordionHeaderName]}>{section.username}</Text>
-        <Text style={[styles.accordionHeaderText, styles.accordionHeaderAmount]}><Text style={section.style}>{section.amount}</Text>€</Text>
+        <Text style={[styles.accordionHeaderText, styles.accordionHeaderAmount]}><Text style={section.style}>{Number((section.amount).toFixed(2))}</Text>€</Text>
         <Icon ref={'chevron'+index} style={[styles.accordionHeaderAmount, {alignItems: 'center', justifyContent: 'center'}]}
         name={'chevron-right'} size={20} color='#000' />
       </TouchableOpacity>

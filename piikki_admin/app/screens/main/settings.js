@@ -61,7 +61,7 @@ var Stats = React.createClass({
       this.setState({'refreshing': true});
       var transactions = this.state.transactions;
       let lastID = transactions[transactions.length - 1]._id;
-      let responseJson = await get('transaction?oldest=' + lastID, this.props.navigator, (e) => {
+      let responseJson = await get('admin/transaction?oldest=' + lastID, this.props.navigator, (e) => {
         console.warn(e);
       });
       if(responseJson.success) {
@@ -76,7 +76,7 @@ var Stats = React.createClass({
   },
 
   getInitialTransactions: async function() {
-    let responseJson = await get('transaction', this.props.navigator, (e)=> {
+    let responseJson = await get('admin/transaction', this.props.navigator, (e)=> {
       console.warn(e);
     });
     if(responseJson.success) {
@@ -144,6 +144,7 @@ var Stats = React.createClass({
           </View>
           <View style={styles.cardFooter}>
             {this.renderComment(item.comment)}
+            <Text style={styles.drinkTime}>{item.username}</Text>
             <Text style={styles.drinkTime}>{datestring}</Text>
           </View>
         </View>)
@@ -199,105 +200,34 @@ var Stats = React.createClass({
   render: function() {
     return(
       <View style={[{height:windowSize.height}, gel.baseBackgroundColor]}>
-      <Text style={styles.userHeader}>Logged in as <Text style={styles.username}>{this.state.username}</Text></Text>
-        <View style={styles.buttons}>
-          <View style={styles.button}>
-            <TouchableOpacity onPress={this.logout}>
-              <View style={[styles.signin, gel.itemBackGroundColor]}>
-                <Text style={styles.whiteFont}>Logout</Text> 
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.button}>
-            <TouchableOpacity onPress={this.showModal}>
-              <View style={[styles.signin, gel.itemBackGroundColor]}>
-                <Text style={styles.whiteFont}>Change password</Text> 
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View style={{flex: 0.1}} />
-        <View style={styles.sliderRow}>
-          <View style={{flex: 0.2}} />
-          <Text style={styles.sliderLabel}>Enable notifications:</Text>
-          <Switch style={styles.sliderSwitch} onValueChange={this.handleNotiSlider} value={this.state.enableNotifications} />
-          <View style={{flex: 0.2}} />
-        </View>
-        <View style={styles.sliderRow}>
-          <View style={{flex: 0.2}} />
-          <Text style={styles.sliderLabel}>Tab confirmation:</Text>
-          <Switch style={styles.sliderSwitch} onValueChange={this.handleConfirmSlider} value={this.state.enableConfirm} />
-          <View style={{flex: 0.2}} />
-        </View>
-
-        <Text style={styles.transactionHeader}>Latest transactions</Text>
-        <ListView
-            renderScrollComponent={props => <InfiniteScrollView {...props} />}
-            onLoadMoreAsync={this.getOlderTransactions}
-            dataSource={this.state.dataSource}
-            renderRow={this.renderTransactions}
-            canLoadMore={!this.state.lastTransaction}
-            refreshControl={this._renderRefreshControl()}
-      >
-                      
-
-                </ListView>
-      <Modal animationType={"slide"} transparent={true} visible={this.state.toggled}
-                  onRequestClose={() => {this.setState({'toggled': !this.state.toggled});}} >
-          <ScrollView contentContainerStyle={{height: windowSize.height}} style={{flex: 1}} ref='scrollView'>
-          <TouchableOpacity style={{height: windowSize.height, width: windowSize.width}} onPress={this.showModal}>
-            <View style={styles.accordionInputRow}>
-              <TouchableOpacity style={{flex:1}} onPress={() => {}}>
-              <View style={{flex:1}}>
-                <View style={{flex:0.1}} />
-                <Text style={styles.modalHeader}>Change password</Text>
-                <View style={{flex:0.1}} />
-                <View style={[cond_input.s.i, {flex:0.2}]}>
-                  <TextInput
-                      style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
-                      onChangeText={(text) => this.state.oldPassword = text}
-                      ref='oldPasswordInput'
-                      placeholder='Old Password'
-                      onFocus={this.inputFocused.bind(this, 'oldPasswordInput')}
-                      secureTextEntry={true}
-                      autoCorrect={false}
-                  />
+        <Text style={styles.userHeader}>Logged in as <Text style={styles.username}>{this.state.username}</Text></Text>
+          <View style={styles.buttons}>
+            <View style={styles.button}>
+              <TouchableOpacity onPress={this.logout}>
+                <View style={[styles.signin, gel.itemBackGroundColor]}>
+                  <Text style={styles.whiteFont}>Logout</Text> 
                 </View>
-                <View style={[cond_input.s.i, {flex:0.2}]}>
-                  <TextInput
-                      style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
-                      onChangeText={(text) => this.state.currentPassword = text}
-                      ref='newPasswordInput'
-                      onFocus={this.inputFocused.bind(this, 'newPasswordInput')}
-                      placeholder='New password'
-                      secureTextEntry={true}
-                      autoCorrect={false}
-                  />
-                </View>
-                <View style={[cond_input.s.i, {flex:0.2}]}>
-                  <TextInput
-                      style={{height:20, flex:0.2, color:'#121212', textAlign:'center'}}
-                      onChangeText={(text) => this.state.confirmCurrentPassword = text}
-                      ref='newPasswordAgainInput'
-                      onFocus={this.inputFocused.bind(this, 'newPasswordAgainInput')}
-                      placeholder='Confirm new password'
-                      secureTextEntry={true}
-                      autoCorrect={false}
-                  />
-                </View>
-                <View style={{flex:0.1}} />
-                <TouchableOpacity style={styles.modalButton} onPress={this.changePassword} >
-                  <Text style={styles.changePass}>Change password</Text>
-                </TouchableOpacity>
-                <View style={{flex:0.1}} />
-              </View>
               </TouchableOpacity>
             </View>
-          </TouchableOpacity>
-          </ScrollView>
-          </Modal>
-      <Toast ref="toast"/>
+          </View>
+          <View style={styles.sliderRow}>
+            <View style={{flex: 0.2}} />
+            <Text style={styles.sliderLabel}>Tab confirmation:</Text>
+            <Switch style={styles.sliderSwitch} onValueChange={this.handleConfirmSlider} value={this.state.enableConfirm} />
+            <View style={{flex: 0.2}} />
+          </View>
+
+          <Text style={styles.transactionHeader}>Latest transactions</Text>
+          <ListView
+              renderScrollComponent={props => <InfiniteScrollView {...props} />}
+              onLoadMoreAsync={this.getOlderTransactions}
+              dataSource={this.state.dataSource}
+              renderRow={this.renderTransactions}
+              canLoadMore={!this.state.lastTransaction}
+              refreshControl={this._renderRefreshControl()}
+          >
+          </ListView>
+        <Toast ref="toast"/>
       </View>
     );
   }
@@ -307,7 +237,7 @@ var Stats = React.createClass({
 var styles = StyleSheet.create({
   sliderRow: {
     flexDirection: 'row',
-    flex: 0.15,
+    flex: 0.1,
     alignItems: 'center',
     justifyContent: 'center'
   },
@@ -349,7 +279,7 @@ var styles = StyleSheet.create({
     marginBottom: 3,
   },
   buttons: {
-    flex: 0.3,
+    flex: 0.13,
     alignItems: 'center',
   },
   changePass: {

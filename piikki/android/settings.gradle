@@ -1,8 +1,5 @@
 rootProject.name = 'piikki'
 
-include ':react-native-android-wifi'
-project(':react-native-android-wifi').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-android-wifi/android')
-
 include ':react-native-vector-icons'
 project(':react-native-vector-icons').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-vector-icons/android')
 
@@ -13,6 +10,3 @@ include ':app'
 
 include ':react-native-smart-splashscreen'
 project(':react-native-smart-splashscreen').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-smart-splash-screen/android')
-
-include ':react-native-background-job'
-project(':react-native-background-job').projectDir = new File(rootProject.projectDir,   '../node_modules/react-native-background-job/android')

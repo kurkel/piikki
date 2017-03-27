@@ -88,7 +88,7 @@ var Admin = React.createClass({
   changeTab: async function() {
     this.state.message="";
     this.state.error = "";
-    var payload = JSON.stringify({'username':this.state.selectedUsername, 'drinks':{'payback': {'amount':this.state.amount}}});
+    var payload = JSON.stringify([{'username':this.state.selectedUsername, 'drinks':{'payback': {'amount':this.state.amount}}}]);
     var responseJson = await post('admin/tab', this.props.navigator, payload, (e)=>{
       this.setState({error:"Could not update" + this.state.selectedUsername + "'s tab"});
       console.error(error);

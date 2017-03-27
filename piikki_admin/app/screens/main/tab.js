@@ -62,6 +62,7 @@ var Tab = React.createClass({
      refresh: async function() {
         this.setState({'refreshing': true});
         await this.getPrices();
+        await this.getUsers();
         this.setState({'refreshing': false});
      },
      componentDidMount: function() {
@@ -110,7 +111,7 @@ var Tab = React.createClass({
         this.setState({usersRdy: true});
     },
 
-    async handleNotification(amount) {
+    async handleNotification(amount, user) {
         var n = await AsyncStorage.getItem('notifications');
         if (n === 'true' || n === null) {
             PushNotification.localNotification({
@@ -140,6 +141,9 @@ var Tab = React.createClass({
         }
         var c = 0;
         var total = 0;
+        this.state.cart.map((i)=>{
+            cart[i.user] = {'username': i.user, 'drinks':{}}
+        });
         this.state.cart.map((item) => {
             var name = item.name;
             if (name === "Misc") {
@@ -147,25 +151,31 @@ var Tab = React.createClass({
                 c++;
             }
             total += item.amount * item.price;
-            cart[name] = item.comment ? {'amount': cart[name] ? cart[name].amount + item.amount : item.amount, 'comment':item.comment} : {'amount':cart[name] ? cart[name].amount + item.amount : item.amount};
+            cart[item.user]['drinks'][name] = item.comment ? {'amount': cart[name] ? cart[name].amount + item.amount : item.amount, 'comment':item.comment} : {'amount':cart[name] ? cart[name].amount + item.amount : item.amount};
         })
-        var new_cart = this.state.cart; 
-        let payload = JSON.stringify(cart);
-        let responseJson = await post('tab', this.props.navigator, payload, (e) => {
+        var new_cart = this.state.cart;
+        var resp = []
+        for(let k of Object.keys(cart)) {
+            resp.push(cart[k]);
+        }
+        let payload = JSON.stringify(resp);
+        let responseJson = await post('admin/tab', this.props.navigator, payload, (e) => {
             this.setState({message: "Error in tabbing!"});
             this.refresh();
-            this.refs.toast.show('Major error, try again or contact devs.', DURATION.LENGTH_LONG);
+            this.refs.toast2.show('Major error, try again or contact devs.', DURATION.LENGTH_LONG);
             console.error(e);
         });
         if(responseJson.success) {
-            for (let k of Object.keys(responseJson.message)) {
-                 new_cart = new_cart.filter((item) => {
-                    var r = new RegExp(k, "g");
-                    return !r.test(k) && responseJson[k].success;
-                });
+            for (let i of responseJson.message) {
+                for (let k of Object.keys(i.message)) {
+                    console.warn(k);
+                     new_cart = new_cart.filter((item) => {
+                        var r = new RegExp(k, "g");
+                        return r.test(k) && i.message[k].success && item.user===i[k].user;
+                    });
+                }
             }
-            if (this.state.tab > this.state.softLimit && this.state.tab - this.state.total <= this.state.softLimit)
-                this.handleNotification(this.state.tab - this.state.total);
+
             this.setState({cart:new_cart});
             this.calcTotal(new_cart);
             this.setState({message: "Enjoy responsibly!"})
@@ -175,14 +185,14 @@ var Tab = React.createClass({
             else {
                 this.setState({message: "Error"});
                 this.refresh();
-                this.refs.toast.show('Error in tabbing, check cart for items.', DURATION.LENGTH_LONG);
+                this.refs.toast2.show('Error in tabbing, check cart for items.', DURATION.LENGTH_LONG);
                 console.error(responseJson);
             }
         }
         else {
             this.setState({message: "Error"});
             this.refresh();
-            this.refs.toast.show('Major error, contact devs.', DURATION.LENGTH_LONG);
+            this.refs.toast2.show('Major error, contact devs.', DURATION.LENGTH_LONG);
         }
     },
 
@@ -196,7 +206,7 @@ var Tab = React.createClass({
             return
         }
 
-        var items = cart.filter((item) => {return item.name === new_item.name && item.extra === new_item.extra && item.user === user});
+        var items = cart.filter((item) => {return item.name === new_item.name && item.extra === new_item.extra && item.user === u});
         if (items.length > 0) {
             cart = cart.map((item) => {
                 if (item.name === new_item.name && item.extra === new_item.extra) {
@@ -213,7 +223,7 @@ var Tab = React.createClass({
                 var p = new_item.price
                 new_item.price = new_item.amount;
                 new_item.amount = p;
-                new_item.user = this.state.selectedUser.name
+                new_item.user = u
             }
             cart.push(new_item);
         }
@@ -335,7 +345,7 @@ var Tab = React.createClass({
         resp.push(
             <TouchableOpacity key={user1.name+'button'} style={{flex:0.3}} onPress={this.openSelectionForUser.bind(this,user1)}>
                 <View style={[gel.itemBackGroundColor, styles.button]}>
-                    <Text style={styles.amount}>{user1.name} <Text style={this.conditionalTab(user1.tab)}>({user1.tab}€)</Text></Text>
+                    <Text style={styles.amount}>{user1.name} <Text style={this.conditionalTab(user1.tab)}>({Number((user1.tab).toFixed(2))}€)</Text></Text>
                 </View>
             </TouchableOpacity>
         );
@@ -345,7 +355,7 @@ var Tab = React.createClass({
             resp.push(
                 <TouchableOpacity key={user2.name+'button'} style={{flex:0.3}} onPress={this.openSelectionForUser.bind(this,user2)}>
                     <View style={[gel.itemBackGroundColor, styles.button]}>
-                        <Text style={styles.amount}>{user2.name} <Text style={this.conditionalTab(user2.tab)}>({user2.tab}€)</Text></Text>
+                        <Text style={styles.amount}>{user2.name} <Text style={this.conditionalTab(user2.tab)}>({Number((user2.tab).toFixed(2))}€)</Text></Text>
                     </View>
                 </TouchableOpacity>
             )
@@ -356,7 +366,7 @@ var Tab = React.createClass({
             resp.push(
                 <TouchableOpacity key={user3.name+'button'} style={{flex:0.3}} onPress={this.openSelectionForUser.bind(this,user3)}>
                     <View style={[gel.itemBackGroundColor, styles.button]}>
-                        <Text style={styles.amount}>{user3.name} <Text style={this.conditionalTab(user3.tab)}>({user3.tab}€)</Text></Text>
+                        <Text style={styles.amount}>{user3.name} <Text style={this.conditionalTab(user3.tab)}>({Number((user3.tab).toFixed(2))}€)</Text></Text>
                     </View>
                 </TouchableOpacity>
             )
@@ -568,7 +578,7 @@ var Tab = React.createClass({
                             </TouchableOpacity>
                         </View>
                     </View>
-                    <View style={{flex:0.2}} />
+                    <View style={{flex:0.1}} />
                         {this.renderUsers()}
                     <View style={{flex:0.1}} />
                     <Modal animationType={"slide"} style={[{flex:1}, gel.baseBackgroundColor]} transparent={false} visible={this.state.userToggled}
@@ -673,7 +683,7 @@ var Tab = React.createClass({
                         </TouchableOpacity>
                     </Modal>            
                 </ScrollView>
-                <Toast ref="toast"/>
+                <Toast ref="toast2"/>
             </View>
         )
     }
