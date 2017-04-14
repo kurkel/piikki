@@ -116,7 +116,7 @@ var Tab = React.createClass({
 			total += item.amount * item.price;
 			cart[name] = item.comment ? {'amount': cart[name] ? cart[name].amount + item.amount : item.amount, 'comment':item.comment} : {'amount':cart[name] ? cart[name].amount + item.amount : item.amount};
 		})
-		var new_cart = this.state.cart; 
+		var new_cart = this.state.cart;
 		let payload = JSON.stringify(cart);
 		let responseJson = await post('tab', this.props.navigator, payload, (e) => {
 			this.setState({message: "Error in tabbing!"});
@@ -135,7 +135,7 @@ var Tab = React.createClass({
         		this.handleNotification(this.state.tab - this.state.total);
             this.setState({cart:new_cart});
             this.setState({total:this.calcTotal(new_cart)});
-            this.setState({message: "Enjoy responsibly!"})
+            this.setState({message: "Drink it, bitch!"})
             if (new_cart.length === 0) {
             	this.refresh();
 	      	}
@@ -216,7 +216,7 @@ var Tab = React.createClass({
         	this.refs.toast.show('Max limit ('+this.state.hardLimit + '€) reached. Cannot add.', DURATION.LENGTH_LONG)
         	this.toggleOther();
         }
-        
+
     },
 	deleteCart: function(name, amnt) {
 		var cart = this.state.cart;
@@ -254,7 +254,7 @@ var Tab = React.createClass({
 		} else {
 			this.setState({message: "Could not fetch prices :("});
 		}
-		
+
 	},
 
 	renderButtons: function(i) {
@@ -283,7 +283,7 @@ var Tab = React.createClass({
                     </TouchableOpacity>
 	            )
 			}
-		}	
+		}
 		return resp;
 	},
 
@@ -412,7 +412,7 @@ var Tab = React.createClass({
 							<Text style={styles.clearCartText}>Clear cart</Text>
 						</View>
 					</TouchableOpacity>
-					<View style={{flex: 0.7}} /> 
+					<View style={{flex: 0.7}} />
 				</View>
 			);
 		}
@@ -446,7 +446,7 @@ var Tab = React.createClass({
     		var s = StyleSheet.create({tab:{'color':'#F73826'}})
     		this.setState({condStyle:s});
     	}
-    	else if (this.state.tab<= this.state.softLimit) {   		
+    	else if (this.state.tab<= this.state.softLimit) {
     		var s = StyleSheet.create({tab:{'color':'#F7AF26'}})
     		this.setState({condStyle:s});
     	}
@@ -553,7 +553,7 @@ var Tab = React.createClass({
                         </View>
                        	<TouchableOpacity style={{height: windowSize.height/8, width: windowSize.width}} onPress={this.toggleConfirm}>
 	                	</TouchableOpacity>
-	                </Modal>			
+	                </Modal>
                 </ScrollView>
                 <Toast ref="toast"/>
 			</View>
@@ -671,7 +671,7 @@ var styles = StyleSheet.create({
 		borderTopRightRadius:3,
 		flex: 0.8,
 		backgroundColor:'#C8E6C9'
-	},	
+	},
 	button: {
 		height:100,
 		width: 160,
